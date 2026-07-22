@@ -1,0 +1,393 @@
+package com.example.ui.screens
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.launch
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
+import com.example.astro.NumerologyValidator
+import com.example.ui.MainViewModel
+import com.example.ui.components.GlassBadge
+import com.example.ui.components.GlassCard
+import com.example.ui.components.GoldGlowButton
+import com.example.ui.components.SectionHeader
+import com.example.ui.theme.AuspiciousGreen
+import com.example.ui.theme.CosmicCardSurface
+import com.example.ui.theme.GlassBorder
+import com.example.ui.theme.GlassWhite
+import com.example.ui.theme.GoldPrimary
+import com.example.ui.theme.SacredOrange
+import com.example.ui.theme.TextGold
+import com.example.ui.theme.TextPrimaryDark
+import com.example.ui.theme.TextSecondaryDark
+import com.example.util.LanguageManager
+
+@Composable
+fun NumerologyScreen(viewModel: MainViewModel) {
+    val numData by viewModel.numerologyData.collectAsState()
+    val aiResponse by viewModel.aiResponse.collectAsState()
+    val isAiLoading by viewModel.isAiLoading.collectAsState()
+
+    var nameInput by remember { mutableStateOf(viewModel.numName.value) }
+    var dobInput by remember { mutableStateOf(viewModel.numDob.value) }
+    var nameError by remember { mutableStateOf<String?>(null) }
+    var dobError by remember { mutableStateOf<String?>(null) }
+
+    var userQuestion by remember { mutableStateOf("") }
+
+    val quickQuestions = listOf(
+        "मेरी नौकरी में पदोन्नति कब होगी?",
+        "क्या मेरा विवाह 2026 में संभव है?",
+        "धन लाभ हेतु कौन सा उपाय करें?",
+        "राहु दशा शांति के सरल उपाय क्या हैं?"
+    )
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            SectionHeader(
+                titleHi = "अंक ज्योतिष (Vedic Numerology)",
+                titleEn = "Vedic Numerology"
+            )
+        }
+
+        // Numerology Input Form
+        item {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    val tfColors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = GoldPrimary,
+                        unfocusedBorderColor = GlassBorder,
+                        focusedTextColor = TextPrimaryDark,
+                        unfocusedTextColor = TextPrimaryDark,
+                        focusedLabelColor = TextGold,
+                        unfocusedLabelColor = TextSecondaryDark,
+                        errorBorderColor = SacredOrange,
+                        errorLabelColor = SacredOrange
+                    )
+
+                    Column {
+                        OutlinedTextField(
+                            value = nameInput,
+                            onValueChange = {
+                                nameInput = it
+                                viewModel.numName.value = it
+                                if (nameError != null) {
+                                    nameError = NumerologyValidator.validateName(it)
+                                }
+                            },
+                            label = { Text("नाम (Name)") },
+                            isError = (nameError != null),
+                            colors = tfColors,
+                            modifier = Modifier.fillMaxWidth().testTag("input_num_name")
+                        )
+                        if (nameError != null) {
+                            Text(
+                                text = nameError!!,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = SacredOrange,
+                                    fontSize = 11.sp
+                                ),
+                                modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                            )
+                        }
+                    }
+
+                    Column {
+                        OutlinedTextField(
+                            value = dobInput,
+                            onValueChange = {
+                                dobInput = it
+                                viewModel.numDob.value = it
+                                if (dobError != null) {
+                                    dobError = NumerologyValidator.validateDob(it)
+                                }
+                            },
+                            label = { Text("जन्म तिथि (YYYY-MM-DD)") },
+                            isError = (dobError != null),
+                            colors = tfColors,
+                            modifier = Modifier.fillMaxWidth().testTag("input_num_dob")
+                        )
+                        if (dobError != null) {
+                            Text(
+                                text = dobError!!,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = SacredOrange,
+                                    fontSize = 11.sp
+                                ),
+                                modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                            )
+                        }
+                    }
+
+                    GoldGlowButton(
+                        text = "अंक ज्योतिष गणना (Calculate Numbers)",
+                        onClick = {
+                            val valResult = NumerologyValidator.validateInput(nameInput, dobInput)
+                            nameError = valResult.nameError
+                            dobError = valResult.dobError
+                            if (valResult.isValid) {
+                                viewModel.calculateNumerology()
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        testTag = "calculate_num_button"
+                    )
+                }
+            }
+        }
+
+        // Numerology Numbers Display (Moolank & Bhagyank)
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                AnimatedResultCard(
+                    scaleKey = "${numData.moolank}_${numData.rulingPlanetHi}",
+                    modifier = Modifier.weight(1f)
+                ) {
+                    GlassCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = "मूलांक (Moolank)", style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 11.sp))
+                            Text(text = "${numData.moolank}", style = MaterialTheme.typography.displayMedium.copy(color = TextGold, fontWeight = FontWeight.ExtraBold))
+                            Text(text = "स्वामी: ${numData.rulingPlanetHi}", style = MaterialTheme.typography.labelSmall.copy(color = SacredOrange, fontSize = 10.sp))
+                        }
+                    }
+                }
+
+                AnimatedResultCard(
+                    scaleKey = "${numData.bhagyank}_${numData.nameNumber}",
+                    modifier = Modifier.weight(1f)
+                ) {
+                    GlassCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = "भाग्यांक (Bhagyank)", style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 11.sp))
+                            Text(text = "${numData.bhagyank}", style = MaterialTheme.typography.displayMedium.copy(color = GoldPrimary, fontWeight = FontWeight.ExtraBold))
+                            Text(text = "नाम अंक: ${numData.nameNumber}", style = MaterialTheme.typography.labelSmall.copy(color = SacredOrange, fontSize = 10.sp))
+                        }
+                    }
+                }
+            }
+        }
+
+        // Moolank Reading Card
+        item {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column {
+                    Text(
+                        text = "मूलांक ${numData.moolank} का फल:",
+                        style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = numData.moolankReadingHi,
+                        style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 13.sp)
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = numData.luckyDaysHi,
+                        style = MaterialTheme.typography.labelSmall.copy(color = SacredOrange, fontWeight = FontWeight.Bold)
+                    )
+                }
+            }
+        }
+
+        // AI Vedic Astrologer Chat Header
+        item {
+            SectionHeader(
+                titleHi = "एआई ज्योतिषाचार्य (AI Vedic Astrologer)",
+                titleEn = "AI Vedic Astrologer Chat",
+                subtitleHi = "Gemini 1.5 संचालित व्यक्तिगत ज्योतिष परामर्श",
+                subtitleEn = "Powered by Gemini 1.5 Flash"
+            )
+        }
+
+        // Quick Sample Questions Chips
+        item {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(quickQuestions) { q ->
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(GlassWhite)
+                            .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
+                            .clickable {
+                                userQuestion = q
+                                viewModel.askAiAstrologer(q)
+                            }
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = q,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = TextGold,
+                                fontSize = 11.sp
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+        // AI Chat Input Card
+        item {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    val tfColors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = GoldPrimary,
+                        unfocusedBorderColor = GlassBorder,
+                        focusedTextColor = TextPrimaryDark,
+                        unfocusedTextColor = TextPrimaryDark,
+                        focusedLabelColor = TextGold,
+                        unfocusedLabelColor = TextSecondaryDark
+                    )
+
+                    OutlinedTextField(
+                        value = userQuestion,
+                        onValueChange = { userQuestion = it },
+                        label = { Text("अपना प्रश्न पूछें (Ask your question)") },
+                        colors = tfColors,
+                        modifier = Modifier.fillMaxWidth().testTag("ai_chat_input"),
+                        trailingIcon = {
+                            if (isAiLoading) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), color = GoldPrimary)
+                            } else {
+                                IconButton(
+                                    onClick = {
+                                        if (userQuestion.isNotBlank()) {
+                                            viewModel.askAiAstrologer(userQuestion)
+                                        }
+                                    },
+                                    modifier = Modifier.testTag("ai_send_button")
+                                ) {
+                                    Icon(imageVector = Icons.AutoMirrored.Filled.Send, contentDescription = "Send", tint = GoldPrimary)
+                                }
+                            }
+                        }
+                    )
+
+                    if (aiResponse.isNotBlank()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(GlassWhite)
+                                .border(1.dp, GoldPrimary, RoundedCornerShape(12.dp))
+                                .padding(12.dp)
+                        ) {
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = GoldPrimary, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(text = "ज्योतिषाचार्य का उत्तर:", style = MaterialTheme.typography.labelMedium.copy(color = TextGold, fontWeight = FontWeight.Bold))
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = aiResponse,
+                                    style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 13.sp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+fun AnimatedResultCard(
+    modifier: Modifier = Modifier,
+    scaleKey: Any,
+    content: @Composable () -> Unit
+) {
+    val scale = remember { Animatable(0.7f) }
+    val alpha = remember { Animatable(0f) }
+
+    LaunchedEffect(scaleKey) {
+        scale.snapTo(0.75f)
+        alpha.snapTo(0f)
+        launch {
+            alpha.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 350)
+            )
+        }
+        scale.animateTo(
+            targetValue = 1f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            )
+        )
+    }
+
+    Box(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale.value
+                scaleY = scale.value
+                this.alpha = alpha.value
+            }
+    ) {
+        content()
+    }
+}
