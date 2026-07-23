@@ -79,6 +79,9 @@ import com.example.ui.theme.TextPrimaryDark
 import com.example.ui.theme.TextSecondaryDark
 import com.example.util.LanguageManager
 
+import com.example.ui.components.SubTabHeader
+import com.example.ui.AppTab
+
 @Composable
 fun RashifalScreen(viewModel: MainViewModel) {
     val haptic = LocalHapticFeedback.current
@@ -432,7 +435,7 @@ fun RashifalScreen(viewModel: MainViewModel) {
 }
 }
 
-private data class DomainItem(
+data class DomainItem(
     val title: String,
     val readingHi: String,
     val readingEn: String,

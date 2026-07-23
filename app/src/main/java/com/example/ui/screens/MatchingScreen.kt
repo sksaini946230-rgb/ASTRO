@@ -23,7 +23,8 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Female
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.PictureAsPdf
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.CalendarMonth
+import com.example.ui.components.M3DatePickerDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -80,7 +81,32 @@ fun MatchingScreen(viewModel: MainViewModel) {
     var girlName by remember { mutableStateOf(viewModel.matchGirlName.value) }
     var girlDob by remember { mutableStateOf(viewModel.matchGirlDob.value) }
 
+    var showBoyDatePicker by remember { mutableStateOf(false) }
+    var showGirlDatePicker by remember { mutableStateOf(false) }
+
     var showForm by remember { mutableStateOf(true) }
+
+    if (showBoyDatePicker) {
+        M3DatePickerDialog(
+            initialDateString = boyDob,
+            onDateSelected = { selected ->
+                boyDob = selected
+                viewModel.matchBoyDob.value = selected
+            },
+            onDismiss = { showBoyDatePicker = false }
+        )
+    }
+
+    if (showGirlDatePicker) {
+        M3DatePickerDialog(
+            initialDateString = girlDob,
+            onDateSelected = { selected ->
+                girlDob = selected
+                viewModel.matchGirlDob.value = selected
+            },
+            onDismiss = { showGirlDatePicker = false }
+        )
+    }
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -121,7 +147,7 @@ fun MatchingScreen(viewModel: MainViewModel) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(imageVector = Icons.Default.Male, contentDescription = "Boy", tint = GoldPrimary)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "वर का विवरण (Boy's Details):", style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold))
+                        Text(text = LanguageManager.getString("वर का विवरण (Boy's Details):", "Boy's Details:"), style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold))
                     }
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -131,28 +157,43 @@ fun MatchingScreen(viewModel: MainViewModel) {
                                 boyName = it
                                 viewModel.matchBoyName.value = it
                             },
-                            label = { Text("वर का नाम (Boy Name)") },
+                            label = { Text(LanguageManager.getString("वर का नाम (Boy Name)", "Boy Name")) },
                             colors = tfColors,
                             modifier = Modifier.weight(1.2f).testTag("input_boy_name")
                         )
 
-                        OutlinedTextField(
-                            value = boyDob,
-                            onValueChange = {
-                                boyDob = it
-                                viewModel.matchBoyDob.value = it
-                            },
-                            label = { Text("जन्म तिथि") },
-                            colors = tfColors,
-                            modifier = Modifier.weight(1f).testTag("input_boy_dob")
-                        )
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = boyDob,
+                                onValueChange = {
+                                    boyDob = it
+                                    viewModel.matchBoyDob.value = it
+                                },
+                                readOnly = true,
+                                label = { Text(LanguageManager.getString("जन्म तिथि", "DOB")) },
+                                trailingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.CalendarMonth,
+                                        contentDescription = "Select Boy DOB",
+                                        tint = GoldPrimary
+                                    )
+                                },
+                                colors = tfColors,
+                                modifier = Modifier.fillMaxWidth().testTag("input_boy_dob")
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .clickable { showBoyDatePicker = true }
+                            )
+                        }
                     }
 
                     // Girl Details
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(imageVector = Icons.Default.Female, contentDescription = "Girl", tint = SacredOrange)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "कन्या का विवरण (Girl's Details):", style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold))
+                        Text(text = LanguageManager.getString("कन्या का विवरण (Girl's Details):", "Girl's Details:"), style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold))
                     }
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -162,21 +203,36 @@ fun MatchingScreen(viewModel: MainViewModel) {
                                 girlName = it
                                 viewModel.matchGirlName.value = it
                             },
-                            label = { Text("कन्या का नाम (Girl Name)") },
+                            label = { Text(LanguageManager.getString("कन्या का नाम (Girl Name)", "Girl Name")) },
                             colors = tfColors,
                             modifier = Modifier.weight(1.2f).testTag("input_girl_name")
                         )
 
-                        OutlinedTextField(
-                            value = girlDob,
-                            onValueChange = {
-                                girlDob = it
-                                viewModel.matchGirlDob.value = it
-                            },
-                            label = { Text("जन्म तिथि") },
-                            colors = tfColors,
-                            modifier = Modifier.weight(1f).testTag("input_girl_dob")
-                        )
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedTextField(
+                                value = girlDob,
+                                onValueChange = {
+                                    girlDob = it
+                                    viewModel.matchGirlDob.value = it
+                                },
+                                readOnly = true,
+                                label = { Text(LanguageManager.getString("जन्म तिथि", "DOB")) },
+                                trailingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.CalendarMonth,
+                                        contentDescription = "Select Girl DOB",
+                                        tint = SacredOrange
+                                    )
+                                },
+                                colors = tfColors,
+                                modifier = Modifier.fillMaxWidth().testTag("input_girl_dob")
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .clickable { showGirlDatePicker = true }
+                            )
+                        }
                     }
 
                     val isCalculating by viewModel.isCalculating.collectAsState()
@@ -186,7 +242,7 @@ fun MatchingScreen(viewModel: MainViewModel) {
                         }
                     } else {
                         GoldGlowButton(
-                            text = "गुण मिलान करें (Calculate 36 Guna)",
+                            text = LanguageManager.getString("गुण मिलान करें (Calculate 36 Guna)", "Calculate 36 Guna Score"),
                             onClick = {
                                 viewModel.matchBoyName.value = boyName
                                 viewModel.matchBoyDob.value = boyDob
@@ -225,7 +281,7 @@ fun MatchingScreen(viewModel: MainViewModel) {
                     )
 
                     Text(
-                        text = "कुल प्राप्त गुण (Obtained Guna Score)",
+                        text = LanguageManager.getString("कुल प्राप्त गुण (Obtained Guna Score)", "Total Guna Match Score"),
                         style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 13.sp)
                     )
 
@@ -244,7 +300,7 @@ fun MatchingScreen(viewModel: MainViewModel) {
                     Spacer(modifier = Modifier.height(12.dp))
 
                     GlassBadge(
-                        text = gunaResult.compatibilityVerdictHi,
+                        text = LanguageManager.getString(gunaResult.compatibilityVerdictHi, gunaResult.compatibilityVerdictEn),
                         backgroundColor = (if (gunaResult.totalObtainedGuna >= 18) AuspiciousGreen else InauspiciousRed).copy(alpha = 0.2f),
                         textColor = if (gunaResult.totalObtainedGuna >= 18) AuspiciousGreen else InauspiciousRed,
                         borderColor = if (gunaResult.totalObtainedGuna >= 18) AuspiciousGreen else InauspiciousRed

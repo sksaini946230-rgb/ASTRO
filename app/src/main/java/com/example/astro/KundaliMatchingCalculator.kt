@@ -56,6 +56,13 @@ object KundaliMatchingCalculator {
             else -> "दोनों अंश-मांगलिक नहीं हैं (कोई मंगल दोष नहीं)"
         }
 
+        val mangalStatusEn = when {
+            isBoyManglik && isGirlManglik -> "Both are Manglik (Mangal Dosha canceled / Manglik compatibility)"
+            isBoyManglik -> "Boy is Manglik, Girl is not Manglik"
+            isGirlManglik -> "Girl is Manglik, Boy is not Manglik"
+            else -> "Both are non-Manglik (No Mangal Dosha)"
+        }
+
         val kootDetails = listOf(
             GunaKootDetail("वर्ण (Varna)", "Varna", 1.0, varnaPoints, "आध्यात्मिक एवं मानसिक दृष्टिकोण का मिलान।"),
             GunaKootDetail("वश्य (Vashya)", "Vashya", 2.0, vashyaPoints, "पारस्परिक आकर्षण एवं अधिकार क्षेत्र।"),
@@ -67,22 +74,30 @@ object KundaliMatchingCalculator {
             GunaKootDetail("नाडी (Nadi)", "Nadi", 8.0, nadiPoints, "आनुवंशिक स्वास्थ्य एवं संतान सुख।")
         )
 
-        val (verdictHi, verdictEn, summaryHi) = when {
-            totalGuna >= 28.0 -> Triple(
-                "अति उत्तम मिलान (Excellent Match)",
-                "Excellent Match",
-                "$boyName एवं $girlName की कुंडली में $totalGuna / 36 गुण प्राप्त हुए हैं। यह विवाह अत्यंत शुभ एवं सुखद वैवाहिक जीवन का संकेत देता है।"
-            )
-            totalGuna >= 18.0 -> Triple(
-                "शुभ एवं अनुकूल मिलान (Good Match)",
-                "Good Match",
-                "$boyName एवं $girlName की कुंडली में $totalGuna / 36 गुण मिल रहे हैं। सामान्य पूजा-अनुष्ठान के उपरांत विवाह सम्पन्न किया जा सकता है।"
-            )
-            else -> Triple(
-                "औसत मिलान (Average Match - Remedy Required)",
-                "Average Match",
-                "$boyName एवं $girlName की कुंडली में $totalGuna / 36 गुण प्राप्त हुए हैं। विवाह पूर्व नाडी अथवा भकूट दोष निवारण उपाय परामर्श योग्य हैं।"
-            )
+        val verdictHi: String
+        val verdictEn: String
+        val summaryHi: String
+        val summaryEn: String
+
+        when {
+            totalGuna >= 28.0 -> {
+                verdictHi = "अति उत्तम मिलान (Excellent Match)"
+                verdictEn = "Excellent Match"
+                summaryHi = "$boyName एवं $girlName की कुंडली में $totalGuna / 36 गुण प्राप्त हुए हैं। यह विवाह अत्यंत शुभ एवं सुखद वैवाहिक जीवन का संकेत देता है।"
+                summaryEn = "Guna score of $totalGuna / 36 obtained between $boyName and $girlName. This indicates an exceptionally auspicious and happy married life."
+            }
+            totalGuna >= 18.0 -> {
+                verdictHi = "शुभ एवं अनुकूल मिलान (Good Match)"
+                verdictEn = "Good Match"
+                summaryHi = "$boyName एवं $girlName की कुंडली में $totalGuna / 36 गुण मिल रहे हैं। सामान्य पूजा-अनुष्ठान के उपरांत विवाह सम्पन्न किया जा सकता है।"
+                summaryEn = "$totalGuna / 36 gunas are matching. The wedding can be safely performed after simple standard rituals."
+            }
+            else -> {
+                verdictHi = "औसत मिलान (Average Match - Remedy Required)"
+                verdictEn = "Average Match"
+                summaryHi = "$boyName एवं $girlName की कुंडली में $totalGuna / 36 गुण प्राप्त हुए हैं। विवाह पूर्व नाडी अथवा भकूट दोष निवारण उपाय परामर्श योग्य हैं।"
+                summaryEn = "Only $totalGuna / 36 gunas match. Prior remedies/prayers for Nadi or Bhakoot Dosha are strongly recommended before marriage."
+            }
         }
 
         return GunaMatchingResult(
@@ -93,10 +108,12 @@ object KundaliMatchingCalculator {
             isManglikBoy = isBoyManglik,
             isManglikGirl = isGirlManglik,
             mangalDoshaStatusHi = mangalStatus,
+            mangalDoshaStatusEn = mangalStatusEn,
             kootDetails = kootDetails,
             compatibilityVerdictHi = verdictHi,
             compatibilityVerdictEn = verdictEn,
-            summaryReadingHi = summaryHi
+            summaryReadingHi = summaryHi,
+            summaryReadingEn = summaryEn
         )
     }
 

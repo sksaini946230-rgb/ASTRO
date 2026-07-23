@@ -1,19 +1,34 @@
 package com.example.data.local
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
 
-class KundaliRepository(private val kundaliDao: KundaliDao) {
-    val allProfiles: Flow<List<KundaliEntity>> = kundaliDao.getAllSavedProfiles()
+class KundaliRepository(
+    private val kundaliDao: KundaliDao,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+) {
+    val allProfiles: Flow<List<KundaliEntity>> = kundaliDao.getAllSavedProfiles().flowOn(ioDispatcher)
 
-    suspend fun saveProfile(profile: KundaliEntity): Long {
-        return kundaliDao.insertProfile(profile)
+    fun getProfileById(id: Long): Flow<KundaliEntity?> {
+        return kundaliDao.getProfileById(id).flowOn(ioDispatcher)
     }
 
-    suspend fun deleteProfile(profile: KundaliEntity) {
+    suspend fun saveProfile(profile: KundaliEntity): Long = withContext(ioDispatcher) {
+        kundaliDao.insertProfile(profile)
+    }
+
+    suspend fun updateProfile(profile: KundaliEntity) = withContext(ioDispatcher) {
+        kundaliDao.updateProfile(profile)
+    }
+
+    suspend fun deleteProfile(profile: KundaliEntity) = withContext(ioDispatcher) {
         kundaliDao.deleteProfile(profile)
     }
 
-    suspend fun deleteProfileById(id: Long) {
+    suspend fun deleteProfileById(id: Long) = withContext(ioDispatcher) {
         kundaliDao.deleteProfileById(id)
     }
 }

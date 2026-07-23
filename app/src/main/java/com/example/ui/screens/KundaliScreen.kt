@@ -68,9 +68,18 @@ import com.example.ui.theme.TextGold
 import com.example.ui.theme.TextPrimaryDark
 import com.example.ui.theme.TextSecondaryDark
 import com.example.util.LanguageManager
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Schedule
+import com.example.ui.components.M3DatePickerDialog
+import com.example.ui.components.M3TimePickerDialog
+
+import com.example.ui.components.SubTabHeader
+import com.example.ui.AppTab
 
 @Composable
 fun KundaliScreen(viewModel: MainViewModel) {
+    val currentSubTab by viewModel.kundaliSubTab.collectAsState()
+
     val kundali by viewModel.generatedKundali.collectAsState()
 
     var isNorthStyle by remember { mutableStateOf(true) }
@@ -81,22 +90,67 @@ fun KundaliScreen(viewModel: MainViewModel) {
     var tobInput by remember { mutableStateOf(kundali.timeOfBirth) }
     var placeInput by remember { mutableStateOf(kundali.placeOfBirth) }
 
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
     var isSaved by remember { mutableStateOf(false) }
+
+    if (showDatePicker) {
+        M3DatePickerDialog(
+            initialDateString = dobInput,
+            onDateSelected = { selected ->
+                dobInput = selected
+                viewModel.kundaliDob.value = selected
+            },
+            onDismiss = { showDatePicker = false }
+        )
+    }
+
+    if (showTimePicker) {
+        M3TimePickerDialog(
+            initialTimeString = tobInput,
+            onTimeSelected = { selected ->
+                tobInput = selected
+                viewModel.kundaliTob.value = selected
+            },
+            onDismiss = { showTimePicker = false }
+        )
+    }
 
     Scaffold(
         containerColor = Color.Transparent,
         modifier = Modifier.fillMaxSize()
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                top = paddingValues.calculateTopPadding() + 8.dp,
-                end = 16.dp,
-                bottom = paddingValues.calculateBottomPadding() + 16.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = paddingValues.calculateTopPadding())
         ) {
+            SubTabHeader(
+                selectedTab = currentSubTab,
+                tabs = listOf(
+                    LanguageManager.getString("जन्म कुंडली", "Birth Chart"),
+                    LanguageManager.getString("गुण मिलान", "Guna Matching"),
+                    LanguageManager.getString("अंकशास्त्र व AI", "Astro AI")
+                ),
+                onTabSelected = { viewModel.setKundaliSubTab(it) },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+
+            when (currentSubTab) {
+                1 -> MatchingScreen(viewModel)
+                2 -> NumerologyScreen(viewModel)
+                else -> {
+                    LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = 16.dp,
+                        top = 8.dp,
+                        end = 16.dp,
+                        bottom = paddingValues.calculateBottomPadding() + 16.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
         item {
             Spacer(modifier = Modifier.height(8.dp))
             SectionHeader(
@@ -128,7 +182,10 @@ fun KundaliScreen(viewModel: MainViewModel) {
 
                         OutlinedTextField(
                             value = nameInput,
-                            onValueChange = { nameInput = it },
+                            onValueChange = {
+                                nameInput = it
+                                viewModel.kundaliName.value = it
+                            },
                             label = { Text(LanguageManager.getString("पूरा नाम", "Full Name")) },
                             colors = tfColors,
                             modifier = Modifier
@@ -140,30 +197,69 @@ fun KundaliScreen(viewModel: MainViewModel) {
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            OutlinedTextField(
-                                value = dobInput,
-                                onValueChange = { dobInput = it },
-                                label = { Text(LanguageManager.getString("जन्म तिथि (YYYY-MM-DD)", "DOB (YYYY-MM-DD)")) },
-                                colors = tfColors,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .testTag("input_kundali_dob")
-                            )
+                            Box(modifier = Modifier.weight(1f)) {
+                                OutlinedTextField(
+                                    value = dobInput,
+                                    onValueChange = {
+                                        dobInput = it
+                                        viewModel.kundaliDob.value = it
+                                    },
+                                    readOnly = true,
+                                    label = { Text(LanguageManager.getString("जन्म तिथि", "DOB")) },
+                                    trailingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.CalendarMonth,
+                                            contentDescription = "Select DOB",
+                                            tint = GoldPrimary
+                                        )
+                                    },
+                                    colors = tfColors,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("input_kundali_dob")
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clickable { showDatePicker = true }
+                                )
+                            }
 
-                            OutlinedTextField(
-                                value = tobInput,
-                                onValueChange = { tobInput = it },
-                                label = { Text(LanguageManager.getString("जन्म समय (HH:MM)", "Time (HH:MM)")) },
-                                colors = tfColors,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .testTag("input_kundali_tob")
-                            )
+                            Box(modifier = Modifier.weight(1f)) {
+                                OutlinedTextField(
+                                    value = tobInput,
+                                    onValueChange = {
+                                        tobInput = it
+                                        viewModel.kundaliTob.value = it
+                                    },
+                                    readOnly = true,
+                                    label = { Text(LanguageManager.getString("जन्म समय", "Time")) },
+                                    trailingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Schedule,
+                                            contentDescription = "Select TOB",
+                                            tint = GoldPrimary
+                                        )
+                                    },
+                                    colors = tfColors,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .testTag("input_kundali_tob")
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clickable { showTimePicker = true }
+                                )
+                            }
                         }
 
                         OutlinedTextField(
                             value = placeInput,
-                            onValueChange = { placeInput = it },
+                            onValueChange = {
+                                placeInput = it
+                                viewModel.kundaliPlace.value = it
+                            },
                             label = { Text(LanguageManager.getString("जन्म स्थान", "Place of Birth")) },
                             colors = tfColors,
                             modifier = Modifier
@@ -178,9 +274,13 @@ fun KundaliScreen(viewModel: MainViewModel) {
                             }
                         } else {
                             GoldGlowButton(
-                                text = "कुण्डली बनाएं (Generate Chart)",
+                                text = LanguageManager.getString("कुण्डली बनाएं (Generate Chart)", "Generate Chart"),
                                 onClick = {
-                                    viewModel.generateKundaliChart(viewModel.kundaliName.value, viewModel.kundaliDob.value, viewModel.kundaliTob.value, viewModel.kundaliPlace.value)
+                                    viewModel.kundaliName.value = nameInput
+                                    viewModel.kundaliDob.value = dobInput
+                                    viewModel.kundaliTob.value = tobInput
+                                    viewModel.kundaliPlace.value = placeInput
+                                    viewModel.generateKundaliChart(nameInput, dobInput, tobInput, placeInput)
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 testTag = "generate_chart_submit_button"
@@ -348,5 +448,8 @@ fun KundaliScreen(viewModel: MainViewModel) {
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
+}
+}
 }
 }

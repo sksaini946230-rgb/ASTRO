@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import android.app.Activity
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -24,20 +26,22 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.ui.MainViewModel
 import com.example.ui.theme.AuspiciousGreen
-import com.example.ui.theme.CosmicCardSurface
 import com.example.ui.theme.CosmicDeepNavy
-import com.example.ui.theme.GlassBorder
-import com.example.ui.theme.GoldGlow
 import com.example.ui.theme.GoldPrimary
 import com.example.ui.theme.SacredOrange
 import com.example.ui.theme.TextGold
@@ -46,9 +50,19 @@ import com.example.ui.theme.TextSecondaryDark
 
 @Composable
 fun PremiumDialog(
+    viewModel: MainViewModel,
     onDismiss: () -> Unit
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
+    val billingError by viewModel.billingErrorMessage.collectAsState()
+
+    // Show toast for error/status messages gracefully
+    LaunchedEffect(billingError) {
+        billingError?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+        }
+    }
+
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(24.dp),
@@ -109,7 +123,12 @@ fun PremiumDialog(
                 GoldGlowButton(
                     text = "प्रारंभ करें ₹199/वर्ष (Get PRO Gold)",
                     onClick = {
-                        android.widget.Toast.makeText(context, "Google Play Billing not implemented yet.", android.widget.Toast.LENGTH_SHORT).show()
+                        val activity = context as? Activity
+                        if (activity != null) {
+                            viewModel.makePurchase(activity)
+                        } else {
+                            Toast.makeText(context, "Billing error: Activity context not available", Toast.LENGTH_SHORT).show()
+                        }
                         onDismiss()
                     },
                     modifier = Modifier.fillMaxWidth(),

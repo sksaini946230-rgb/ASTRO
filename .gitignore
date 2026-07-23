@@ -16,3 +16,9 @@
 local.properties
 .env
 debug.keystore
+
+# Scratch and patch files
+patch_*
+fix_*
+*.txt
+

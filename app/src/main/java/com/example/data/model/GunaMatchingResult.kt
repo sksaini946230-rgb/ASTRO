@@ -16,8 +16,10 @@ data class GunaMatchingResult(
     val isManglikBoy: Boolean,
     val isManglikGirl: Boolean,
     val mangalDoshaStatusHi: String,
+    val mangalDoshaStatusEn: String,
     val kootDetails: List<GunaKootDetail>,
     val compatibilityVerdictHi: String,
     val compatibilityVerdictEn: String,
-    val summaryReadingHi: String
+    val summaryReadingHi: String,
+    val summaryReadingEn: String
 )

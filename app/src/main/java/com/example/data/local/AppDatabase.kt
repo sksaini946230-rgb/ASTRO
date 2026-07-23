@@ -6,14 +6,15 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [KundaliEntity::class, PanchangCacheEntity::class, HoroscopeCacheEntity::class],
-    version = 2,
+    entities = [KundaliEntity::class, PanchangCacheEntity::class, HoroscopeCacheEntity::class, SavedReportEntity::class],
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun kundaliDao(): KundaliDao
     abstract fun panchangCacheDao(): PanchangCacheDao
     abstract fun horoscopeCacheDao(): HoroscopeCacheDao
+    abstract fun savedReportDao(): SavedReportDao
 
     companion object {
         @Volatile

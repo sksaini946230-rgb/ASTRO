@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -52,8 +53,8 @@ import com.example.util.LanguageManager
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
-    borderColor: Color = Color.Transparent,
-    borderWidth: Dp = 0.dp,
+    borderColor: Color = MaterialTheme.colorScheme.outline,
+    borderWidth: Dp = 1.dp,
     shape: RoundedCornerShape = RoundedCornerShape(16.dp),
     onClick: (() -> Unit)? = null,
     testTag: String? = null,
@@ -62,8 +63,8 @@ fun GlassCard(
     val cardModifier = modifier
         .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
         .clip(shape)
-        .background(Color(0x0AFFFFFF)) // Much simpler, flatter background
-        .then(if (borderWidth > 0.dp && borderColor != Color.Transparent) Modifier.border(width = borderWidth, color = borderColor, shape = shape) else Modifier)
+        .background(MaterialTheme.colorScheme.surface)
+        .border(width = borderWidth, color = borderColor, shape = shape)
         .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
         .padding(16.dp)
     
@@ -83,7 +84,7 @@ fun GoldGlowButton(
         modifier = modifier
             .testTag(testTag)
             .shadow(
-                elevation = 8.dp,
+                elevation = 6.dp,
                 shape = RoundedCornerShape(24.dp),
                 ambientColor = GoldPrimary,
                 spotColor = GoldGlow
@@ -106,7 +107,7 @@ fun GoldGlowButton(
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = CosmicDeepNavy,
+                        tint = Color.White,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -115,7 +116,7 @@ fun GoldGlowButton(
                     text = text,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = CosmicDeepNavy,
+                        color = Color.White,
                         fontSize = 15.sp
                     )
                 )
@@ -128,15 +129,15 @@ fun GoldGlowButton(
 fun GlassBadge(
     text: String,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = GlassWhite,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
     textColor: Color = TextGold,
-    borderColor: Color = GlassBorder
+    borderColor: Color = MaterialTheme.colorScheme.outline
 ) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .background(backgroundColor)
-            
+            .border(width = 0.8.dp, color = borderColor, shape = RoundedCornerShape(12.dp))
             .padding(horizontal = 10.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -164,7 +165,7 @@ fun SectionHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp), // reduced padding
+            .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != null) {
@@ -182,7 +183,7 @@ fun SectionHeader(
                 text = LanguageManager.getString(titleHi, titleEn),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimaryDark, // Softer color for headings, instead of Gold everywhere
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontSize = 18.sp
                 )
             )
@@ -193,7 +194,7 @@ fun SectionHeader(
                 Text(
                     text = sub,
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = TextSecondaryDark,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 12.sp
                     )
                 )
@@ -205,6 +206,53 @@ fun SectionHeader(
                 text = actionButtonText,
                 modifier = Modifier.clickable { onActionClick() }
             )
+        }
+    }
+}
+
+@Composable
+fun SubTabHeader(
+    selectedTab: Int,
+    tabs: List<String>,
+    onTabSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            tabs.forEachIndexed { index, title ->
+                val isSelected = (selectedTab == index)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(
+                            if (isSelected) GoldPrimary else Color.Transparent
+                        )
+                        .clickable { onTabSelected(index) }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 13.sp
+                        )
+                    )
+                }
+            }
         }
     }
 }

@@ -45,6 +45,8 @@ import com.example.ui.theme.TextSecondaryDark
 import com.example.util.AppLanguage
 import com.example.util.LanguageManager
 
+import androidx.compose.foundation.layout.statusBarsPadding
+
 @Composable
 fun TopHeaderBar(
     onLanguageToggle: () -> Unit = {},
@@ -52,8 +54,9 @@ fun TopHeaderBar(
     onSettingsClick: () -> Unit = {}
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = CosmicDeepNavy.copy(alpha = 0.95f)
+        modifier = Modifier.fillMaxWidth().statusBarsPadding(),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.98f),
+        tonalElevation = 2.dp
     ) {
         Row(
             modifier = Modifier
@@ -66,8 +69,8 @@ fun TopHeaderBar(
                 modifier = Modifier
                     .size(42.dp)
                     .clip(CircleShape)
-                    .border(1.2.dp, GlassBorder, CircleShape)
-                    .background(GlassWhite),
+                    .border(1.2.dp, MaterialTheme.colorScheme.outline, CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
@@ -86,7 +89,7 @@ fun TopHeaderBar(
                     text = "AstroVeda",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.ExtraBold,
-                        color = TextGold,
+                        color = GoldPrimary,
                         fontSize = 20.sp,
                         letterSpacing = 0.5.sp
                     )
@@ -97,7 +100,7 @@ fun TopHeaderBar(
                         "Vedic Panchang & Kundali 2026"
                     ),
                     style = MaterialTheme.typography.labelSmall.copy(
-                        color = TextSecondaryDark,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 11.sp
                     )
                 )
@@ -107,8 +110,8 @@ fun TopHeaderBar(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(16.dp))
-                    .background(GlassWhite)
-                    .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
                     .clickable { onLanguageToggle() }
                     .padding(horizontal = 10.dp, vertical = 6.dp)
                     .testTag("language_toggle_button"),
@@ -144,7 +147,7 @@ fun TopHeaderBar(
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = "PRO",
-                        tint = CosmicDeepNavy,
+                        tint = Color.White,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
@@ -152,7 +155,7 @@ fun TopHeaderBar(
                         text = "PRO",
                         style = MaterialTheme.typography.labelMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
-                            color = CosmicDeepNavy,
+                            color = Color.White,
                             fontSize = 11.sp
                         )
                     )
@@ -166,8 +169,8 @@ fun TopHeaderBar(
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(GlassWhite)
-                    .border(1.dp, GlassBorder, CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
                     .clickable { onSettingsClick() }
                     .testTag("settings_icon_button"),
                 contentAlignment = Alignment.Center

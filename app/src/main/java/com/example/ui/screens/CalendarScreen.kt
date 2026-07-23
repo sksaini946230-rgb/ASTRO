@@ -67,6 +67,24 @@ import com.example.ui.theme.TextGold
 import com.example.ui.theme.TextPrimaryDark
 import com.example.ui.theme.TextSecondaryDark
 import com.example.util.LanguageManager
+import com.example.util.AppLanguage
+
+fun getLocalizedDay(dayHi: String): String {
+    return if (LanguageManager.currentLanguage == AppLanguage.HINDI) {
+        dayHi
+    } else {
+        when (dayHi) {
+            "सोमवार" -> "Monday"
+            "मंगलवार" -> "Tuesday"
+            "बुधवार" -> "Wednesday"
+            "गुरुवार" -> "Thursday"
+            "शुक्रवार" -> "Friday"
+            "शनिवार" -> "Saturday"
+            "रविवार" -> "Sunday"
+            else -> dayHi
+        }
+    }
+}
 
 @Composable
 fun CalendarScreen(viewModel: MainViewModel) {
@@ -301,7 +319,7 @@ fun CalendarScreen(viewModel: MainViewModel) {
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = festival.nameHi,
+                            text = LanguageManager.getString(festival.nameHi, festival.nameEn),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = TextGold,
@@ -310,7 +328,7 @@ fun CalendarScreen(viewModel: MainViewModel) {
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "${festival.dateString} (${festival.dayNameHi})",
+                                text = "${festival.dateString} (${getLocalizedDay(festival.dayNameHi)})",
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     color = SacredOrange,
                                     fontWeight = FontWeight.SemiBold,
@@ -330,7 +348,7 @@ fun CalendarScreen(viewModel: MainViewModel) {
 
                     if (festival.regionFilter != "ALL") {
                         GlassBadge(
-                            text = if (festival.regionFilter == "RAJASTHAN") "राजस्थान" else "उत्तर भारत",
+                            text = if (festival.regionFilter == "RAJASTHAN") LanguageManager.getString("राजस्थान", "Rajasthan") else LanguageManager.getString("उत्तर भारत", "North India"),
                             backgroundColor = SacredOrange.copy(alpha = 0.2f),
                             textColor = SacredOrange,
                             borderColor = SacredOrange
@@ -440,7 +458,7 @@ fun FestivalCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = festival.nameHi,
+                        text = LanguageManager.getString(festival.nameHi, festival.nameEn),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = TextGold,
@@ -448,7 +466,7 @@ fun FestivalCard(
                         )
                     )
                     Text(
-                        text = "${festival.dateString} (${festival.dayNameHi})",
+                        text = "${festival.dateString} (${getLocalizedDay(festival.dayNameHi)})",
                         style = MaterialTheme.typography.labelMedium.copy(
                             color = SacredOrange,
                             fontWeight = FontWeight.SemiBold,
@@ -459,7 +477,7 @@ fun FestivalCard(
 
                 if (festival.regionFilter != "ALL") {
                     GlassBadge(
-                        text = if (festival.regionFilter == "RAJASTHAN") "राजस्थान विशेष" else "उत्तर भारत",
+                        text = if (festival.regionFilter == "RAJASTHAN") LanguageManager.getString("राजस्थान विशेष", "Rajasthan Spl") else LanguageManager.getString("उत्तर भारत", "North India"),
                         backgroundColor = SacredOrange.copy(alpha = 0.2f),
                         textColor = SacredOrange,
                         borderColor = SacredOrange
@@ -470,7 +488,7 @@ fun FestivalCard(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = festival.significanceHi,
+                text = LanguageManager.getString(festival.significanceHi, festival.significanceEn),
                 style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 14.sp, lineHeight = 20.sp)
             )
 
@@ -514,7 +532,7 @@ fun FestivalDetailDialog(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = festival.nameHi,
+                        text = LanguageManager.getString(festival.nameHi, festival.nameEn),
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             color = TextGold,
@@ -522,7 +540,7 @@ fun FestivalDetailDialog(
                         )
                     )
                     Text(
-                        text = "${festival.dateString} (${festival.dayNameHi})",
+                        text = "${festival.dateString} (${getLocalizedDay(festival.dayNameHi)})",
                         style = MaterialTheme.typography.labelMedium.copy(
                             color = SacredOrange,
                             fontWeight = FontWeight.SemiBold,
@@ -558,7 +576,7 @@ fun FestivalDetailDialog(
                     GlassBadge(text = "तिथि: ${festival.tithiHi}", textColor = GoldPrimary, borderColor = GoldPrimary)
                     if (festival.regionFilter != "ALL") {
                         GlassBadge(
-                            text = if (festival.regionFilter == "RAJASTHAN") "राजस्थान विशेष" else "उत्तर भारत",
+                            text = if (festival.regionFilter == "RAJASTHAN") LanguageManager.getString("राजस्थान विशेष", "Rajasthan Spl") else LanguageManager.getString("उत्तर भारत", "North India"),
                             textColor = SacredOrange,
                             borderColor = SacredOrange
                         )
@@ -594,7 +612,7 @@ fun FestivalDetailDialog(
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = festival.significanceHi,
+                            text = LanguageManager.getString(festival.significanceHi, festival.significanceEn),
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 color = TextPrimaryDark,
                                 fontSize = 14.sp,

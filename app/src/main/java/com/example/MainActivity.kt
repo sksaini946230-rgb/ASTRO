@@ -24,6 +24,7 @@ import com.example.ui.components.TopHeaderBar
 import com.example.ui.screens.CalendarScreen
 import com.example.ui.screens.KundaliScreen
 import com.example.ui.screens.MatchingScreen
+import com.example.ui.screens.MoreScreen
 import com.example.ui.screens.MuhuratScreen
 import com.example.ui.screens.NumerologyScreen
 import com.example.ui.screens.OnboardingScreen
@@ -32,14 +33,43 @@ import com.example.ui.screens.RashifalScreen
 import com.example.ui.screens.SavedProfilesScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.theme.AstroVedaTheme
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.Lifecycle
+import kotlinx.coroutines.launch
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+
 
 class MainActivity : ComponentActivity() {
 
     private val mainViewModel: MainViewModel by viewModels()
 
+    private var mInterstitialAd: InterstitialAd? = null
+    private var lastInterstitialShowTime = 0L
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        try {
+            MobileAds.initialize(this) {}
+            loadInterstitialAd()
+            com.example.worker.AstroNotificationWorker.scheduleDailyNotification(this)
+        } catch (e: Throwable) {
+            // fail gracefully
+        }
+
+        lifecycleScope.launch {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                mainViewModel.showInterstitialTrigger.collect {
+                    showInterstitialAd()
+                }
+            }
+        }
 
         setContent {
             AstroVedaTheme {
@@ -59,12 +89,13 @@ class MainActivity : ComponentActivity() {
                             TopHeaderBar(
                                 onLanguageToggle = { mainViewModel.toggleLanguage() },
                                 onPremiumClick = { mainViewModel.showPremiumDialog.value = true },
-                                onSettingsClick = { mainViewModel.selectTab(AppTab.SETTINGS) }
+                                onSettingsClick = { mainViewModel.navigateToMore(subTab = 1) }
                             )
                         },
                         bottomBar = {
                             Column {
-                                if (selectedTab == AppTab.PANCHANG || selectedTab == AppTab.CALENDAR) {
+                                val isPro by mainViewModel.isProUser.collectAsState()
+                                if (!isPro && selectedTab == AppTab.PANCHANG) {
                                     AdBanner(
                                         onRemoveAdsClick = { mainViewModel.showPremiumDialog.value = true }
                                     )
@@ -95,22 +126,16 @@ class MainActivity : ComponentActivity() {
                                 Crossfade(targetState = selectedTab, label = "TabTransition") { tab ->
                                     when (tab) {
                                         AppTab.PANCHANG -> PanchangScreen(mainViewModel)
-                                        AppTab.CALENDAR -> CalendarScreen(mainViewModel)
                                         AppTab.RASHIFAL -> RashifalScreen(mainViewModel)
                                         AppTab.KUNDALI -> KundaliScreen(mainViewModel)
                                         AppTab.MUHURAT -> MuhuratScreen(mainViewModel)
-                                        AppTab.MATCHING -> MatchingScreen(mainViewModel)
-                                        AppTab.NUMEROLOGY_AI -> NumerologyScreen(mainViewModel)
-                                        AppTab.SAVED_PROFILES -> SavedProfilesScreen(mainViewModel)
-                                        AppTab.SETTINGS -> SettingsScreen(
-                                            viewModel = mainViewModel,
-                                            onShowPremiumDialog = { mainViewModel.showPremiumDialog.value = true }
-                                        )
+                                        AppTab.MORE -> MoreScreen(mainViewModel)
                                     }
                                 }
 
                                 if (showPremium) {
                                     PremiumDialog(
+                                        viewModel = mainViewModel,
                                         onDismiss = { mainViewModel.showPremiumDialog.value = false }
                                     )
                                 }
@@ -119,6 +144,56 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    private fun loadInterstitialAd() {
+        val interstitialId = try {
+            com.example.BuildConfig.ADMOB_INTERSTITIAL_ID.ifBlank { "ca-app-pub-3940256099942544/1033173712" }
+        } catch (e: Throwable) {
+            "ca-app-pub-3940256099942544/1033173712"
+        }
+
+        if (interstitialId.isBlank()) return
+
+        val adRequest = AdRequest.Builder().build()
+        try {
+            InterstitialAd.load(this, interstitialId, adRequest, object : InterstitialAdLoadCallback() {
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    mInterstitialAd = null
+                }
+
+                override fun onAdLoaded(interstitialAd: InterstitialAd) {
+                    mInterstitialAd = interstitialAd
+                }
+            })
+        } catch (e: Throwable) {
+            // fail gracefully
+        }
+    }
+
+    private fun showInterstitialAd() {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastInterstitialShowTime < 60_000L) {
+            // Frequency capped - do not show too often
+            return
+        }
+
+        if (mainViewModel.isProUser.value) {
+            return
+        }
+
+        try {
+            mInterstitialAd?.let { ad ->
+                ad.show(this)
+                mInterstitialAd = null
+                lastInterstitialShowTime = currentTime
+                loadInterstitialAd() // Preload the next one
+            } ?: run {
+                loadInterstitialAd()
+            }
+        } catch (e: Throwable) {
+            // fail gracefully
         }
     }
 }

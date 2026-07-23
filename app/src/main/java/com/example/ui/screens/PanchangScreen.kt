@@ -78,6 +78,16 @@ import com.example.ui.theme.TextGold
 import com.example.ui.theme.TextPrimaryDark
 import com.example.ui.theme.TextSecondaryDark
 import com.example.util.LanguageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+
+import com.example.ui.components.SubTabHeader
+import com.example.ui.AppTab
 
 @Composable
 fun PanchangScreen(viewModel: MainViewModel) {
@@ -86,22 +96,59 @@ fun PanchangScreen(viewModel: MainViewModel) {
     val isChoghadiyaDaytime by viewModel.choghadiyaDaytime.collectAsState()
     val choghadiyaSlots = viewModel.choghadiyaSlots
 
+    val currentSubTab by viewModel.panchangSubTab.collectAsState()
+
     var showCityDropdown by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    val locationPermissionsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (fineGranted || coarseGranted) {
+            viewModel.detectGPSLocation(context) { success ->
+                if (!success) {
+                    Toast.makeText(context, "स्थिति प्राप्त करने में असमर्थ (Unable to fetch location)", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            Toast.makeText(context, "अनुमति अस्वीकार कर दी गई (Permission Denied)", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
         containerColor = Color.Transparent,
         modifier = Modifier.fillMaxSize()
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                top = paddingValues.calculateTopPadding() + 8.dp,
-                end = 16.dp,
-                bottom = paddingValues.calculateBottomPadding() + 16.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = paddingValues.calculateTopPadding())
         ) {
+            SubTabHeader(
+                selectedTab = currentSubTab,
+                tabs = listOf(
+                    LanguageManager.getString("दैनिक पंचांग", "Daily Panchang"),
+                    LanguageManager.getString("मासिक कैलेंडर", "Monthly Calendar")
+                ),
+                onTabSelected = { viewModel.setPanchangSubTab(it) },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+            )
+
+            if (currentSubTab == 1) {
+                CalendarScreen(viewModel)
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        start = 16.dp,
+                        top = 8.dp,
+                        end = 16.dp,
+                        bottom = paddingValues.calculateBottomPadding() + 16.dp
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
         // Hero Cosmic Banner Header
         item {
             Spacer(modifier = Modifier.height(8.dp))
@@ -188,6 +235,28 @@ fun PanchangScreen(viewModel: MainViewModel) {
                                 expanded = showCityDropdown,
                                 onDismissRequest = { showCityDropdown = false }
                             ) {
+                                DropdownMenuItem(
+                                    text = { Text("📍 वर्तमान स्थान (Current GPS)") },
+                                    onClick = {
+                                        showCityDropdown = false
+                                        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                                            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                                            viewModel.detectGPSLocation(context) { success ->
+                                                if (!success) {
+                                                    Toast.makeText(context, "स्थिति प्राप्त करने में असमर्थ (Unable to fetch location)", Toast.LENGTH_SHORT).show()
+                                                }
+                                            }
+                                        } else {
+                                            locationPermissionsLauncher.launch(
+                                                arrayOf(
+                                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                                )
+                                            )
+                                        }
+                                    }
+                                )
+
                                 PanchangCalculator.popularCities.forEach { city ->
                                     DropdownMenuItem(
                                         text = { Text("${city.cityNameHindi} (${city.cityName})") },
@@ -545,6 +614,8 @@ fun PanchangScreen(viewModel: MainViewModel) {
         item {
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+}
     }
 }
 }

@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,17 +20,39 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.ui.graphics.Color
+import com.example.ui.theme.AuspiciousGreen
+import com.example.ui.theme.CosmicDarkBlue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,12 +61,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.local.KundaliEntity
+import com.example.data.local.SavedReportEntity
 import com.example.ui.AppTab
 import com.example.ui.MainViewModel
 import com.example.ui.components.GlassBadge
 import com.example.ui.components.GlassCard
+import com.example.ui.components.GoldGlowButton
+import com.example.ui.components.M3DatePickerDialog
+import com.example.ui.components.M3TimePickerDialog
 import com.example.ui.components.SectionHeader
 import com.example.ui.theme.CosmicCardSurface
+import com.example.ui.theme.CosmicDeepNavy
 import com.example.ui.theme.GlassBorder
 import com.example.ui.theme.GlassWhite
 import com.example.ui.theme.GoldPrimary
@@ -52,10 +80,27 @@ import com.example.ui.theme.SacredOrange
 import com.example.ui.theme.TextGold
 import com.example.ui.theme.TextPrimaryDark
 import com.example.ui.theme.TextSecondaryDark
+import com.example.util.LanguageManager
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedProfilesScreen(viewModel: MainViewModel) {
     val profiles by viewModel.savedProfiles.collectAsState()
+    val savedReports by viewModel.savedReports.collectAsState()
+    var showAddDialog by remember { mutableStateOf(false) }
+
+    if (showAddDialog) {
+        AddProfileDialog(
+            onSave = { name, dob, tob, place ->
+                viewModel.saveNewProfile(name, dob, tob, place)
+                showAddDialog = false
+            },
+            onDismiss = { showAddDialog = false }
+        )
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -67,9 +112,21 @@ fun SavedProfilesScreen(viewModel: MainViewModel) {
             Spacer(modifier = Modifier.height(8.dp))
             SectionHeader(
                 titleHi = "सहेजी गई कुण्डलियां (Saved Profiles)",
-                titleEn = "Saved Birth Charts",
-                subtitleHi = "Room Database ऑफलाइन संग्रहण",
-                subtitleEn = "Offline Local Room Database"
+                titleEn = "Saved Birth Profiles",
+                subtitleHi = "स्थानीय डेटाबेस - त्वरित लोड के लिए",
+                subtitleEn = "Local Room Storage for Quick Access"
+            )
+        }
+
+        item {
+            CloudBackupCard(viewModel = viewModel)
+        }
+
+        item {
+            GoldGlowButton(
+                text = LanguageManager.getString("+ नया प्रोफाइल जोड़ें", "+ Add New Profile"),
+                onClick = { showAddDialog = true },
+                modifier = Modifier.fillMaxWidth().testTag("add_new_profile_button")
             )
         }
 
@@ -85,88 +142,544 @@ fun SavedProfilesScreen(viewModel: MainViewModel) {
                         Icon(imageVector = Icons.Default.Bookmark, contentDescription = null, tint = GoldPrimary, modifier = Modifier.size(40.dp))
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "कोई कुण्डली प्रोफाइल सहेजी नहीं गई है।",
+                            text = LanguageManager.getString("कोई कुण्डली प्रोफाइल सहेजी नहीं गई है।", "No saved birth chart profiles found."),
                             style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold)
                         )
                         Text(
-                            text = "'कुण्डली' टैब में जाएं और अपनी कुण्डली सहेजें।",
+                            text = LanguageManager.getString("ऊपर दिए गए बटन से नया प्रोफाइल जोड़ें।", "Tap above to add a new birth profile."),
                             style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark, fontSize = 12.sp)
                         )
                     }
                 }
             }
         } else {
-            items(profiles) { profile ->
-                SavedProfileCard(
-                    profile = profile,
-                    onOpen = {
-                        viewModel.generateKundaliChart(
-                            profile.name, profile.dateOfBirth, profile.timeOfBirth, profile.placeOfBirth
+            items(profiles, key = { it.id }) { profile ->
+                val dismissState = rememberSwipeToDismissBoxState(
+                    confirmValueChange = { dismissValue ->
+                        if (dismissValue == SwipeToDismissBoxValue.EndToStart || dismissValue == SwipeToDismissBoxValue.StartToEnd) {
+                            viewModel.deleteProfile(profile)
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                )
+
+                SwipeToDismissBox(
+                    state = dismissState,
+                    backgroundContent = {
+                        val color = when (dismissState.dismissDirection) {
+                            SwipeToDismissBoxValue.EndToStart, SwipeToDismissBoxValue.StartToEnd -> InauspiciousRed.copy(alpha = 0.8f)
+                            else -> Color.Transparent
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(color)
+                                .padding(horizontal = 20.dp),
+                            contentAlignment = Alignment.CenterEnd
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Swipe to Delete Profile",
+                                tint = Color.White
+                            )
+                        }
+                    }
+                ) {
+                    SavedProfileCard(
+                        profile = profile,
+                        onOpenKundali = {
+                            viewModel.generateKundaliChart(
+                                profile.name, profile.dateOfBirth, profile.timeOfBirth, profile.placeOfBirth
+                            )
+                            viewModel.navigateToKundali(0)
+                        },
+                        onUseForMatchingBoy = {
+                            viewModel.matchBoyName.value = profile.name
+                            viewModel.matchBoyDob.value = profile.dateOfBirth
+                            viewModel.navigateToKundali(1)
+                        },
+                        onUseForMatchingGirl = {
+                            viewModel.matchGirlName.value = profile.name
+                            viewModel.matchGirlDob.value = profile.dateOfBirth
+                            viewModel.navigateToKundali(1)
+                        },
+                        onDelete = { viewModel.deleteProfile(profile) }
+                    )
+                }
+            }
+        }
+
+        // Saved Astrology Reports Section
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            SectionHeader(
+                titleHi = "सहेजी गई रिपोर्ट (Saved Reports)",
+                titleEn = "Saved Astrology Reports",
+                subtitleHi = "ऑफ़लाइन रिपोर्ट संग्रहण",
+                subtitleEn = "Offline Stored Astrology Reports"
+            )
+        }
+
+        if (savedReports.isEmpty()) {
+            item {
+                GlassCard(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = LanguageManager.getString("कोई रिपोर्ट सहेजी नहीं गई है।", "No saved reports available."),
+                            style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold)
                         )
-                        viewModel.selectTab(AppTab.KUNDALI)
-                    },
-                    onDelete = { viewModel.deleteProfile(profile) }
+                    }
+                }
+            }
+        } else {
+            items(savedReports) { report ->
+                SavedReportCard(
+                    report = report,
+                    onDelete = { viewModel.deleteReport(report) }
                 )
             }
         }
 
         item {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
 
 @Composable
+fun AddProfileDialog(
+    onSave: (String, String, String, String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var dob by remember { mutableStateOf("1995-05-15") }
+    var tob by remember { mutableStateOf("08:30") }
+    var place by remember { mutableStateOf("Jaipur, Rajasthan") }
+
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    if (showDatePicker) {
+        M3DatePickerDialog(
+            initialDateString = dob,
+            onDateSelected = { dob = it },
+            onDismiss = { showDatePicker = false }
+        )
+    }
+
+    if (showTimePicker) {
+        M3TimePickerDialog(
+            initialTimeString = tob,
+            onTimeSelected = { tob = it },
+            onDismiss = { showTimePicker = false }
+        )
+    }
+
+    val tfColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = GoldPrimary,
+        unfocusedBorderColor = GlassBorder,
+        focusedLabelColor = GoldPrimary,
+        unfocusedLabelColor = TextSecondaryDark,
+        focusedTextColor = TextPrimaryDark,
+        unfocusedTextColor = TextPrimaryDark
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = CosmicDeepNavy,
+        title = {
+            Text(
+                text = LanguageManager.getString("नया प्रोफाइल जोड़ें", "Add Birth Profile"),
+                color = TextGold,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(LanguageManager.getString("नाम", "Name")) },
+                    colors = tfColors,
+                    modifier = Modifier.fillMaxWidth().testTag("add_profile_name")
+                )
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        OutlinedTextField(
+                            value = dob,
+                            onValueChange = { dob = it },
+                            readOnly = true,
+                            label = { Text(LanguageManager.getString("जन्म तिथि", "DOB")) },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.CalendarMonth,
+                                    contentDescription = "DOB",
+                                    tint = GoldPrimary
+                                )
+                            },
+                            colors = tfColors,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { showDatePicker = true }
+                        )
+                    }
+
+                    Box(modifier = Modifier.weight(1f)) {
+                        OutlinedTextField(
+                            value = tob,
+                            onValueChange = { tob = it },
+                            readOnly = true,
+                            label = { Text(LanguageManager.getString("समय", "Time")) },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Schedule,
+                                    contentDescription = "TOB",
+                                    tint = GoldPrimary
+                                )
+                            },
+                            colors = tfColors,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clickable { showTimePicker = true }
+                        )
+                    }
+                }
+
+                OutlinedTextField(
+                    value = place,
+                    onValueChange = { place = it },
+                    label = { Text(LanguageManager.getString("जन्म स्थान", "Place of Birth")) },
+                    colors = tfColors,
+                    modifier = Modifier.fillMaxWidth().testTag("add_profile_place")
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (name.isNotBlank()) {
+                        onSave(name, dob, tob, place)
+                    }
+                }
+            ) {
+                Text(LanguageManager.getString("सहेजें", "Save"), color = GoldPrimary, fontWeight = FontWeight.Bold)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(LanguageManager.getString("रद्द करें", "Cancel"), color = TextSecondaryDark)
+            }
+        }
+    )
+}
+
+@Composable
 fun SavedProfileCard(
     profile: KundaliEntity,
-    onOpen: () -> Unit,
+    onOpenKundali: () -> Unit,
+    onUseForMatchingBoy: () -> Unit,
+    onUseForMatchingGirl: () -> Unit,
     onDelete: () -> Unit
 ) {
     GlassCard(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(GlassWhite)
-                        .border(1.dp, GlassBorder, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = GoldPrimary, modifier = Modifier.size(22.dp))
-                }
+        Column(modifier = Modifier.fillMaxWidth().padding(4.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(CircleShape)
+                            .background(GlassWhite)
+                            .border(1.dp, GlassBorder, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = GoldPrimary, modifier = Modifier.size(24.dp))
+                    }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
 
-                Column {
-                    Text(
-                        text = profile.name,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = TextGold, fontSize = 16.sp)
-                    )
-                    Text(
-                        text = "${profile.dateOfBirth} | ${profile.timeOfBirth}",
-                        style = MaterialTheme.typography.bodySmall.copy(color = SacredOrange, fontSize = 12.sp)
-                    )
-                    Text(
-                        text = profile.placeOfBirth,
-                        style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 11.sp)
-                    )
-                }
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onOpen, modifier = Modifier.testTag("open_profile_${profile.id}")) {
-                    Icon(imageVector = Icons.Default.Visibility, contentDescription = "Open", tint = GoldPrimary)
+                    Column {
+                        Text(
+                            text = profile.name,
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = TextGold, fontSize = 16.sp)
+                        )
+                        Text(
+                            text = "${profile.dateOfBirth} | ${profile.timeOfBirth}",
+                            style = MaterialTheme.typography.bodySmall.copy(color = SacredOrange, fontSize = 12.sp)
+                        )
+                        Text(
+                            text = profile.placeOfBirth,
+                            style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 11.sp)
+                        )
+                    }
                 }
 
                 IconButton(onClick = onDelete, modifier = Modifier.testTag("delete_profile_${profile.id}")) {
                     Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete", tint = InauspiciousRed)
                 }
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                GlassBadge(
+                    text = LanguageManager.getString("कुण्डली बनाएं", "Generate Chart"),
+                    textColor = GoldPrimary,
+                    borderColor = GoldPrimary,
+                    modifier = Modifier.clickable { onOpenKundali() }
+                )
+
+                GlassBadge(
+                    text = LanguageManager.getString("वर (Boy)", "Use Boy"),
+                    textColor = GoldPrimary,
+                    borderColor = GlassBorder,
+                    modifier = Modifier.clickable { onUseForMatchingBoy() }
+                )
+
+                GlassBadge(
+                    text = LanguageManager.getString("कन्या (Girl)", "Use Girl"),
+                    textColor = SacredOrange,
+                    borderColor = SacredOrange,
+                    modifier = Modifier.clickable { onUseForMatchingGirl() }
+                )
+            }
         }
     }
 }
+
+@Composable
+fun SavedReportCard(
+    report: SavedReportEntity,
+    onDelete: () -> Unit
+) {
+    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()) }
+    val formattedDate = remember(report.createdAt) { dateFormat.format(Date(report.createdAt)) }
+
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = report.title,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = TextGold,
+                            fontSize = 15.sp
+                        )
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = report.profileName,
+                            style = MaterialTheme.typography.bodySmall.copy(color = SacredOrange, fontSize = 12.sp)
+                        )
+                        Text(
+                            text = "• $formattedDate",
+                            style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 11.sp)
+                        )
+                    }
+                }
+
+                IconButton(
+                    onClick = onDelete,
+                    modifier = Modifier.testTag("delete_report_${report.id}")
+                ) {
+                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete Report", tint = InauspiciousRed)
+                }
+            }
+
+            if (report.summaryText.isNotBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = report.summaryText,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = TextPrimaryDark,
+                        fontSize = 13.sp,
+                        lineHeight = 18.sp
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CloudBackupCard(
+    viewModel: MainViewModel
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val currentUser by viewModel.currentUser.collectAsState()
+    val backupStatusMessage by viewModel.backupStatusMessage.collectAsState()
+
+    GlassCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CloudUpload,
+                        contentDescription = "Cloud Backup",
+                        tint = TextGold,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        text = LanguageManager.getString("क्लाउड बैकअप (Firebase)", "Firebase Cloud Sync"),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = TextGold
+                        )
+                    )
+                }
+
+                if (currentUser != null) {
+                    GlassBadge(
+                        text = "Online",
+                        backgroundColor = AuspiciousGreen.copy(alpha = 0.2f),
+                        textColor = AuspiciousGreen
+                    )
+                } else {
+                    GlassBadge(
+                        text = "Offline",
+                        backgroundColor = Color.Gray.copy(alpha = 0.2f),
+                        textColor = TextSecondaryDark
+                    )
+                }
+            }
+
+            if (currentUser != null) {
+                Text(
+                    text = LanguageManager.getString(
+                        "साइन इन किया: ${currentUser?.displayName ?: currentUser?.email ?: "उपयोगकर्ता"}",
+                        "Signed in as: ${currentUser?.displayName ?: currentUser?.email ?: "User"}"
+                    ),
+                    style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryDark)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        GoldGlowButton(
+                            text = LanguageManager.getString("बैकअप (Backup)", "Backup to Cloud"),
+                            onClick = { viewModel.backupProfilesToCloud() },
+                            modifier = Modifier.fillMaxWidth().testTag("backup_to_cloud_button")
+                        )
+                    }
+
+                    Box(modifier = Modifier.weight(1f)) {
+                        OutlinedButton(
+                            onClick = { viewModel.restoreProfilesFromCloud() },
+                            modifier = Modifier.fillMaxWidth().testTag("restore_from_cloud_button"),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = TextGold),
+                            border = BorderStroke(1.dp, TextGold)
+                        ) {
+                            Text(
+                                text = LanguageManager.getString("पुनर्प्राप्त (Restore)", "Restore"),
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                        }
+                    }
+                }
+
+                TextButton(
+                    onClick = { viewModel.signOutFirebase() },
+                    modifier = Modifier.align(Alignment.End).testTag("sign_out_button")
+                ) {
+                    Text(
+                        text = LanguageManager.getString("साइन आउट (Sign Out)", "Sign Out"),
+                        style = MaterialTheme.typography.labelSmall.copy(color = InauspiciousRed)
+                    )
+                }
+            } else {
+                Text(
+                    text = LanguageManager.getString(
+                        "अपने कुण्डली प्रोफाइल को सुरक्षित रूप से गूगल क्लाउड पर बैकअप करने के लिए गूगल से साइन इन करें।",
+                        "Sign in with Google to securely back up and sync your Kundali profiles to Firebase Cloud."
+                    ),
+                    style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark)
+                )
+
+                GoldGlowButton(
+                    text = LanguageManager.getString("Google से साइन इन करें", "Sign In with Google"),
+                    onClick = { viewModel.signInWithGoogle(context) },
+                    modifier = Modifier.fillMaxWidth().testTag("google_sign_in_button")
+                )
+            }
+
+            if (!backupStatusMessage.isNullOrBlank()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(CosmicDarkBlue.copy(alpha = 0.6f))
+                        .border(1.dp, TextGold.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                        .padding(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = backupStatusMessage!!,
+                            style = MaterialTheme.typography.bodySmall.copy(color = TextGold),
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(
+                            onClick = { viewModel.clearBackupStatusMessage() },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Clear Message",
+                                tint = TextSecondaryDark,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

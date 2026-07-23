@@ -15,8 +15,11 @@ import com.example.astro.RashifalProvider
 import com.example.data.ai.GeminiAstroService
 import com.example.data.local.AppDatabase
 import com.example.data.local.AstroCacheRepository
+import com.example.data.local.DatabaseProvider
 import com.example.data.local.KundaliEntity
 import com.example.data.local.KundaliRepository
+import com.example.data.local.SavedReportEntity
+import com.example.data.local.SavedReportRepository
 import com.example.data.model.ChoghadiyaSlot
 import com.example.data.model.CityLocation
 import com.example.data.model.FestivalData
@@ -27,6 +30,17 @@ import com.example.data.model.NumerologyData
 import com.example.data.model.PanchangData
 import com.example.data.model.RashifalData
 import com.example.util.LanguageManager
+import com.example.service.BillingManager
+import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import android.Manifest
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,20 +49,49 @@ import java.util.Date
 
 enum class AppTab {
     PANCHANG,
-    CALENDAR,
     RASHIFAL,
     KUNDALI,
     MUHURAT,
-    MATCHING,
-    NUMEROLOGY_AI,
-    SAVED_PROFILES,
-    SETTINGS
+    MORE
 }
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: KundaliRepository
+    private val reportRepository: SavedReportRepository
     private val cacheRepository: AstroCacheRepository
+
+    // SharedPreferences for local billing persistence
+    private val sharedPrefs = application.getSharedPreferences("astroveda_prefs", Context.MODE_PRIVATE)
+
+    private val _isProUser = MutableStateFlow(sharedPrefs.getBoolean("is_pro", false))
+    val isProUser: StateFlow<Boolean> = _isProUser.asStateFlow()
+
+    fun setProUser(isPro: Boolean) {
+        _isProUser.value = isPro
+        sharedPrefs.edit().putBoolean("is_pro", isPro).apply()
+    }
+
+    // Google Play Billing Client Wrapper
+    private val billingManager = BillingManager(application) { isUnlocked ->
+        setProUser(isUnlocked)
+    }
+
+    val isBillingReady = billingManager.isReady
+    val billingErrorMessage = billingManager.errorMessage
+    val subscriptionProductDetails = billingManager.productDetails
+
+    fun makePurchase(activity: android.app.Activity) {
+        billingManager.launchPurchaseFlow(activity)
+    }
+
+    // Interstitial ad trigger
+    private val _showInterstitialTrigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val showInterstitialTrigger: SharedFlow<Unit> = _showInterstitialTrigger.asSharedFlow()
+
+    fun triggerInterstitial() {
+        _showInterstitialTrigger.tryEmit(Unit)
+    }
 
     // Global Error State for ErrorBoundary integration
     private val _globalError = MutableStateFlow<Throwable?>(null)
@@ -78,8 +121,53 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _selectedTab = MutableStateFlow(AppTab.PANCHANG)
     val selectedTab: StateFlow<AppTab> = _selectedTab.asStateFlow()
 
+    // Sub-tab states
+    private val _panchangSubTab = MutableStateFlow(0) // 0: Daily Panchang, 1: Monthly Calendar
+    val panchangSubTab: StateFlow<Int> = _panchangSubTab.asStateFlow()
+
+    private val _kundaliSubTab = MutableStateFlow(0) // 0: Kundali Chart, 1: Guna Matching, 2: Astro AI
+    val kundaliSubTab: StateFlow<Int> = _kundaliSubTab.asStateFlow()
+
+    private val _moreSubTab = MutableStateFlow(0) // 0: Saved Profiles, 1: Settings
+    val moreSubTab: StateFlow<Int> = _moreSubTab.asStateFlow()
+
     fun selectTab(tab: AppTab) {
         _selectedTab.value = tab
+    }
+
+    fun setPanchangSubTab(subTab: Int) {
+        _panchangSubTab.value = subTab
+    }
+
+    fun setKundaliSubTab(subTab: Int) {
+        _kundaliSubTab.value = subTab
+    }
+
+    fun setMoreSubTab(subTab: Int) {
+        _moreSubTab.value = subTab
+    }
+
+    fun navigateToPanchang(subTab: Int = 0) {
+        _panchangSubTab.value = subTab
+        _selectedTab.value = AppTab.PANCHANG
+    }
+
+    fun navigateToKundali(subTab: Int = 0) {
+        _kundaliSubTab.value = subTab
+        _selectedTab.value = AppTab.KUNDALI
+    }
+
+    fun navigateToMore(subTab: Int = 0) {
+        _moreSubTab.value = subTab
+        _selectedTab.value = AppTab.MORE
+    }
+
+    fun navigateToRashifal() {
+        _selectedTab.value = AppTab.RASHIFAL
+    }
+
+    fun navigateToMuhurat() {
+        _selectedTab.value = AppTab.MUHURAT
     }
 
     // Language Toggle
@@ -94,6 +182,65 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setCity(city: CityLocation) {
         _selectedCity.value = city
         recalculatePanchang()
+    }
+
+    fun detectGPSLocation(context: Context, onComplete: (Boolean) -> Unit = {}) {
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            onComplete(false)
+            return
+        }
+
+        try {
+            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+            fusedLocationClient.getCurrentLocation(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                CancellationTokenSource().token
+            ).addOnSuccessListener { location ->
+                if (location != null) {
+                    val gpsCity = CityLocation(
+                        cityName = "Current Location",
+                        cityNameHindi = "वर्तमान स्थान",
+                        state = "GPS",
+                        latitude = location.latitude,
+                        longitude = location.longitude
+                    )
+                    setCity(gpsCity)
+                    onComplete(true)
+                } else {
+                    fusedLocationClient.lastLocation.addOnSuccessListener { lastLoc ->
+                        if (lastLoc != null) {
+                            val gpsCity = CityLocation(
+                                cityName = "Current Location",
+                                cityNameHindi = "वर्तमान स्थान",
+                                state = "GPS",
+                                latitude = lastLoc.latitude,
+                                longitude = lastLoc.longitude
+                            )
+                            setCity(gpsCity)
+                            onComplete(true)
+                        } else {
+                            onComplete(false)
+                        }
+                    }.addOnFailureListener {
+                        onComplete(false)
+                    }
+                }
+            }.addOnFailureListener {
+                onComplete(false)
+            }
+        } catch (e: SecurityException) {
+            onComplete(false)
+        } catch (e: Throwable) {
+            onComplete(false)
+        }
     }
 
     // Notification Toggles
@@ -200,6 +347,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val result = KundaliCalculator.generateKundali(name, dob, tob, place)
                 _generatedKundali.value = result
+                triggerInterstitial()
             } catch (e: Exception) {
                 reportError(e)
             } finally {
@@ -231,6 +379,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     matchGirlName.value, matchGirlDob.value, matchGirlTob.value
                 )
                 _gunaResult.value = result
+                triggerInterstitial()
             } catch (e: Exception) {
                 reportError(e)
             } finally {
@@ -327,20 +476,143 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun saveNewProfile(name: String, dob: String, tob: String, place: String) {
+        viewModelScope.launch {
+            val entity = KundaliEntity(
+                name = name,
+                gender = "MALE",
+                dateOfBirth = dob,
+                timeOfBirth = tob,
+                placeOfBirth = place,
+                latitude = _selectedCity.value.latitude,
+                longitude = _selectedCity.value.longitude,
+                notes = "Saved Profile"
+            )
+            repository.saveProfile(entity)
+        }
+    }
+
     fun deleteProfile(entity: KundaliEntity) {
         viewModelScope.launch {
             repository.deleteProfile(entity)
         }
     }
 
+    // Room DB Saved Reports
+    private val _savedReports = MutableStateFlow<List<SavedReportEntity>>(emptyList())
+    val savedReports: StateFlow<List<SavedReportEntity>> = _savedReports.asStateFlow()
+
+    private fun loadSavedReports() {
+        viewModelScope.launch {
+            reportRepository.allReports.collect { list ->
+                _savedReports.value = list
+            }
+        }
+    }
+
+    fun saveReport(
+        title: String,
+        reportType: String,
+        profileName: String,
+        summaryText: String,
+        detailedJsonData: String = ""
+    ) {
+        viewModelScope.launch {
+            val entity = SavedReportEntity(
+                title = title,
+                reportType = reportType,
+                profileName = profileName,
+                summaryText = summaryText,
+                detailedJsonData = detailedJsonData
+            )
+            reportRepository.saveReport(entity)
+        }
+    }
+
+    fun deleteReport(entity: SavedReportEntity) {
+        viewModelScope.launch {
+            reportRepository.deleteReport(entity)
+        }
+    }
+
+    // Firebase Auth & Cloud Backup
+    private val authService = com.example.service.FirebaseAuthService()
+    private val _currentUser = MutableStateFlow<com.google.firebase.auth.FirebaseUser?>(authService.currentUser)
+    val currentUser: StateFlow<com.google.firebase.auth.FirebaseUser?> = _currentUser.asStateFlow()
+
+    private val _backupStatusMessage = MutableStateFlow<String?>(null)
+    val backupStatusMessage: StateFlow<String?> = _backupStatusMessage.asStateFlow()
+
+    fun signInWithGoogle(context: android.content.Context, webClientId: String = "") {
+        viewModelScope.launch {
+            _backupStatusMessage.value = "Signing in with Google..."
+            val result = authService.signInWithGoogle(context, webClientId)
+            result.onSuccess { user ->
+                _currentUser.value = user
+                _backupStatusMessage.value = "Signed in as ${user.displayName ?: user.email}"
+            }.onFailure { err ->
+                _backupStatusMessage.value = "Sign-In failed: ${err.message}"
+            }
+        }
+    }
+
+    fun signOutFirebase() {
+        authService.signOut()
+        _currentUser.value = null
+        _backupStatusMessage.value = "Signed out"
+    }
+
+    fun backupProfilesToCloud() {
+        val user = _currentUser.value
+        if (user == null) {
+            _backupStatusMessage.value = "Please sign in with Google first."
+            return
+        }
+        viewModelScope.launch {
+            _backupStatusMessage.value = "Backing up profiles to cloud..."
+            val profiles = _savedProfiles.value
+            val result = authService.backupProfilesToCloud(profiles)
+            result.onSuccess { count ->
+                _backupStatusMessage.value = "Successfully backed up $count profiles to cloud!"
+            }.onFailure { err ->
+                _backupStatusMessage.value = "Backup failed: ${err.message}"
+            }
+        }
+    }
+
+    fun restoreProfilesFromCloud() {
+        val user = _currentUser.value
+        if (user == null) {
+            _backupStatusMessage.value = "Please sign in with Google first."
+            return
+        }
+        viewModelScope.launch {
+            _backupStatusMessage.value = "Restoring profiles from cloud..."
+            val result = authService.restoreProfilesFromCloud()
+            result.onSuccess { cloudProfiles ->
+                cloudProfiles.forEach { profile ->
+                    repository.saveProfile(profile)
+                }
+                _backupStatusMessage.value = "Restored ${cloudProfiles.size} profiles from cloud!"
+            }.onFailure { err ->
+                _backupStatusMessage.value = "Restore failed: ${err.message}"
+            }
+        }
+    }
+
+    fun clearBackupStatusMessage() {
+        _backupStatusMessage.value = null
+    }
+
     // Premium Dialog state
     var showPremiumDialog = MutableStateFlow(false)
 
     init {
-        val db = AppDatabase.getDatabase(application)
-        repository = KundaliRepository(db.kundaliDao())
-        cacheRepository = AstroCacheRepository(db.panchangCacheDao(), db.horoscopeCacheDao())
+        repository = DatabaseProvider.getKundaliRepository(application)
+        reportRepository = DatabaseProvider.getSavedReportRepository(application)
+        cacheRepository = DatabaseProvider.getAstroCacheRepository(application)
         loadSavedProfiles()
+        loadSavedReports()
         recalculatePanchang()
         loadHoroscopesWithCache()
         fetchAstroNews()

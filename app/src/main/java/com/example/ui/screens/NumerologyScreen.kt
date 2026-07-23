@@ -72,6 +72,9 @@ import com.example.ui.theme.TextPrimaryDark
 import com.example.ui.theme.TextSecondaryDark
 import com.example.util.LanguageManager
 
+import com.example.ui.components.SubTabHeader
+import com.example.ui.AppTab
+
 @Composable
 fun NumerologyScreen(viewModel: MainViewModel) {
     val numData by viewModel.numerologyData.collectAsState()

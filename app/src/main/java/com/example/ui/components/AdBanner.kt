@@ -1,136 +1,68 @@
 package com.example.ui.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import android.view.View
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.ui.theme.CosmicCardSurface
-import com.example.ui.theme.GlassBorder
-import com.example.ui.theme.GlassWhite
-import com.example.ui.theme.GoldPrimary
-import com.example.ui.theme.TextGold
-import com.example.ui.theme.TextSecondaryDark
+import androidx.compose.ui.viewinterop.AndroidView
+import com.google.android.gms.ads.AdListener
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.LoadAdError
 
 @Composable
 fun AdBanner(
     onRemoveAdsClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var isDismissed by remember { mutableStateOf(false) }
+    val bannerId = remember {
+        try {
+            com.example.BuildConfig.ADMOB_BANNER_ID.ifBlank { "ca-app-pub-3940256099942544/6300978111" }
+        } catch (e: Throwable) {
+            "ca-app-pub-3940256099942544/6300978111" // fallback to official test banner ID
+        }
+    }
 
-    if (!isDismissed) {
-        Box(
+    var adFailedToLoad by remember { mutableStateOf(false) }
+
+    if (adFailedToLoad || bannerId.isBlank()) {
+        // Fail gracefully (show nothing)
+        Box(modifier = Modifier.size(0.dp))
+    } else {
+        AndroidView(
             modifier = modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(CosmicCardSurface)
-                .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
-                .padding(horizontal = 12.dp, vertical = 8.dp)
-                .testTag("ad_banner_container")
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(GlassWhite)
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = "AD",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = GoldPrimary,
-                                fontSize = 10.sp
-                            )
-                        )
+                .padding(vertical = 4.dp)
+                .testTag("ad_banner_container"),
+            factory = { context ->
+                try {
+                    AdView(context).apply {
+                        setAdSize(AdSize.BANNER)
+                        adUnitId = bannerId
+                        val adRequest = AdRequest.Builder().build()
+                        adListener = object : AdListener() {
+                            override fun onAdFailedToLoad(error: LoadAdError) {
+                                super.onAdFailedToLoad(error)
+                                adFailedToLoad = true
+                            }
+                        }
+                        loadAd(adRequest)
                     }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Column {
-                        Text(
-                            text = "AstroVeda PRO - विज्ञापन हटाएं (No Ads)",
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                color = TextGold,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 12.sp
-                            )
-                        )
-                        Text(
-                            text = "100% सटीक दैनिक पंचांग एवं विस्तृत कुण्डली",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = TextSecondaryDark,
-                                fontSize = 10.sp
-                            )
-                        )
-                    }
+                } catch (e: Throwable) {
+                    adFailedToLoad = true
+                    View(context)
                 }
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(GoldPrimary)
-                            .clickable { onRemoveAdsClick() }
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = "PRO ₹99",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = CosmicCardSurface,
-                                fontSize = 10.sp
-                            )
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(6.dp))
-
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close Ad",
-                        tint = TextSecondaryDark,
-                        modifier = Modifier
-                            .size(16.dp)
-                            .clickable { isDismissed = true }
-                    )
-                }
+            },
+            update = { adView ->
+                // No update needed
             }
-        }
+        )
     }
 }

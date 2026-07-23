@@ -5,20 +5,24 @@ import com.example.astro.RashifalProvider
 import com.example.data.model.CityLocation
 import com.example.data.model.PanchangData
 import com.example.data.model.RashifalData
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 class AstroCacheRepository(
     private val panchangCacheDao: PanchangCacheDao,
-    private val horoscopeCacheDao: HoroscopeCacheDao
+    private val horoscopeCacheDao: HoroscopeCacheDao,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
 
     companion object {
         const val SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000L
     }
 
-    suspend fun getPanchangWith7DayCache(date: Date, city: CityLocation): PanchangData {
+    suspend fun getPanchangWith7DayCache(date: Date, city: CityLocation): PanchangData = withContext(ioDispatcher) {
         val dateFormat = SimpleDateFormat("yyyy-MM-DD", Locale.US)
         val dateKey = dateFormat.format(date)
         val cacheKey = "${dateKey}_${city.cityName.replace(" ", "_")}"
@@ -26,7 +30,7 @@ class AstroCacheRepository(
 
         val cached = panchangCacheDao.getCachedPanchang(cacheKey)
         if (cached != null && (now - cached.cachedAtTimestamp) < SEVEN_DAYS_MS) {
-            return PanchangData(
+            return@withContext PanchangData(
                 dateString = cached.dateString,
                 dayOfWeek = cached.dayOfWeek,
                 dayOfWeekHindi = cached.dayOfWeekHindi,
@@ -110,16 +114,16 @@ class AstroCacheRepository(
         )
         panchangCacheDao.insertPanchangCache(entity)
 
-        return freshPanchang
+        return@withContext freshPanchang
     }
 
-    suspend fun getHoroscopesWith7DayCache(): List<RashifalData> {
+    suspend fun getHoroscopesWith7DayCache(): List<RashifalData> = withContext(ioDispatcher) {
         val now = System.currentTimeMillis()
         val validAfter = now - SEVEN_DAYS_MS
 
         val cachedEntities = horoscopeCacheDao.getAllValidHoroscopes(validAfter)
         if (cachedEntities.size >= 12) {
-            return cachedEntities.map { entity ->
+            return@withContext cachedEntities.map { entity ->
                 RashifalData(
                     rashiId = entity.rashiId,
                     rashiNameEn = entity.rashiNameEn,
@@ -180,7 +184,7 @@ class AstroCacheRepository(
         }
 
         horoscopeCacheDao.insertAllHoroscopes(entities)
-        return freshHoroscopes
+        return@withContext freshHoroscopes
     }
 
     private fun entityFieldOr(value: String?): String = value ?: ""

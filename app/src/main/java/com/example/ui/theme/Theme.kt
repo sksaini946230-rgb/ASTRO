@@ -32,24 +32,28 @@ private val AstroDarkColorScheme = darkColorScheme(
 )
 
 private val AstroLightColorScheme = lightColorScheme(
-    primary = GoldSecondary,
+    primary = GoldPrimary,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFFFF8E1),
-    onPrimaryContainer = Color(0xFF5D4037),
+    primaryContainer = Color(0xFFFFF3E0),
+    onPrimaryContainer = Color(0xFFE65100),
     secondary = SacredOrange,
     onSecondary = Color.White,
-    background = Color(0xFFFBF9F5),
-    onBackground = Color(0xFF1C1B1F),
-    surface = Color.White,
-    onSurface = Color(0xFF1C1B1F),
-    surfaceVariant = Color(0xFFF5F0E6),
-    onSurfaceVariant = Color(0xFF4A453E),
-    outline = GoldSecondary
+    secondaryContainer = Color(0xFFFFF8E1),
+    onSecondaryContainer = Color(0xFF1E293B),
+    tertiary = AccentCyan,
+    onTertiary = Color.White,
+    background = Color(0xFFFAF7F2),
+    onBackground = Color(0xFF1E293B),
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF1E293B),
+    surfaceVariant = Color(0xFFF1EDE6),
+    onSurfaceVariant = Color(0xFF64748B),
+    outline = Color(0xFFE2E8F0)
 )
 
 @Composable
 fun AstroVedaTheme(
-    darkTheme: Boolean = true, // Default to rich cosmic dark theme for luxury Vedic aesthetic
+    darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
