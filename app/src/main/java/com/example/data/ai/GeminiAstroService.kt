@@ -1,5 +1,6 @@
 package com.example.data.ai
 
+import android.util.Log
 import com.example.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,9 +14,12 @@ import java.util.concurrent.TimeUnit
 
 object GeminiAstroService {
 
+    private const val TAG = "GeminiAstroService"
+
     private val client = OkHttpClient.Builder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(20, TimeUnit.SECONDS)
+        .connectTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
         .build()
 
     suspend fun getAiAstrologyInsight(
@@ -29,6 +33,7 @@ object GeminiAstroService {
         }
 
         if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY") {
+            Log.d(TAG, "API key is empty or default; utilizing fallback offline Vedic response.")
             return@withContext getOfflineVedicResponse(userQuestion)
         }
 
@@ -65,30 +70,43 @@ object GeminiAstroService {
             val mediaType = "application/json; charset=utf-8".toMediaType()
             val requestBody = jsonBody.toString().toRequestBody(mediaType)
 
-            val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$apiKey"
+            val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey"
 
             val request = Request.Builder()
                 .url(url)
                 .post(requestBody)
                 .build()
 
-            val response = client.newCall(request).execute()
+            val response = try {
+                client.newCall(request).execute()
+            } catch (e: Exception) {
+                Log.e(TAG, "Network failure calling Gemini API: ${e.message}", e)
+                return@withContext getOfflineVedicResponse(userQuestion)
+            }
+
             val responseString = response.body?.string() ?: ""
 
             if (response.isSuccessful && responseString.isNotBlank()) {
-                val jsonRes = JSONObject(responseString)
-                val candidates = jsonRes.optJSONArray("candidates")
-                if (candidates != null && candidates.length() > 0) {
-                    val firstCandidate = candidates.getJSONObject(0)
-                    val content = firstCandidate.optJSONObject("content")
-                    val parts = content?.optJSONArray("parts")
-                    if (parts != null && parts.length() > 0) {
-                        return@withContext parts.getJSONObject(0).optString("text", "शुभं करोति कल्याणम्।")
+                try {
+                    val jsonRes = JSONObject(responseString)
+                    val candidates = jsonRes.optJSONArray("candidates")
+                    if (candidates != null && candidates.length() > 0) {
+                        val firstCandidate = candidates.getJSONObject(0)
+                        val content = firstCandidate.optJSONObject("content")
+                        val parts = content?.optJSONArray("parts")
+                        if (parts != null && parts.length() > 0) {
+                            return@withContext parts.getJSONObject(0).optString("text", "शुभं करोति कल्याणम्।")
+                        }
                     }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to parse Gemini response: ${e.message}", e)
                 }
+            } else {
+                Log.e(TAG, "Gemini API error response code: ${response.code}, message: $responseString")
             }
             return@withContext getOfflineVedicResponse(userQuestion)
         } catch (e: Exception) {
+            Log.e(TAG, "Unhandled exception in getAiAstrologyInsight: ${e.message}", e)
             return@withContext getOfflineVedicResponse(userQuestion)
         }
     }
@@ -115,6 +133,7 @@ object GeminiAstroService {
         }
 
         if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY") {
+            Log.d(TAG, "API key is empty or default; utilizing fallback offline Astro News.")
             return@withContext getOfflineAstroNews()
         }
 
@@ -146,30 +165,43 @@ object GeminiAstroService {
             val mediaType = "application/json; charset=utf-8".toMediaType()
             val requestBody = jsonBody.toString().toRequestBody(mediaType)
 
-            val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$apiKey"
+            val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey"
 
             val request = Request.Builder()
                 .url(url)
                 .post(requestBody)
                 .build()
 
-            val response = client.newCall(request).execute()
+            val response = try {
+                client.newCall(request).execute()
+            } catch (e: Exception) {
+                Log.e(TAG, "Network failure calling Gemini API (AstroNews): ${e.message}", e)
+                return@withContext getOfflineAstroNews()
+            }
+
             val responseString = response.body?.string() ?: ""
 
             if (response.isSuccessful && responseString.isNotBlank()) {
-                val jsonRes = JSONObject(responseString)
-                val candidates = jsonRes.optJSONArray("candidates")
-                if (candidates != null && candidates.length() > 0) {
-                    val firstCandidate = candidates.getJSONObject(0)
-                    val content = firstCandidate.optJSONObject("content")
-                    val parts = content?.optJSONArray("parts")
-                    if (parts != null && parts.length() > 0) {
-                        return@withContext parts.getJSONObject(0).optString("text", getOfflineAstroNews())
+                try {
+                    val jsonRes = JSONObject(responseString)
+                    val candidates = jsonRes.optJSONArray("candidates")
+                    if (candidates != null && candidates.length() > 0) {
+                        val firstCandidate = candidates.getJSONObject(0)
+                        val content = firstCandidate.optJSONObject("content")
+                        val parts = content?.optJSONArray("parts")
+                        if (parts != null && parts.length() > 0) {
+                            return@withContext parts.getJSONObject(0).optString("text", getOfflineAstroNews())
+                        }
                     }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to parse Gemini response (AstroNews): ${e.message}", e)
                 }
+            } else {
+                Log.e(TAG, "Gemini API error response code (AstroNews): ${response.code}, message: $responseString")
             }
             return@withContext getOfflineAstroNews()
         } catch (e: Exception) {
+            Log.e(TAG, "Unhandled exception in fetchAstroNewsWithSearchGrounding: ${e.message}", e)
             return@withContext getOfflineAstroNews()
         }
     }

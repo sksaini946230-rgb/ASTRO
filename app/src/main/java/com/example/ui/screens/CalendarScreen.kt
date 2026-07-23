@@ -37,6 +37,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -75,51 +78,58 @@ fun CalendarScreen(viewModel: MainViewModel) {
         selectedRegion == "ALL" || it.regionFilter == "ALL" || it.regionFilter == selectedRegion
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    Scaffold(
+        containerColor = Color.Transparent,
+        modifier = Modifier.fillMaxSize()
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                top = paddingValues.calculateTopPadding() + 8.dp,
+                end = 16.dp,
+                bottom = paddingValues.calculateBottomPadding() + 16.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
         item {
-            Spacer(modifier = Modifier.height(8.dp))
-            // Month Header
-            GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "विक्रम संवत ${panchang.vikramSamvat} | ${panchang.masaNameHindi}",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = TextGold,
-                                fontSize = 17.sp
-                            )
+            // Month Header - Simplified without redundant GlassCard container
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "विक्रम संवत ${panchang.vikramSamvat} | ${panchang.masaNameHindi}",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = TextGold,
+                            fontSize = 17.sp
                         )
-                        Text(
-                            text = "शक संवत ${panchang.sakaSamvat} • 2026 हिन्दू पंचांग कैलेण्डर",
-                            style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark, fontSize = 12.sp)
-                        )
-                    }
+                    )
+                    Text(
+                        text = "शक संवत ${panchang.sakaSamvat} • 2026 हिन्दू पंचांग कैलेण्डर",
+                        style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark, fontSize = 12.sp)
+                    )
+                }
 
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(GlassWhite)
-                            .border(1.dp, GlassBorder, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Event,
-                            contentDescription = "Calendar",
-                            tint = GoldPrimary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(GlassWhite)
+                        .border(1.dp, GlassBorder, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Event,
+                        contentDescription = "Calendar",
+                        tint = GoldPrimary,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
             }
         }
@@ -158,7 +168,7 @@ fun CalendarScreen(viewModel: MainViewModel) {
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         color = SacredOrange,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 11.sp
+                                        fontSize = 13.sp
                                     )
                                 )
                             }
@@ -196,7 +206,7 @@ fun CalendarScreen(viewModel: MainViewModel) {
                                     Box(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .height(38.dp)
+                                            .height(42.dp)
                                             .padding(2.dp)
                                             .clip(RoundedCornerShape(8.dp))
                                             .background(
@@ -223,7 +233,7 @@ fun CalendarScreen(viewModel: MainViewModel) {
                                                 style = MaterialTheme.typography.labelSmall.copy(
                                                     fontWeight = if (isToday || hasFestival) FontWeight.Bold else FontWeight.Normal,
                                                     color = if (isToday) CosmicCardSurface else if (hasFestival) TextGold else TextPrimaryDark,
-                                                    fontSize = 12.sp
+                                                    fontSize = 14.sp
                                                 )
                                             )
                                             if (hasFestival && !isToday) {
@@ -410,6 +420,7 @@ fun CalendarScreen(viewModel: MainViewModel) {
         )
     }
 }
+}
 
 @Composable
 fun FestivalCard(
@@ -460,7 +471,7 @@ fun FestivalCard(
 
             Text(
                 text = festival.significanceHi,
-                style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 13.sp)
+                style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 14.sp, lineHeight = 20.sp)
             )
 
             if (festival.pujaVidhiHi.isNotBlank()) {
@@ -476,7 +487,8 @@ fun FestivalCard(
                         text = "पूजन विधि: ${festival.pujaVidhiHi}",
                         style = MaterialTheme.typography.bodySmall.copy(
                             color = TextSecondaryDark,
-                            fontSize = 11.sp
+                            fontSize = 13.sp,
+                            lineHeight = 18.sp
                         )
                     )
                 }
@@ -576,7 +588,7 @@ fun FestivalDetailDialog(
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = TextGold,
-                                    fontSize = 13.sp
+                                    fontSize = 15.sp
                                 )
                             )
                         }
@@ -585,8 +597,8 @@ fun FestivalDetailDialog(
                             text = festival.significanceHi,
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 color = TextPrimaryDark,
-                                fontSize = 12.sp,
-                                lineHeight = 18.sp
+                                fontSize = 14.sp,
+                                lineHeight = 20.sp
                             )
                         )
                     }
@@ -615,7 +627,7 @@ fun FestivalDetailDialog(
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = TextGold,
-                                    fontSize = 13.sp
+                                    fontSize = 15.sp
                                 )
                             )
                         }
@@ -624,8 +636,8 @@ fun FestivalDetailDialog(
                             text = if (festival.pujaVidhiHi.isNotBlank()) festival.pujaVidhiHi else "प्रातःकाल स्नान कर शुद्ध वस्त्र धारण करें एवं इष्टदेव का ध्यान करते हुए पूजन व अर्घ्य अर्पित करें।",
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 color = TextPrimaryDark,
-                                fontSize = 12.sp,
-                                lineHeight = 18.sp
+                                fontSize = 14.sp,
+                                lineHeight = 20.sp
                             )
                         )
                     }
@@ -654,7 +666,7 @@ fun FestivalDetailDialog(
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = TextGold,
-                                    fontSize = 13.sp
+                                    fontSize = 15.sp
                                 )
                             )
                         }
@@ -663,8 +675,8 @@ fun FestivalDetailDialog(
                             text = festival.regionalHistoryHi,
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 color = TextPrimaryDark,
-                                fontSize = 12.sp,
-                                lineHeight = 18.sp
+                                fontSize = 14.sp,
+                                lineHeight = 20.sp
                             )
                         )
                     }

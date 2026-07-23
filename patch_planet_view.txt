@@ -1,0 +1,51 @@
+@Composable
+fun PlanetaryPositionsCard(planets: List<com.example.data.model.PlanetPosition>) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = "ग्रह स्थिति (Planetary Positions)",
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.Bold,
+                color = TextGold,
+                fontSize = 18.sp
+            )
+        )
+        Text(
+            text = "Current astrological positions",
+            style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark, fontSize = 12.sp)
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                planets.forEach { planet ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "${planet.planetNameHi} (${planet.planetNameEn})",
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextGold
+                                )
+                            )
+                            Text(
+                                text = "नक्षत्र: ${planet.nakshatraHi} | राशि: ${planet.rashiNameHi}",
+                                style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark)
+                            )
+                        }
+                        Text(
+                            text = "${planet.degree}°",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                color = TextSecondaryDark,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
+}

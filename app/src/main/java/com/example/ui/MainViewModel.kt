@@ -1,5 +1,6 @@
 package com.example.ui
 
+import kotlinx.coroutines.Dispatchers
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -48,6 +49,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: KundaliRepository
     private val cacheRepository: AstroCacheRepository
+
+    // Global Error State for ErrorBoundary integration
+    private val _globalError = MutableStateFlow<Throwable?>(null)
+    val globalError: StateFlow<Throwable?> = _globalError.asStateFlow()
+
+    fun reportError(t: Throwable) {
+        _globalError.value = t
+    }
+
+    fun clearGlobalError() {
+        _globalError.value = null
+    }
 
     // Onboarding State
     private val _isOnboardingCompleted = MutableStateFlow(true)
@@ -110,7 +123,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun recalculatePanchang() {
         viewModelScope.launch {
-            _panchangState.value = cacheRepository.getPanchangWith7DayCache(_selectedDate.value, _selectedCity.value)
+            try {
+                _panchangState.value = cacheRepository.getPanchangWith7DayCache(_selectedDate.value, _selectedCity.value)
+            } catch (e: Exception) {
+                reportError(e)
+            }
         }
     }
 
@@ -124,7 +141,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun loadHoroscopesWithCache() {
         viewModelScope.launch {
-            _dailyHoroscopes.value = cacheRepository.getHoroscopesWith7DayCache()
+            try {
+                _dailyHoroscopes.value = cacheRepository.getHoroscopesWith7DayCache()
+            } catch (e: Exception) {
+                reportError(e)
+            }
         }
     }
 
@@ -165,12 +186,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     )
     val generatedKundali: StateFlow<KundaliChartData> = _generatedKundali.asStateFlow()
 
+    private val _isCalculating = MutableStateFlow(false)
+    val isCalculating: StateFlow<Boolean> = _isCalculating.asStateFlow()
+
     fun generateKundaliChart(name: String, dob: String, tob: String, place: String) {
         kundaliName.value = name
         kundaliDob.value = dob
         kundaliTob.value = tob
         kundaliPlace.value = place
-        _generatedKundali.value = KundaliCalculator.generateKundali(name, dob, tob, place)
+        
+        viewModelScope.launch(Dispatchers.Default) {
+            _isCalculating.value = true
+            try {
+                val result = KundaliCalculator.generateKundali(name, dob, tob, place)
+                _generatedKundali.value = result
+            } catch (e: Exception) {
+                reportError(e)
+            } finally {
+                _isCalculating.value = false
+            }
+        }
     }
 
     // Kundali Matching / Guna Milan State
@@ -188,10 +223,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val gunaResult: StateFlow<GunaMatchingResult> = _gunaResult.asStateFlow()
 
     fun calculateGunaMatching() {
-        _gunaResult.value = KundaliMatchingCalculator.matchKundali(
-            matchBoyName.value, matchBoyDob.value, matchBoyTob.value,
-            matchGirlName.value, matchGirlDob.value, matchGirlTob.value
-        )
+        viewModelScope.launch(Dispatchers.Default) {
+            _isCalculating.value = true
+            try {
+                val result = KundaliMatchingCalculator.matchKundali(
+                    matchBoyName.value, matchBoyDob.value, matchBoyTob.value,
+                    matchGirlName.value, matchGirlDob.value, matchGirlTob.value
+                )
+                _gunaResult.value = result
+            } catch (e: Exception) {
+                reportError(e)
+            } finally {
+                _isCalculating.value = false
+            }
+        }
     }
 
     // Numerology
@@ -204,7 +249,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val numerologyData: StateFlow<NumerologyData> = _numerologyData.asStateFlow()
 
     fun calculateNumerology() {
-        _numerologyData.value = NumerologyCalculator.calculateNumerology(numName.value, numDob.value)
+        try {
+            _numerologyData.value = NumerologyCalculator.calculateNumerology(numName.value, numDob.value)
+        } catch (e: Exception) {
+            reportError(e)
+        }
     }
 
     // AI Astrologer Chat
@@ -217,10 +266,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun askAiAstrologer(question: String) {
         viewModelScope.launch {
             _isAiLoading.value = true
-            val kundaliDetails = "${_generatedKundali.value.personName}, DOB: ${_generatedKundali.value.dateOfBirth}, Lagna: ${_generatedKundali.value.ascendantRashiHi}"
-            val res = GeminiAstroService.getAiAstrologyInsight(question, kundaliDetails)
-            _aiResponse.value = res
-            _isAiLoading.value = false
+            try {
+                val kundaliDetails = "${_generatedKundali.value.personName}, DOB: ${_generatedKundali.value.dateOfBirth}, Lagna: ${_generatedKundali.value.ascendantRashiHi}"
+                val res = GeminiAstroService.getAiAstrologyInsight(question, kundaliDetails)
+                _aiResponse.value = res
+            } catch (e: Exception) {
+                reportError(e)
+            } finally {
+                _isAiLoading.value = false
+            }
         }
     }
 
@@ -234,9 +288,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun fetchAstroNews() {
         viewModelScope.launch {
             _isNewsLoading.value = true
-            val news = GeminiAstroService.fetchAstroNewsWithSearchGrounding()
-            _astroNews.value = news
-            _isNewsLoading.value = false
+            try {
+                val news = GeminiAstroService.fetchAstroNewsWithSearchGrounding()
+                _astroNews.value = news
+            } catch (e: Exception) {
+                reportError(e)
+            } finally {
+                _isNewsLoading.value = false
+            }
         }
     }
 

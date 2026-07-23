@@ -41,6 +41,8 @@ import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -93,12 +95,20 @@ fun RashifalScreen(viewModel: MainViewModel) {
         else -> "इस महीने का राशिफल (This Month)"
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    Scaffold(
+        containerColor = Color.Transparent,
+        modifier = Modifier.fillMaxSize()
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                top = paddingValues.calculateTopPadding() + 8.dp,
+                end = 16.dp,
+                bottom = paddingValues.calculateBottomPadding() + 16.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
         item {
             Spacer(modifier = Modifier.height(8.dp))
             SectionHeader(
@@ -137,7 +147,7 @@ fun RashifalScreen(viewModel: MainViewModel) {
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = item.rashiNameHi.substringBefore(" "),
+                                text = LanguageManager.getString(item.rashiNameHi.substringBefore(" "), item.rashiNameEn),
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = if (isSelected) CosmicCardSurface else TextGold,
@@ -221,7 +231,7 @@ fun RashifalScreen(viewModel: MainViewModel) {
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Column {
                                         Text(
-                                            text = horoscope.rashiNameHi,
+                                            text = LanguageManager.getString(horoscope.rashiNameHi, horoscope.rashiNameEn),
                                             style = MaterialTheme.typography.titleLarge.copy(
                                                 fontWeight = FontWeight.Bold,
                                                 color = TextGold,
@@ -229,7 +239,7 @@ fun RashifalScreen(viewModel: MainViewModel) {
                                             )
                                         )
                                         Text(
-                                            text = "स्वामी: ${horoscope.rulerHi} | तत्व: ${horoscope.elementHi}",
+                                            text = "${LanguageManager.getString("स्वामी", "Lord")}: ${horoscope.rulerHi} | ${LanguageManager.getString("तत्व", "Element")}: ${horoscope.elementHi}",
                                             style = MaterialTheme.typography.bodySmall.copy(
                                                 color = TextSecondaryDark,
                                                 fontSize = 12.sp
@@ -300,7 +310,7 @@ fun RashifalScreen(viewModel: MainViewModel) {
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "सामान्य भविष्यफल (General Overview)",
+                                    text = LanguageManager.getString("सामान्य भविष्यफल", "General Overview"),
                                     style = MaterialTheme.typography.titleSmall.copy(
                                         color = TextGold,
                                         fontWeight = FontWeight.Bold
@@ -328,38 +338,88 @@ fun RashifalScreen(viewModel: MainViewModel) {
                         titleEn = "Category Breakdown"
                     )
 
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        HoroscopeDomainCard(
-                            titleHi = "करियर व व्यवसाय (Career & Business)",
-                            readingHi = horoscope.careerReadingHi,
-                            readingEn = horoscope.careerReadingEn,
-                            icon = Icons.Default.Work,
-                            accentColor = GoldPrimary
-                        )
+                    GlassCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            val domains = listOf(
+                                DomainItem(
+                                    "करियर व व्यवसाय (Career & Business)",
+                                    horoscope.careerReadingHi,
+                                    horoscope.careerReadingEn,
+                                    Icons.Default.Work,
+                                    GoldPrimary
+                                ),
+                                DomainItem(
+                                    "स्वास्थ्य एवं ऊर्जा (Health & Fitness)",
+                                    horoscope.healthReadingHi,
+                                    horoscope.healthReadingEn,
+                                    Icons.Default.FitnessCenter,
+                                    AuspiciousGreen
+                                ),
+                                DomainItem(
+                                    "प्रेम व संबंध (Love & Marriage)",
+                                    horoscope.loveReadingHi,
+                                    horoscope.loveReadingEn,
+                                    Icons.Default.Favorite,
+                                    SacredOrange
+                                ),
+                                DomainItem(
+                                    "वित्त व धन लाभ (Finance & Money)",
+                                    horoscope.financeReadingHi,
+                                    horoscope.financeReadingEn,
+                                    Icons.Default.MonetizationOn,
+                                    GoldGlow
+                                )
+                            )
 
-                        HoroscopeDomainCard(
-                            titleHi = "स्वास्थ्य एवं ऊर्जा (Health & Fitness)",
-                            readingHi = horoscope.healthReadingHi,
-                            readingEn = horoscope.healthReadingEn,
-                            icon = Icons.Default.FitnessCenter,
-                            accentColor = AuspiciousGreen
-                        )
+                            domains.forEachIndexed { index, item ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(CircleShape)
+                                            .background(item.color.copy(alpha = 0.15f))
+                                            .border(1.dp, item.color.copy(alpha = 0.5f), CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = item.icon,
+                                            contentDescription = null,
+                                            tint = item.color,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
 
-                        HoroscopeDomainCard(
-                            titleHi = "प्रेम व संबंध (Love & Marriage)",
-                            readingHi = horoscope.loveReadingHi,
-                            readingEn = horoscope.loveReadingEn,
-                            icon = Icons.Default.Favorite,
-                            accentColor = SacredOrange
-                        )
+                                    Spacer(modifier = Modifier.width(14.dp))
 
-                        HoroscopeDomainCard(
-                            titleHi = "वित्त व धन लाभ (Finance & Money)",
-                            readingHi = horoscope.financeReadingHi,
-                            readingEn = horoscope.financeReadingEn,
-                            icon = Icons.Default.MonetizationOn,
-                            accentColor = GoldGlow
-                        )
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = item.title,
+                                            style = MaterialTheme.typography.titleSmall.copy(
+                                                color = TextGold,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 15.sp
+                                            )
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = LanguageManager.getString(item.readingHi, item.readingEn),
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                color = TextPrimaryDark,
+                                                fontSize = 14.sp,
+                                                lineHeight = 20.sp
+                                            )
+                                        )
+                                    }
+                                }
+
+                                if (index < domains.lastIndex) {
+                                    androidx.compose.material3.HorizontalDivider(color = GlassWhite.copy(alpha = 0.1f), thickness = 1.dp)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -370,6 +430,15 @@ fun RashifalScreen(viewModel: MainViewModel) {
         }
     }
 }
+}
+
+private data class DomainItem(
+    val title: String,
+    val readingHi: String,
+    val readingEn: String,
+    val icon: ImageVector,
+    val color: Color
+)
 
 @Composable
 fun AnimatedStarScoreDisplay(rating: Int) {

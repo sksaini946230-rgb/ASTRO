@@ -30,6 +30,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -79,12 +82,20 @@ fun MatchingScreen(viewModel: MainViewModel) {
 
     var showForm by remember { mutableStateOf(true) }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    Scaffold(
+        containerColor = Color.Transparent,
+        modifier = Modifier.fillMaxSize()
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                top = paddingValues.calculateTopPadding() + 8.dp,
+                end = 16.dp,
+                bottom = paddingValues.calculateBottomPadding() + 16.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
         item {
             Spacer(modifier = Modifier.height(8.dp))
             SectionHeader(
@@ -168,19 +179,28 @@ fun MatchingScreen(viewModel: MainViewModel) {
                         )
                     }
 
-                    GoldGlowButton(
-                        text = "गुण मिलान करें (Calculate 36 Guna)",
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            viewModel.calculateGunaMatching()
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        testTag = "calculate_guna_button"
-                    )
+                    val isCalculating by viewModel.isCalculating.collectAsState()
+                    if (isCalculating) {
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            androidx.compose.material3.CircularProgressIndicator(color = GoldPrimary)
+                        }
+                    } else {
+                        GoldGlowButton(
+                            text = "गुण मिलान करें (Calculate 36 Guna)",
+                            onClick = {
+                                viewModel.matchBoyName.value = boyName
+                                viewModel.matchBoyDob.value = boyDob
+                                viewModel.matchGirlName.value = girlName
+                                viewModel.matchGirlDob.value = girlDob
+                                viewModel.calculateGunaMatching()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            testTag = "calculate_guna_button"
+                        )
+                    }
                 }
             }
         }
-
         // Score Card Summary
         item {
             GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -206,7 +226,7 @@ fun MatchingScreen(viewModel: MainViewModel) {
 
                     Text(
                         text = "कुल प्राप्त गुण (Obtained Guna Score)",
-                        style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 11.sp)
+                        style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 13.sp)
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -246,7 +266,7 @@ fun MatchingScreen(viewModel: MainViewModel) {
                                     MatchingPdfReportService.sharePdfReport(context, pdfFile)
                                 }
                             }
-                            .padding(vertical = 10.dp)
+                            .padding(vertical = 12.dp)
                             .testTag("share_pdf_report_button"),
                         contentAlignment = Alignment.Center
                     ) {
@@ -255,7 +275,7 @@ fun MatchingScreen(viewModel: MainViewModel) {
                                 imageVector = Icons.Default.PictureAsPdf,
                                 contentDescription = "PDF Report",
                                 tint = GoldPrimary,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(22.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
@@ -263,7 +283,7 @@ fun MatchingScreen(viewModel: MainViewModel) {
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     color = GoldPrimary,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp
+                                    fontSize = 15.sp
                                 )
                             )
                         }
@@ -272,19 +292,37 @@ fun MatchingScreen(viewModel: MainViewModel) {
             }
         }
 
-        // Mangal Dosha Compatibility Card
+        // Mangal Dosha & Summary Reading Card Consolidated
         item {
             GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column {
-                    Text(
-                        text = "मंगल दोष विचार (Mangal Dosha Analysis)",
-                        style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = gunaResult.mangalDoshaStatusHi,
-                        style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 13.sp)
-                    )
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    // Mangal Dosha Section
+                    Column {
+                        Text(
+                            text = "मंगल दोष विचार (Mangal Dosha Analysis)",
+                            style = MaterialTheme.typography.titleMedium.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = gunaResult.mangalDoshaStatusHi,
+                            style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryDark, fontSize = 14.sp, lineHeight = 20.sp)
+                        )
+                    }
+
+                    androidx.compose.material3.HorizontalDivider(color = GlassWhite.copy(alpha = 0.1f), thickness = 1.dp)
+
+                    // Summary Report Section
+                    Column {
+                        Text(
+                            text = "विवाह निष्कर्ष रिपोर्ट (Summary Report):",
+                            style = MaterialTheme.typography.titleMedium.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = gunaResult.summaryReadingHi,
+                            style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryDark, fontSize = 14.sp, lineHeight = 20.sp)
+                        )
+                    }
                 }
             }
         }
@@ -300,47 +338,29 @@ fun MatchingScreen(viewModel: MainViewModel) {
         // Koota Details Table
         item {
             GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 8.dp),
+                            .padding(bottom = 6.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = "कूट (Koota)", style = MaterialTheme.typography.labelSmall.copy(color = TextGold, fontWeight = FontWeight.Bold), modifier = Modifier.weight(1.5f))
-                        Text(text = "अधिकतम", style = MaterialTheme.typography.labelSmall.copy(color = TextGold, fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
-                        Text(text = "प्राप्त", style = MaterialTheme.typography.labelSmall.copy(color = TextGold, fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
+                        Text(text = "कूट (Koota)", style = MaterialTheme.typography.labelSmall.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 13.sp), modifier = Modifier.weight(1.5f))
+                        Text(text = "अधिकतम", style = MaterialTheme.typography.labelSmall.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 13.sp), modifier = Modifier.weight(1f))
+                        Text(text = "प्राप्त", style = MaterialTheme.typography.labelSmall.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 13.sp), modifier = Modifier.weight(1f))
                     }
 
                     gunaResult.kootDetails.forEach { koot ->
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = koot.kootNameHi, style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 12.sp), modifier = Modifier.weight(1.5f))
-                            Text(text = "${koot.maxPoints}", style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark, fontSize = 12.sp), modifier = Modifier.weight(1f))
-                            Text(text = "${koot.obtainedPoints}", style = MaterialTheme.typography.bodySmall.copy(color = AuspiciousGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp), modifier = Modifier.weight(1f))
+                            Text(text = koot.kootNameHi, style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 14.sp), modifier = Modifier.weight(1.5f))
+                            Text(text = "${koot.maxPoints}", style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark, fontSize = 14.sp), modifier = Modifier.weight(1f))
+                            Text(text = "${koot.obtainedPoints}", style = MaterialTheme.typography.bodySmall.copy(color = AuspiciousGreen, fontWeight = FontWeight.Bold, fontSize = 14.sp), modifier = Modifier.weight(1f))
                         }
                     }
-                }
-            }
-        }
-
-        // Summary Reading Card
-        item {
-            GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column {
-                    Text(
-                        text = "विवाह निष्कर्ष रिपोर्ट (Summary Report):",
-                        style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = gunaResult.summaryReadingHi,
-                        style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 13.sp)
-                    )
                 }
             }
         }
@@ -349,4 +369,5 @@ fun MatchingScreen(viewModel: MainViewModel) {
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
 }

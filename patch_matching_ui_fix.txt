@@ -1,0 +1,24 @@
+                    val isCalculating by viewModel.isCalculating.collectAsState()
+                    if (isCalculating) {
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            androidx.compose.material3.CircularProgressIndicator(color = GoldPrimary)
+                        }
+                    } else {
+                        GoldGlowButton(
+                            text = "गुण मिलान करें (Calculate 36 Guna)",
+                            onClick = {
+                                viewModel.matchBoyName.value = boyName
+                                viewModel.matchBoyDob.value = boyDob
+                                viewModel.matchBoyTob.value = boyTob
+                                viewModel.matchGirlName.value = girlName
+                                viewModel.matchGirlDob.value = girlDob
+                                viewModel.matchGirlTob.value = girlTob
+                                viewModel.calculateGunaMatching()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            testTag = "calculate_guna_button"
+                        )
+                    }
+                }
+            }
+        }

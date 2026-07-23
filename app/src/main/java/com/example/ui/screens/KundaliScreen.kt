@@ -1,5 +1,7 @@
 package com.example.ui.screens
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -33,6 +35,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -79,12 +83,20 @@ fun KundaliScreen(viewModel: MainViewModel) {
 
     var isSaved by remember { mutableStateOf(false) }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    Scaffold(
+        containerColor = Color.Transparent,
+        modifier = Modifier.fillMaxSize()
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                top = paddingValues.calculateTopPadding() + 8.dp,
+                end = 16.dp,
+                bottom = paddingValues.calculateBottomPadding() + 16.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
         item {
             Spacer(modifier = Modifier.height(8.dp))
             SectionHeader(
@@ -101,7 +113,7 @@ fun KundaliScreen(viewModel: MainViewModel) {
                 GlassCard(modifier = Modifier.fillMaxWidth()) {
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text(
-                            text = "जन्म विवरण दर्ज करें (Enter Birth Details):",
+                            text = LanguageManager.getString("जन्म विवरण दर्ज करें", "Enter Birth Details"),
                             style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold)
                         )
 
@@ -117,7 +129,7 @@ fun KundaliScreen(viewModel: MainViewModel) {
                         OutlinedTextField(
                             value = nameInput,
                             onValueChange = { nameInput = it },
-                            label = { Text("पूरा नाम (Name)") },
+                            label = { Text(LanguageManager.getString("पूरा नाम", "Full Name")) },
                             colors = tfColors,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -131,7 +143,7 @@ fun KundaliScreen(viewModel: MainViewModel) {
                             OutlinedTextField(
                                 value = dobInput,
                                 onValueChange = { dobInput = it },
-                                label = { Text("जन्म तिथि (YYYY-MM-DD)") },
+                                label = { Text(LanguageManager.getString("जन्म तिथि (YYYY-MM-DD)", "DOB (YYYY-MM-DD)")) },
                                 colors = tfColors,
                                 modifier = Modifier
                                     .weight(1f)
@@ -141,7 +153,7 @@ fun KundaliScreen(viewModel: MainViewModel) {
                             OutlinedTextField(
                                 value = tobInput,
                                 onValueChange = { tobInput = it },
-                                label = { Text("जन्म समय (HH:MM)") },
+                                label = { Text(LanguageManager.getString("जन्म समय (HH:MM)", "Time (HH:MM)")) },
                                 colors = tfColors,
                                 modifier = Modifier
                                     .weight(1f)
@@ -152,28 +164,32 @@ fun KundaliScreen(viewModel: MainViewModel) {
                         OutlinedTextField(
                             value = placeInput,
                             onValueChange = { placeInput = it },
-                            label = { Text("जन्म स्थान (Place of Birth)") },
+                            label = { Text(LanguageManager.getString("जन्म स्थान", "Place of Birth")) },
                             colors = tfColors,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("input_kundali_place")
                         )
 
-                        GoldGlowButton(
-                            text = "कुण्डली बनाएं (Generate Chart)",
-                            onClick = {
-                                viewModel.generateKundaliChart(nameInput, dobInput, tobInput, placeInput)
-                                showForm = false
-                                isSaved = false
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            testTag = "generate_chart_submit_button"
-                        )
+                        val isCalculating by viewModel.isCalculating.collectAsState()
+                        if (isCalculating) {
+                            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                androidx.compose.material3.CircularProgressIndicator(color = GoldPrimary)
+                            }
+                        } else {
+                            GoldGlowButton(
+                                text = "कुण्डली बनाएं (Generate Chart)",
+                                onClick = {
+                                    viewModel.generateKundaliChart(viewModel.kundaliName.value, viewModel.kundaliDob.value, viewModel.kundaliTob.value, viewModel.kundaliPlace.value)
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                testTag = "generate_chart_submit_button"
+                            )
+                        }
                     }
                 }
             }
         }
-
         // Person Summary Header Bar
         item {
             GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -182,182 +198,145 @@ fun KundaliScreen(viewModel: MainViewModel) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = kundali.personName,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = TextGold,
-                                fontSize = 18.sp
-                            )
+                            style = MaterialTheme.typography.titleMedium.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                         )
                         Text(
                             text = "जन्म: ${kundali.dateOfBirth} | ${kundali.timeOfBirth} | ${kundali.placeOfBirth}",
                             style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark, fontSize = 12.sp)
                         )
                     }
-
-                    // Save Profile to Room Button
-                    Box(
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Share",
+                        tint = GoldPrimary,
                         modifier = Modifier
-                            .clip(CircleShape)
-                            .background(if (isSaved) GoldPrimary else GlassWhite)
-                            .border(1.dp, GlassBorder, CircleShape)
-                            .clickable {
-                                viewModel.saveCurrentKundaliProfile()
-                                isSaved = true
-                            }
-                            .padding(10.dp)
-                            .testTag("save_profile_button"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = if (isSaved) Icons.Default.Check else Icons.Default.Bookmark,
-                            contentDescription = "Save",
-                            tint = if (isSaved) CosmicCardSurface else GoldPrimary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-            }
-        }
-
-        // Chart Style Switcher Pill Bar (North vs South Style)
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(if (isNorthStyle) GoldPrimary else GlassWhite)
-                        .clickable { isNorthStyle = true }
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .testTag("north_style_toggle")
-                ) {
-                    Text(
-                        text = "उत्तर भारतीय (North Style)",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = if (isNorthStyle) CosmicCardSurface else TextGold
-                        )
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(if (!isNorthStyle) GoldPrimary else GlassWhite)
-                        .clickable { isNorthStyle = false }
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .testTag("south_style_toggle")
-                ) {
-                    Text(
-                        text = "दक्षिण भारतीय (South Style)",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = if (!isNorthStyle) CosmicCardSurface else TextGold
-                        )
+                            .size(24.dp)
+                            .clickable { }
                     )
                 }
             }
         }
 
-        // Interactive D1 Birth Chart Render
-        item {
-            Crossfade(targetState = isNorthStyle, label = "ChartTransition") { north ->
-                if (north) {
-                    NorthIndianChart(chartData = kundali)
-                } else {
-                    SouthIndianChart(chartData = kundali)
-                }
-            }
-        }
-
-        // Planetary Details Table Header
-        item {
-            SectionHeader(
-                titleHi = "ग्रह स्थिति एवं नक्षत्र (Planetary Degrees)",
-                titleEn = "Planetary Positions"
-            )
-        }
-
-        // Planets Positions List Table
+        // Chart View Section
         item {
             GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "ग्रह", style = MaterialTheme.typography.labelSmall.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 11.sp), modifier = Modifier.weight(1f))
-                        Text(text = "राशि", style = MaterialTheme.typography.labelSmall.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 11.sp), modifier = Modifier.weight(1.2f))
-                        Text(text = "अंश (Deg)", style = MaterialTheme.typography.labelSmall.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 11.sp), modifier = Modifier.weight(1f))
-                        Text(text = "भाव (House)", style = MaterialTheme.typography.labelSmall.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 11.sp), modifier = Modifier.weight(1f))
-                    }
-
-                    kundali.planets.forEach { planet ->
+                        Text(
+                            text = "जन्म कुण्डली (Birth Chart)",
+                            style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold)
+                        )
+                        // Style Toggle
                         Row(
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(CosmicCardSurface)
+                                .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
                         ) {
-                            Text(text = planet.planetNameHi.substringBefore(" "), style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 12.sp), modifier = Modifier.weight(1f))
-                            Text(text = planet.rashiNameHi, style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 12.sp), modifier = Modifier.weight(1.2f))
-                            Text(text = "${planet.degree}°", style = MaterialTheme.typography.bodySmall.copy(color = TextGold, fontSize = 12.sp), modifier = Modifier.weight(1f))
-                            Text(text = "${planet.houseNumber} भाव", style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark, fontSize = 12.sp), modifier = Modifier.weight(1f))
+                            Box(
+                                modifier = Modifier
+                                    .clickable { isNorthStyle = true }
+                                    .background(if (isNorthStyle) GoldPrimary else Color.Transparent)
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Text(
+                                    text = LanguageManager.getString("उत्तर भारतीय (North)", "North Indian"),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = if (isNorthStyle) CosmicCardSurface else TextSecondaryDark,
+                                        fontWeight = if (isNorthStyle) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .clickable { isNorthStyle = false }
+                                    .background(if (!isNorthStyle) GoldPrimary else Color.Transparent)
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Text(
+                                    text = LanguageManager.getString("दक्षिण भारतीय (South)", "South Indian"),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = if (!isNorthStyle) CosmicCardSurface else TextSecondaryDark,
+                                        fontWeight = if (!isNorthStyle) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(20.dp))
+                    
+                    if (isNorthStyle) {
+                        NorthIndianChart(kundali)
+                    } else {
+                        SouthIndianChart(kundali)
+                    }
+                }
+            }
+        }
+
+        // Planetary Positions
+        item {
+            SectionHeader(
+                titleHi = "ग्रह स्थिति (Planetary Positions)",
+                titleEn = "Planetary Positions"
+            )
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)) {
+                        Text(text = LanguageManager.getString("ग्रह", "Planet"), style = MaterialTheme.typography.labelSmall.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 13.sp), modifier = Modifier.weight(1f))
+                        Text(text = LanguageManager.getString("राशि", "Zodiac"), style = MaterialTheme.typography.labelSmall.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 13.sp), modifier = Modifier.weight(1.2f))
+                        Text(text = LanguageManager.getString("अंश", "Deg"), style = MaterialTheme.typography.labelSmall.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 13.sp), modifier = Modifier.weight(1f))
+                        Text(text = LanguageManager.getString("भाव", "House"), style = MaterialTheme.typography.labelSmall.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 13.sp), modifier = Modifier.weight(1f))
+                    }
+                    
+                    kundali.planets.forEach { planet ->
+                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = LanguageManager.getString(planet.planetNameHi.substringBefore(" "), planet.planetNameEn), style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 14.sp), modifier = Modifier.weight(1f))
+                            Text(text = planet.rashiNameHi, style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 14.sp), modifier = Modifier.weight(1.2f))
+                            Text(text = "${planet.degree}°", style = MaterialTheme.typography.bodySmall.copy(color = TextGold, fontSize = 14.sp, fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
+                            Text(text = "${planet.houseNumber} भाव", style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark, fontSize = 14.sp), modifier = Modifier.weight(1f))
                         }
                     }
                 }
             }
         }
 
-        // Vimshottari Dasha Timeline Section
+        // Dasha Table
         item {
             SectionHeader(
-                titleHi = "विंशोत्तरी महादशा चक्र (Vimshottari Dasha)",
-                titleEn = "Dasha Timeline"
+                titleHi = "विंशोत्तरी दशा (Vimshottari Dasha)",
+                titleEn = "Vimshottari Dasha"
             )
-        }
-
-        item {
             GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
                         text = "वर्तमान महादशा: ${kundali.currentMahadashaHi} | अंतर्दशा: ${kundali.currentAntardashaHi}",
-                        style = MaterialTheme.typography.titleSmall.copy(color = SacredOrange, fontWeight = FontWeight.Bold)
+                        style = MaterialTheme.typography.titleMedium.copy(color = SacredOrange, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                     )
-
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
                     kundali.dashaTimeline.forEach { dasha ->
                         Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (dasha.isCurrent) GoldPrimary.copy(alpha = 0.2f) else GlassWhite)
-                                .padding(8.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = "${dasha.planetHi} (${dasha.planetEn})",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = if (dasha.isCurrent) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (dasha.isCurrent) TextGold else TextPrimaryDark
-                                )
+                                style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryDark, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                             )
-
                             Text(
                                 text = "${dasha.startDate} - ${dasha.endDate} (${dasha.durationYears} वर्ष)",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = if (dasha.isCurrent) GoldPrimary else TextSecondaryDark
-                                )
+                                style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 13.sp)
                             )
                         }
                     }
@@ -369,4 +348,5 @@ fun KundaliScreen(viewModel: MainViewModel) {
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
 }

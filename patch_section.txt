@@ -1,0 +1,57 @@
+@Composable
+fun SectionHeader(
+    titleHi: String,
+    titleEn: String,
+    subtitleHi: String? = null,
+    subtitleEn: String? = null,
+    icon: ImageVector? = null,
+    actionButtonText: String? = null,
+    onActionClick: (() -> Unit)? = null
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp), // reduced padding
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = GoldPrimary,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+        }
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = LanguageManager.getString(titleHi, titleEn),
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimaryDark, // Softer color for headings, instead of Gold everywhere
+                    fontSize = 18.sp
+                )
+            )
+            val sub = if (subtitleHi != null && subtitleEn != null) {
+                LanguageManager.getString(subtitleHi, subtitleEn)
+            } else null
+            if (!sub.isNullOrEmpty()) {
+                Text(
+                    text = sub,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = TextSecondaryDark,
+                        fontSize = 12.sp
+                    )
+                )
+            }
+        }
+        
+        if (actionButtonText != null && onActionClick != null) {
+            GlassBadge(
+                text = actionButtonText,
+                modifier = Modifier.clickable { onActionClick() }
+            )
+        }
+    }
+}

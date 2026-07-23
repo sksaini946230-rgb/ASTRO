@@ -35,7 +35,8 @@ data class PanchangData(
     val moonSign: String,
     val locationName: String,
     val latitude: Double,
-    val longitude: Double
+    val longitude: Double,
+    val planets: List<PlanetPosition> = emptyList()
 )
 
 data class CityLocation(

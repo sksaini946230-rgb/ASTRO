@@ -1,0 +1,83 @@
+    fun generateKundali(
+        name: String,
+        dobString: String, // YYYY-MM-DD
+        tobString: String, // HH:MM
+        placeName: String,
+        lat: Double = 26.9124,
+        lng: Double = 75.7873
+    ): KundaliChartData {
+        // Parse DOB
+        val parts = dobString.split("-")
+        val year = parts.getOrNull(0)?.toIntOrNull() ?: 1995
+        val month = parts.getOrNull(1)?.toIntOrNull() ?: 1
+        val day = parts.getOrNull(2)?.toIntOrNull() ?: 1
+
+        val timeParts = tobString.split(":")
+        val hour = timeParts.getOrNull(0)?.toIntOrNull() ?: 12
+        val minute = timeParts.getOrNull(1)?.toIntOrNull() ?: 0
+
+        // Determine Lagna (Ascendant) based on birth hour & latitude
+        val totalMinutes = hour * 60 + minute
+        val ascendantRashiIdx = ((totalMinutes / 120 + month * 2 + (year % 12)) % 12).coerceIn(0, 11)
+
+        val planetPositions = mutableListOf<PlanetPosition>()
+        val housePlanetsMap = mutableMapOf<Int, MutableList<String>>()
+        for (i in 1..12) {
+            housePlanetsMap[i] = mutableListOf()
+        }
+
+        // Calculate planet positions
+        val hourDecimal = hour + minute / 60.0
+        val planetDegrees = AstroMath.calculatePlanets(year, month, day, hourDecimal)
+
+        PLANETS_INFO.forEach { (en, hi) ->
+            val deg = planetDegrees[en] ?: 0.0
+            val rashiIdx = (deg / 30.0).toInt().coerceIn(0, 11)
+            val degreeInRashi = deg % 30.0
+
+            // House relative to Lagna (1-based)
+            val houseNum = ((rashiIdx - ascendantRashiIdx + 12) % 12) + 1
+            val nakshatraIdx = (deg / 13.333333).toInt().coerceIn(0, 26)
+
+            val shortPlanetName = hi.substringBefore(" ")
+
+            val planet = PlanetPosition(
+                planetNameEn = en,
+                planetNameHi = hi,
+                rashiNumber = rashiIdx + 1,
+                rashiNameHi = RASHI_SHORT_HI[rashiIdx],
+                degree = String.format(java.util.Locale.US, "%.2f", degreeInRashi).toDouble(),
+                houseNumber = houseNum,
+                isRetrograde = false, // Simplified
+                nakshatraHi = NAKSHATRAS[nakshatraIdx]
+            )
+            planetPositions.add(planet)
+            housePlanetsMap[houseNum]?.add(shortPlanetName)
+        }
+
+        val moonPlanet = planetPositions.find { it.planetNameEn == "Moon" } ?: planetPositions[1]
+        val moonRashi = moonPlanet.rashiNameHi
+        val moonNakshatra = moonPlanet.nakshatraHi
+
+        // Vimshottari Dasha calculation (20-year span timeline)
+        val absoluteMoonDegree = (moonPlanet.rashiNumber - 1) * 30.0 + moonPlanet.degree
+        val dashaTimeline = calculateVimshottariDasha(year, absoluteMoonDegree)
+
+        val currentDasha = dashaTimeline.find { it.isCurrent } ?: dashaTimeline.firstOrNull()
+
+        return KundaliChartData(
+            personName = name,
+            dateOfBirth = dobString,
+            timeOfBirth = tobString,
+            placeOfBirth = placeName,
+            ascendantRashiNumber = ascendantRashiIdx + 1,
+            ascendantRashiHi = RASHI_NAMES_HI[ascendantRashiIdx],
+            moonRashiHi = moonRashi,
+            moonNakshatraHi = moonNakshatra,
+            planets = planetPositions,
+            housePlanetsMap = housePlanetsMap.mapValues { it.value.toList() },
+            currentMahadashaHi = currentDasha?.planetHi ?: "केतु (Ketu)",
+            currentAntardashaHi = "गुरु (Jupiter)",
+            dashaTimeline = dashaTimeline
+        )
+    }

@@ -76,32 +76,44 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     ) { innerPadding ->
-                        Box(
+                        val globalError by mainViewModel.globalError.collectAsState()
+
+                        com.example.ui.components.ErrorBoundary(
+                            externalError = globalError,
+                            onClearError = { mainViewModel.clearGlobalError() },
+                            onRetry = {
+                                // Clear error and reset tab or rerun last query
+                                mainViewModel.clearGlobalError()
+                            },
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(innerPadding)
                         ) {
-                            Crossfade(targetState = selectedTab, label = "TabTransition") { tab ->
-                                when (tab) {
-                                    AppTab.PANCHANG -> PanchangScreen(mainViewModel)
-                                    AppTab.CALENDAR -> CalendarScreen(mainViewModel)
-                                    AppTab.RASHIFAL -> RashifalScreen(mainViewModel)
-                                    AppTab.KUNDALI -> KundaliScreen(mainViewModel)
-                                    AppTab.MUHURAT -> MuhuratScreen(mainViewModel)
-                                    AppTab.MATCHING -> MatchingScreen(mainViewModel)
-                                    AppTab.NUMEROLOGY_AI -> NumerologyScreen(mainViewModel)
-                                    AppTab.SAVED_PROFILES -> SavedProfilesScreen(mainViewModel)
-                                    AppTab.SETTINGS -> SettingsScreen(
-                                        viewModel = mainViewModel,
-                                        onShowPremiumDialog = { mainViewModel.showPremiumDialog.value = true }
+                            Box(
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                Crossfade(targetState = selectedTab, label = "TabTransition") { tab ->
+                                    when (tab) {
+                                        AppTab.PANCHANG -> PanchangScreen(mainViewModel)
+                                        AppTab.CALENDAR -> CalendarScreen(mainViewModel)
+                                        AppTab.RASHIFAL -> RashifalScreen(mainViewModel)
+                                        AppTab.KUNDALI -> KundaliScreen(mainViewModel)
+                                        AppTab.MUHURAT -> MuhuratScreen(mainViewModel)
+                                        AppTab.MATCHING -> MatchingScreen(mainViewModel)
+                                        AppTab.NUMEROLOGY_AI -> NumerologyScreen(mainViewModel)
+                                        AppTab.SAVED_PROFILES -> SavedProfilesScreen(mainViewModel)
+                                        AppTab.SETTINGS -> SettingsScreen(
+                                            viewModel = mainViewModel,
+                                            onShowPremiumDialog = { mainViewModel.showPremiumDialog.value = true }
+                                        )
+                                    }
+                                }
+
+                                if (showPremium) {
+                                    PremiumDialog(
+                                        onDismiss = { mainViewModel.showPremiumDialog.value = false }
                                     )
                                 }
-                            }
-
-                            if (showPremium) {
-                                PremiumDialog(
-                                    onDismiss = { mainViewModel.showPremiumDialog.value = false }
-                                )
                             }
                         }
                     }

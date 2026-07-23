@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import com.example.util.LanguageManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,6 +25,8 @@ import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -60,12 +63,20 @@ fun MuhuratScreen(viewModel: MainViewModel) {
     val slots = viewModel.choghadiyaSlots
     val muhurats = viewModel.upcomingMuhurats
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    Scaffold(
+        containerColor = Color.Transparent,
+        modifier = Modifier.fillMaxSize()
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                top = paddingValues.calculateTopPadding() + 8.dp,
+                end = 16.dp,
+                bottom = paddingValues.calculateBottomPadding() + 16.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
         item {
             Spacer(modifier = Modifier.height(8.dp))
             SectionHeader(
@@ -97,10 +108,11 @@ fun MuhuratScreen(viewModel: MainViewModel) {
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "दिन का चौघड़िया (Day)",
+                            text = LanguageManager.getString("दिन का चौघड़िया (Day)", "Day Choghadiya"),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = if (isDaytime) CosmicCardSurface else TextGold
+                                color = if (isDaytime) CosmicCardSurface else TextGold,
+                                fontSize = 12.sp
                             )
                         )
                     }
@@ -125,10 +137,11 @@ fun MuhuratScreen(viewModel: MainViewModel) {
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "रात का चौघड़िया (Night)",
+                            text = LanguageManager.getString("रात का चौघड़िया (Night)", "Night Choghadiya"),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = if (!isDaytime) CosmicCardSurface else TextGold
+                                color = if (!isDaytime) CosmicCardSurface else TextGold,
+                                fontSize = 12.sp
                             )
                         )
                     }
@@ -160,6 +173,7 @@ fun MuhuratScreen(viewModel: MainViewModel) {
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
 }
 
 @Composable
@@ -194,16 +208,17 @@ fun ChoghadiyaRow(slot: ChoghadiyaSlot) {
                         text = "(${slot.type.natureHi})",
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = statusColor,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
                         )
                     )
                 }
 
                 Text(
-                    text = "समय: ${slot.timeSlotString}",
+                    text = "${LanguageManager.getString("समय", "Time")}: ${slot.timeSlotString}",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = TextPrimaryDark,
-                        fontSize = 13.sp
+                        fontSize = 14.sp
                     )
                 )
             }
@@ -228,7 +243,7 @@ fun EventMuhuratCard(item: MuhuratItem) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = item.categoryHi,
+                    text = LanguageManager.getString(item.categoryHi, item.categoryEn),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = TextGold,
@@ -250,15 +265,16 @@ fun EventMuhuratCard(item: MuhuratItem) {
                 text = "${item.dateString} (${item.dayOfWeekHi}) | ${item.startTime} - ${item.endTime}",
                 style = MaterialTheme.typography.labelMedium.copy(
                     color = SacredOrange,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
                 )
             )
 
             Text(
-                text = "तिथि: ${item.tithiHi} | नक्षत्र: ${item.nakshatraHi}",
+                text = "${LanguageManager.getString("तिथि", "Tithi")}: ${item.tithiHi} | ${LanguageManager.getString("नक्षत्र", "Nakshatra")}: ${item.nakshatraHi}",
                 style = MaterialTheme.typography.bodySmall.copy(
                     color = TextSecondaryDark,
-                    fontSize = 12.sp
+                    fontSize = 13.sp
                 )
             )
 
@@ -268,7 +284,8 @@ fun EventMuhuratCard(item: MuhuratItem) {
                 text = item.descriptionHi,
                 style = MaterialTheme.typography.bodySmall.copy(
                     color = TextPrimaryDark,
-                    fontSize = 13.sp
+                    fontSize = 14.sp,
+                    lineHeight = 19.sp
                 )
             )
         }

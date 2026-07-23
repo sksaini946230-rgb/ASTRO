@@ -52,9 +52,9 @@ import com.example.util.LanguageManager
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
-    borderColor: Color = GlassBorder,
-    borderWidth: Dp = 1.dp,
-    shape: RoundedCornerShape = RoundedCornerShape(24.dp),
+    borderColor: Color = Color.Transparent,
+    borderWidth: Dp = 0.dp,
+    shape: RoundedCornerShape = RoundedCornerShape(16.dp),
     onClick: (() -> Unit)? = null,
     testTag: String? = null,
     content: @Composable BoxScope.() -> Unit
@@ -62,18 +62,11 @@ fun GlassCard(
     val cardModifier = modifier
         .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
         .clip(shape)
-        .background(
-            brush = Brush.linearGradient(
-                colors = listOf(
-                    Color(0x14FFFFFF),
-                    Color(0x08FFFFFF)
-                )
-            )
-        )
-        .border(width = borderWidth, color = borderColor, shape = shape)
+        .background(Color(0x0AFFFFFF)) // Much simpler, flatter background
+        .then(if (borderWidth > 0.dp && borderColor != Color.Transparent) Modifier.border(width = borderWidth, color = borderColor, shape = shape) else Modifier)
         .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
         .padding(16.dp)
-
+    
     Box(modifier = cardModifier, content = content)
 }
 
@@ -143,7 +136,7 @@ fun GlassBadge(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .background(backgroundColor)
-            .border(0.8.dp, borderColor, RoundedCornerShape(12.dp))
+            
             .padding(horizontal = 10.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -171,25 +164,16 @@ fun SectionHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 4.dp), // reduced padding
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (icon != null) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(GlassWhite)
-                    .border(1.dp, GlassBorder, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = GoldPrimary,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = GoldPrimary,
+                modifier = Modifier.size(24.dp)
+            )
             Spacer(modifier = Modifier.width(12.dp))
         }
 
@@ -198,7 +182,7 @@ fun SectionHeader(
                 text = LanguageManager.getString(titleHi, titleEn),
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    color = TextGold,
+                    color = TextPrimaryDark, // Softer color for headings, instead of Gold everywhere
                     fontSize = 18.sp
                 )
             )
@@ -215,7 +199,7 @@ fun SectionHeader(
                 )
             }
         }
-
+        
         if (actionButtonText != null && onActionClick != null) {
             GlassBadge(
                 text = actionButtonText,

@@ -30,6 +30,8 @@ import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -86,12 +88,20 @@ fun PanchangScreen(viewModel: MainViewModel) {
 
     var showCityDropdown by remember { mutableStateOf(false) }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    Scaffold(
+        containerColor = Color.Transparent,
+        modifier = Modifier.fillMaxSize()
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                top = paddingValues.calculateTopPadding() + 8.dp,
+                end = 16.dp,
+                bottom = paddingValues.calculateBottomPadding() + 16.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
         // Hero Cosmic Banner Header
         item {
             Spacer(modifier = Modifier.height(8.dp))
@@ -220,37 +230,120 @@ fun PanchangScreen(viewModel: MainViewModel) {
         }
 
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                PanchangElementCard(
-                    titleHi = "तिथि (Tithi)",
-                    titleEn = "Tithi",
-                    valueHi = panchang.tithiHindi,
-                    subValueHi = panchang.tithiEndTime,
-                    progress = panchang.tithiProgressPercent / 100f,
-                    badgeText = panchang.pakshaHindi.substringBefore(" ")
-                )
-
-                PanchangElementCard(
-                    titleHi = "नक्षत्र (Nakshatra)",
-                    titleEn = "Nakshatra",
-                    valueHi = "${panchang.nakshatraHindi} (चरण ${panchang.nakshatraPada})",
-                    subValueHi = panchang.nakshatraEndTime,
-                    progress = 0.65f,
-                    badgeText = "चंद्र नक्षत्र: ${panchang.moonSign}"
-                )
-
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        SmallElementCard(
-                            titleHi = "योग (Yoga)",
-                            valueHi = panchang.yogaHindi
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    // Tithi Section
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "तिथि (Tithi)",
+                                style = MaterialTheme.typography.labelMedium.copy(color = TextSecondaryDark, fontSize = 13.sp)
+                            )
+                            GlassBadge(text = panchang.pakshaHindi.substringBefore(" "))
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = panchang.tithiHindi,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = TextGold,
+                                fontSize = 18.sp
+                            )
+                        )
+                        Text(
+                            text = panchang.tithiEndTime,
+                            style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 13.sp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LinearProgressIndicator(
+                            progress = { (panchang.tithiProgressPercent / 100f).coerceIn(0f, 1f) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                            color = GoldPrimary,
+                            trackColor = GlassWhite
                         )
                     }
-                    Box(modifier = Modifier.weight(1f)) {
-                        SmallElementCard(
-                            titleHi = "करण (Karan)",
-                            valueHi = panchang.karanHindi
+
+                    androidx.compose.material3.HorizontalDivider(color = GlassWhite.copy(alpha = 0.1f), thickness = 1.dp)
+
+                    // Nakshatra Section
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "नक्षत्र (Nakshatra)",
+                                style = MaterialTheme.typography.labelMedium.copy(color = TextSecondaryDark, fontSize = 13.sp)
+                            )
+                            GlassBadge(text = "चंद्र नक्षत्र: ${panchang.moonSign}")
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "${panchang.nakshatraHindi} (चरण ${panchang.nakshatraPada})",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = TextGold,
+                                fontSize = 18.sp
+                            )
                         )
+                        Text(
+                            text = panchang.nakshatraEndTime,
+                            style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 13.sp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LinearProgressIndicator(
+                            progress = { 0.65f },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                            color = GoldPrimary,
+                            trackColor = GlassWhite
+                        )
+                    }
+
+                    androidx.compose.material3.HorizontalDivider(color = GlassWhite.copy(alpha = 0.1f), thickness = 1.dp)
+
+                    // Yoga & Karan Section
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "योग (Yoga)",
+                                style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 12.sp)
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = panchang.yogaHindi,
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextGold,
+                                    fontSize = 16.sp
+                                )
+                            )
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "करण (Karan)",
+                                style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 12.sp)
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = panchang.karanHindi,
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextGold,
+                                    fontSize = 16.sp
+                                )
+                            )
+                        }
                     }
                 }
             }
@@ -287,31 +380,48 @@ fun PanchangScreen(viewModel: MainViewModel) {
         }
 
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                MuhuratTimeRow(
-                    titleHi = "अभिजित मुहूर्त (Abhijit)",
-                    timeStr = panchang.abhijitMuhurat,
-                    statusText = "अति शुभ (Best)",
-                    color = AuspiciousGreen
-                )
-                MuhuratTimeRow(
-                    titleHi = "राहुकाल (Rahu Kaal)",
-                    timeStr = panchang.rahuKaal,
-                    statusText = "अशुभ (Avoid)",
-                    color = InauspiciousRed
-                )
-                MuhuratTimeRow(
-                    titleHi = "गुलिक काल (Gulika)",
-                    timeStr = panchang.gulikaKaal,
-                    statusText = "मध्यम (Neutral)",
-                    color = NeutralOrange
-                )
-                MuhuratTimeRow(
-                    titleHi = "यमगण्ड (Yamaganda)",
-                    timeStr = panchang.yamaganda,
-                    statusText = "अशुभ (Avoid)",
-                    color = InauspiciousRed
-                )
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    val timings = listOf(
+                        Triple("अभिजित मुहूर्त (Abhijit)", panchang.abhijitMuhurat, Pair("अति शुभ (Best)", AuspiciousGreen)),
+                        Triple("राहुकाल (Rahu Kaal)", panchang.rahuKaal, Pair("अशुभ (Avoid)", InauspiciousRed)),
+                        Triple("गुलिक काल (Gulika)", panchang.gulikaKaal, Pair("मध्यम (Neutral)", NeutralOrange)),
+                        Triple("यमगण्ड (Yamaganda)", panchang.yamaganda, Pair("अशुभ (Avoid)", InauspiciousRed))
+                    )
+
+                    timings.forEachIndexed { index, timing ->
+                        val (title, time, status) = timing
+                        val (statusText, color) = status
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = title,
+                                    style = MaterialTheme.typography.titleSmall.copy(color = color, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = time,
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryDark, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                                )
+                            }
+
+                            GlassBadge(
+                                text = statusText,
+                                backgroundColor = color.copy(alpha = 0.15f),
+                                textColor = color,
+                                borderColor = color.copy(alpha = 0.4f)
+                            )
+                        }
+
+                        if (index < timings.lastIndex) {
+                            androidx.compose.material3.HorizontalDivider(color = GlassWhite.copy(alpha = 0.1f), thickness = 1.dp)
+                        }
+                    }
+                }
             }
         }
 
@@ -429,9 +539,14 @@ fun PanchangScreen(viewModel: MainViewModel) {
         }
 
         item {
+            PlanetaryPositionsCard(planets = panchang.planets)
+        }
+
+        item {
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
 }
 
 @Composable
@@ -439,11 +554,11 @@ fun InfoPill(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 11.sp)
+            style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 13.sp)
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium.copy(color = TextGold, fontWeight = FontWeight.Bold)
+            style = MaterialTheme.typography.titleMedium.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 16.sp)
         )
     }
 }
@@ -466,7 +581,7 @@ fun PanchangElementCard(
             ) {
                 Text(
                     text = titleHi,
-                    style = MaterialTheme.typography.labelMedium.copy(color = TextSecondaryDark, fontSize = 12.sp)
+                    style = MaterialTheme.typography.labelMedium.copy(color = TextSecondaryDark, fontSize = 13.sp)
                 )
                 GlassBadge(text = badgeText)
             }
@@ -478,13 +593,13 @@ fun PanchangElementCard(
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = TextGold,
-                    fontSize = 17.sp
+                    fontSize = 18.sp
                 )
             )
 
             Text(
                 text = subValueHi,
-                style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 12.sp)
+                style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 13.sp)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -508,7 +623,7 @@ fun SmallElementCard(titleHi: String, valueHi: String) {
         Column {
             Text(
                 text = titleHi,
-                style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 11.sp)
+                style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 12.sp)
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
@@ -516,7 +631,7 @@ fun SmallElementCard(titleHi: String, valueHi: String) {
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.Bold,
                     color = TextGold,
-                    fontSize = 14.sp
+                    fontSize = 15.sp
                 )
             )
         }
@@ -526,10 +641,10 @@ fun SmallElementCard(titleHi: String, valueHi: String) {
 @Composable
 fun TimingColumn(title: String, time: String, icon: ImageVector, iconColor: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(imageVector = icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(20.dp))
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(text = title, style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 10.sp))
-        Text(text = time, style = MaterialTheme.typography.labelMedium.copy(color = TextPrimaryDark, fontWeight = FontWeight.Bold, fontSize = 12.sp))
+        Icon(imageVector = icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(24.dp))
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(text = title, style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 12.sp))
+        Text(text = time, style = MaterialTheme.typography.labelMedium.copy(color = TextPrimaryDark, fontWeight = FontWeight.Bold, fontSize = 14.sp))
     }
 }
 
@@ -548,12 +663,12 @@ fun MuhuratTimeRow(titleHi: String, timeStr: String, statusText: String, color: 
             Column {
                 Text(
                     text = titleHi,
-                    style = MaterialTheme.typography.titleSmall.copy(color = color, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    style = MaterialTheme.typography.titleSmall.copy(color = color, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = timeStr,
-                    style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryDark, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                    style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryDark, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                 )
             }
 
@@ -563,6 +678,83 @@ fun MuhuratTimeRow(titleHi: String, timeStr: String, statusText: String, color: 
                 textColor = color,
                 borderColor = color.copy(alpha = 0.4f)
             )
+        }
+    }
+}
+@Composable
+fun PlanetaryPositionsCard(planets: List<com.example.data.model.PlanetPosition>) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        SectionHeader(
+            titleHi = "ग्रह स्थिति (Planetary Positions)",
+            titleEn = "Current Astrological Positions"
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        GlassCard(modifier = Modifier.fillMaxWidth()) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                planets.forEach { planet ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(GoldPrimary.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = planet.planetNameHi.substring(0, 1),
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        color = TextGold,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp
+                                    )
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "${planet.planetNameHi} (${planet.planetNameEn})",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextGold,
+                                        fontSize = 15.sp
+                                    )
+                                )
+                                Text(
+                                    text = "नक्षत्र: ${planet.nakshatraHi} | राशि: ${planet.rashiNameHi}",
+                                    style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 13.sp)
+                                )
+                            }
+                        }
+                        
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "${planet.degree}°",
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    color = TextSecondaryDark,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
+                                )
+                            )
+                            if (planet.isRetrograde) {
+                                Text(
+                                    text = "Retrograde (वक्री)",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = InauspiciousRed,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

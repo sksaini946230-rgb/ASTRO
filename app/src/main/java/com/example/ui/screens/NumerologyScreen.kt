@@ -39,6 +39,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -90,12 +92,20 @@ fun NumerologyScreen(viewModel: MainViewModel) {
         "राहु दशा शांति के सरल उपाय क्या हैं?"
     )
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
+    Scaffold(
+        containerColor = Color.Transparent,
+        modifier = Modifier.fillMaxSize()
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                top = paddingValues.calculateTopPadding() + 8.dp,
+                end = 16.dp,
+                bottom = paddingValues.calculateBottomPadding() + 16.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
         item {
             Spacer(modifier = Modifier.height(8.dp))
             SectionHeader(
@@ -202,9 +212,9 @@ fun NumerologyScreen(viewModel: MainViewModel) {
                 ) {
                     GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "मूलांक (Moolank)", style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 11.sp))
+                            Text(text = "मूलांक (Moolank)", style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 13.sp))
                             Text(text = "${numData.moolank}", style = MaterialTheme.typography.displayMedium.copy(color = TextGold, fontWeight = FontWeight.ExtraBold))
-                            Text(text = "स्वामी: ${numData.rulingPlanetHi}", style = MaterialTheme.typography.labelSmall.copy(color = SacredOrange, fontSize = 10.sp))
+                            Text(text = "स्वामी: ${numData.rulingPlanetHi}", style = MaterialTheme.typography.labelSmall.copy(color = SacredOrange, fontSize = 12.sp, fontWeight = FontWeight.Bold))
                         }
                     }
                 }
@@ -215,9 +225,9 @@ fun NumerologyScreen(viewModel: MainViewModel) {
                 ) {
                     GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "भाग्यांक (Bhagyank)", style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 11.sp))
+                            Text(text = "भाग्यांक (Bhagyank)", style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 13.sp))
                             Text(text = "${numData.bhagyank}", style = MaterialTheme.typography.displayMedium.copy(color = GoldPrimary, fontWeight = FontWeight.ExtraBold))
-                            Text(text = "नाम अंक: ${numData.nameNumber}", style = MaterialTheme.typography.labelSmall.copy(color = SacredOrange, fontSize = 10.sp))
+                            Text(text = "नाम अंक: ${numData.nameNumber}", style = MaterialTheme.typography.labelSmall.copy(color = SacredOrange, fontSize = 12.sp, fontWeight = FontWeight.Bold))
                         }
                     }
                 }
@@ -230,17 +240,17 @@ fun NumerologyScreen(viewModel: MainViewModel) {
                 Column {
                     Text(
                         text = "मूलांक ${numData.moolank} का फल:",
-                        style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = numData.moolankReadingHi,
-                        style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 13.sp)
+                        style = MaterialTheme.typography.titleMedium.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
+                        text = numData.moolankReadingHi,
+                        style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryDark, fontSize = 15.sp, lineHeight = 21.sp)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
                         text = numData.luckyDaysHi,
-                        style = MaterialTheme.typography.labelSmall.copy(color = SacredOrange, fontWeight = FontWeight.Bold)
+                        style = MaterialTheme.typography.labelSmall.copy(color = SacredOrange, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                     )
                 }
             }
@@ -258,24 +268,28 @@ fun NumerologyScreen(viewModel: MainViewModel) {
 
         // Quick Sample Questions Chips
         item {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 items(quickQuestions) { q ->
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(20.dp))
                             .background(GlassWhite)
-                            .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
+                            .border(1.dp, GlassBorder, RoundedCornerShape(20.dp))
                             .clickable {
                                 userQuestion = q
                                 viewModel.askAiAstrologer(q)
                             }
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
                     ) {
                         Text(
                             text = q,
                             style = MaterialTheme.typography.labelSmall.copy(
                                 color = TextGold,
-                                fontSize = 11.sp
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium
                             )
                         )
                     }
@@ -331,14 +345,14 @@ fun NumerologyScreen(viewModel: MainViewModel) {
                         ) {
                             Column {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = GoldPrimary, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(text = "ज्योतिषाचार्य का उत्तर:", style = MaterialTheme.typography.labelMedium.copy(color = TextGold, fontWeight = FontWeight.Bold))
+                                    Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = GoldPrimary, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(text = "ज्योतिषाचार्य का उत्तर:", style = MaterialTheme.typography.labelMedium.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 14.sp))
                                 }
-                                Spacer(modifier = Modifier.height(6.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = aiResponse,
-                                    style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 13.sp)
+                                    style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 14.sp, lineHeight = 20.sp)
                                 )
                             }
                         }
@@ -351,6 +365,7 @@ fun NumerologyScreen(viewModel: MainViewModel) {
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
 }
 
 @Composable

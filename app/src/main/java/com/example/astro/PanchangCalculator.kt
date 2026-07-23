@@ -2,6 +2,7 @@ package com.example.astro
 
 import com.example.data.model.CityLocation
 import com.example.data.model.PanchangData
+import com.example.data.model.PlanetPosition
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -98,10 +99,16 @@ object PanchangCalculator {
         )
         val masa = masaNames[monthIdx % 12]
 
-        // Astronomical Moon/Sun degree approximations for Tithi & Nakshatra
-        val dayCounter = dayOfYear + (year - 2026) * 365
-        val sunDeg = (280.0 + dayCounter * 0.9856) % 360.0
-        val moonDeg = (dayCounter * 13.176) % 360.0
+        val minute = cal.get(Calendar.MINUTE)
+        val hour = cal.get(Calendar.HOUR_OF_DAY)
+        val month = cal.get(Calendar.MONTH) + 1
+        val day = cal.get(Calendar.DAY_OF_MONTH)
+
+        val hourDecimal = hour + minute / 60.0
+        val planetDegrees = AstroMath.calculatePlanets(year, month, day, hourDecimal)
+
+        val sunDeg = planetDegrees["Sun"] ?: 0.0
+        val moonDeg = planetDegrees["Moon"] ?: 0.0
 
         val diffDeg = (moonDeg - sunDeg + 360.0) % 360.0
         val tithiNum = (diffDeg / 12.0).toInt() + 1 // 1 to 30
@@ -203,6 +210,69 @@ object PanchangCalculator {
         val sunSignIdx = (sunDeg / 30.0).toInt().coerceIn(0, 11)
         val moonSignIdx = (moonDeg / 30.0).toInt().coerceIn(0, 11)
 
+        val PLANETS_INFO = listOf(
+            Pair("Sun", "सूर्य (Su)"), Pair("Moon", "चन्द्र (Mo)"), Pair("Mars", "मंगल (Ma)"),
+            Pair("Mercury", "बुध (Me)"), Pair("Jupiter", "गुरु (Ju)"), Pair("Venus", "शुक्र (Ve)"),
+            Pair("Saturn", "शनि (Sa)"), Pair("Rahu", "राहु (Ra)"), Pair("Ketu", "केतु (Ke)")
+        )
+        val NAKSHATRAS = listOf(
+            "अश्विनी", "भरणी", "कृत्तिका", "रोहिणी", "मृगशिरा", "आर्द्रा", "पुनर्वसु", "पुष्य", "अश्लेषा",
+            "मघा", "पूर्वाफाल्गुनी", "उत्तराफाल्गुनी", "हस्त", "चित्रा", "स्वाती", "विशाखा", "अनुराधा", "ज्येष्ठा",
+            "मूल", "पूर्वाषाढा", "उत्तराषाढा", "श्रवण", "धनिष्ठा", "शतभिषा", "पूर्वाभाद्रपद", "उत्तराभाद्रपद", "रेवती"
+        )
+        
+        // Sidereal Ascendant (Lagna) with Lahiri Ayanamsa
+        val y = if (month <= 2) year - 1 else year
+        val m = if (month <= 2) month + 12 else month
+        val aVal = y / 100
+        val bVal = 2 - aVal + aVal / 4
+        val jdVal = floor(365.25 * (y + 4716)) + floor(30.6001 * (m + 1)) + day + hourDecimal / 24.0 + bVal - 1524.5
+
+        val t1900Val = (jdVal - 2415020.0) / 36525.0
+        val ayanamsaVal = 22.460148 + 1.396042 * t1900Val + 0.000308 * t1900Val * t1900Val
+
+        val gmst = (18.697374558 + 24.06570982441908 * (jdVal - 2451545.0)) % 24.0
+        val gmstDeg = if (gmst < 0) (gmst + 24.0) * 15.0 else gmst * 15.0
+        val lstDeg = (gmstDeg + city.longitude) % 360.0
+        val lst = if (lstDeg < 0) lstDeg + 360.0 else lstDeg
+
+        val t2000Val = (jdVal - 2451545.0) / 36525.0
+        val obliquity = 23.4392911 - (46.8150 * t2000Val) / 3600.0
+
+        val lstRad = Math.toRadians(lst)
+        val epsRad = Math.toRadians(obliquity)
+        val latRadCalculated = Math.toRadians(city.latitude)
+
+        val num = kotlin.math.cos(lstRad)
+        val den = -kotlin.math.sin(lstRad) * kotlin.math.cos(epsRad) - kotlin.math.tan(latRadCalculated) * kotlin.math.sin(epsRad)
+        var ascendantDeg = Math.toDegrees(kotlin.math.atan2(num, den))
+        if (ascendantDeg < 0) ascendantDeg += 360.0
+
+        var siderealAscendant = (ascendantDeg - ayanamsaVal) % 360.0
+        if (siderealAscendant < 0) siderealAscendant += 360.0
+
+        val ascendantRashiIdx = (siderealAscendant / 30.0).toInt().coerceIn(0, 11)
+
+        val planetPositions = mutableListOf<PlanetPosition>()
+        PLANETS_INFO.forEach { (en, hi) ->
+            val deg = planetDegrees[en] ?: 0.0
+            val rashiIdx = (deg / 30.0).toInt().coerceIn(0, 11)
+            val degreeInRashi = deg % 30.0
+            val houseNum = ((rashiIdx - ascendantRashiIdx + 12) % 12) + 1
+            val nakshatraIdxP = (deg / 13.333333).toInt().coerceIn(0, 26)
+            
+            planetPositions.add(PlanetPosition(
+                planetNameEn = en,
+                planetNameHi = hi,
+                rashiNumber = rashiIdx + 1,
+                rashiNameHi = rashiNamesHi[rashiIdx],
+                degree = String.format(Locale.US, "%.2f", degreeInRashi).toDouble(),
+                houseNumber = houseNum,
+                isRetrograde = false,
+                nakshatraHi = NAKSHATRAS[nakshatraIdxP]
+            ))
+        }
+
         val dateFmt = SimpleDateFormat("EEEE, dd MMMM yyyy", Locale.ENGLISH)
 
         return PanchangData(
@@ -240,7 +310,8 @@ object PanchangCalculator {
             moonSign = rashiNamesHi[moonSignIdx],
             locationName = city.cityNameHindi,
             latitude = city.latitude,
-            longitude = city.longitude
+            longitude = city.longitude,
+            planets = planetPositions
         )
     }
 
