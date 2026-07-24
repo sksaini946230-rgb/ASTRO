@@ -58,6 +58,7 @@ import com.example.ui.MainViewModel
 import com.example.ui.components.GlassBadge
 import com.example.ui.components.GlassCard
 import com.example.ui.components.SectionHeader
+import com.example.ui.theme.GlassBorder
 import com.example.util.LanguageManager
 import com.example.util.AppLanguage
 
@@ -228,7 +229,7 @@ fun CalendarScreen(viewModel: MainViewModel) {
                                             )
                                             .border(
                                                 1.dp,
-                                                if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                                                if (isToday) MaterialTheme.colorScheme.primary else GlassBorder,
                                                 RoundedCornerShape(8.dp)
                                             )
                                             .clickable {
@@ -581,7 +582,7 @@ fun FestivalDetailDialog(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
+                        .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
                         .padding(12.dp)
                 ) {
                     Column {
@@ -620,7 +621,7 @@ fun FestivalDetailDialog(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
+                        .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
                         .padding(12.dp)
                 ) {
                     Column {
@@ -659,7 +660,7 @@ fun FestivalDetailDialog(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
+                        .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
                         .padding(12.dp)
                 ) {
                     Column {

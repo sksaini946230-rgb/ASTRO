@@ -31,4 +31,8 @@ class KundaliRepository(
     suspend fun deleteProfileById(id: Long) = withContext(ioDispatcher) {
         kundaliDao.deleteProfileById(id)
     }
+
+    suspend fun deleteAllProfiles() = withContext(ioDispatcher) {
+        kundaliDao.deleteAllProfiles()
+    }
 }

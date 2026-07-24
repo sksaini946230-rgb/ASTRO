@@ -30,4 +30,7 @@ interface SavedReportDao {
 
     @Query("DELETE FROM saved_astrology_reports WHERE id = :id")
     suspend fun deleteReportById(id: Long)
+
+    @Query("DELETE FROM saved_astrology_reports")
+    suspend fun deleteAllReports()
 }

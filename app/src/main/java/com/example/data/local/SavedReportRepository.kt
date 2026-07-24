@@ -35,4 +35,8 @@ class SavedReportRepository(
     suspend fun deleteReportById(id: Long) = withContext(ioDispatcher) {
         savedReportDao.deleteReportById(id)
     }
+
+    suspend fun deleteAllReports() = withContext(ioDispatcher) {
+        savedReportDao.deleteAllReports()
+    }
 }

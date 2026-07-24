@@ -141,4 +141,33 @@ class FirebaseAuthService {
             Result.failure(e)
         }
     }
+
+    suspend fun deleteUserDataAndAccount(): Result<Unit> {
+        val user = currentUser ?: return Result.failure(Exception("User not authenticated with Firebase"))
+        return try {
+            // 1. Delete all Firestore cloud backup data for this user
+            val userProfilesRef = firestore.collection("users")
+                .document(user.uid)
+                .collection("kundali_profiles")
+                .get()
+                .await()
+
+            val batch = firestore.batch()
+            userProfilesRef.documents.forEach { doc ->
+                batch.delete(doc.reference)
+            }
+            batch.delete(firestore.collection("users").document(user.uid))
+            batch.commit().await()
+
+            // 2. Delete the Firebase Auth user account
+            user.delete().await()
+            Result.success(Unit)
+        } catch (e: com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException) {
+            Log.e("FirebaseAuthService", "Re-authentication required before deleting account", e)
+            Result.failure(Exception("सुरक्षा के लिए, खाता हटाने से पहले कृपया पुनः साइन-इन करें। (For security, please sign in again before deleting your account.)"))
+        } catch (e: Exception) {
+            Log.e("FirebaseAuthService", "Failed to delete user data and account", e)
+            Result.failure(e)
+        }
+    }
 }

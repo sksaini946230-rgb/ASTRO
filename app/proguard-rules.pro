@@ -1,21 +1,42 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# AstroVeda ProGuard / R8 Rules
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Keep Line Numbers and Attributes for Crash Reporting
+-keepattributes SourceFile,LineNumberTable,Signature,InnerClasses,EnclosingMethod,*Annotation*
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Data Models and Entities (Preserve reflection/serialization for Firestore & Room)
+-keep class com.example.data.model.** { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Firebase (Auth, Firestore, Cloud Messaging, Analytics)
+-keep class com.google.firebase.** { *; }
+-keepclassmembers class * {
+    @com.google.firebase.firestore.PropertyName *;
+    @com.google.firebase.database.PropertyName *;
+}
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.firebase.**
+
+# Room Database
+-keep class * extends androidx.room.RoomDatabase
+-keepclassmembers class * {
+    @androidx.room.* *;
+}
+-dontwarn androidx.room.paging.**
+
+# WorkManager Workers
+-keep class * extends androidx.work.ListenableWorker {
+    public <init>(android.content.Context, androidx.work.WorkerParameters);
+}
+-keep class com.example.worker.** { *; }
+
+# Google Play Billing
+-keep class com.android.billingclient.api.** { *; }
+
+# Google Mobile Ads (AdMob)
+-keep class com.google.android.gms.ads.** { *; }
+-keep class com.google.ads.** { *; }
+
+# Kotlin Serialization / Coroutines
+-keepclassmembers class * {
+    @kotlinx.serialization.Serializable *;
+}
+-dontwarn kotlinx.coroutines.**

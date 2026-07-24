@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.GridOn
 import androidx.compose.material.icons.filled.Info
@@ -38,7 +39,10 @@ import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,6 +54,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -77,10 +82,18 @@ import com.example.ui.components.GlassBadge
 import com.example.ui.components.GlassCard
 import com.example.ui.components.SectionHeader
 import com.example.ui.theme.AuspiciousGreen
+import com.example.ui.theme.GoldSecondary
 import com.example.ui.theme.InauspiciousRed
 import com.example.ui.theme.NeutralOrange
+import com.example.ui.theme.PremiumGold
 import com.example.util.AppLanguage
 import com.example.util.LanguageManager
+
+// External URL constants for hosted versions (can be updated when hosted on web)
+const val EXTERNAL_PRIVACY_POLICY_URL = "https://astroveda.app/privacy"
+const val EXTERNAL_TERMS_OF_SERVICE_URL = "https://astroveda.app/terms"
+const val LOCAL_PRIVACY_POLICY_URL = "file:///android_asset/privacy_policy.html"
+const val LOCAL_TERMS_OF_SERVICE_URL = "file:///android_asset/terms_of_service.html"
 
 @Composable
 fun SettingsScreen(
@@ -94,6 +107,8 @@ fun SettingsScreen(
     val selectedRashiId by viewModel.selectedRashiId.collectAsState()
     val dailyRahuKaalAlert by viewModel.dailyRahuKaalAlert.collectAsState()
     val festivalRemindersAlert by viewModel.festivalRemindersAlert.collectAsState()
+    val currentUser by viewModel.currentUser.collectAsState()
+    val backupStatusMessage by viewModel.backupStatusMessage.collectAsState()
 
     var showRashiDialog by remember { mutableStateOf(false) }
     var showLocationModal by remember { mutableStateOf(false) }
@@ -101,8 +116,16 @@ fun SettingsScreen(
 
     var showAboutDialog by remember { mutableStateOf(false) }
     var showRatingDialog by remember { mutableStateOf(false) }
+    var showDeleteAccountDialog by remember { mutableStateOf(false) }
     var webViewUrlToOpen by remember { mutableStateOf<String?>(null) }
     var webViewTitle by remember { mutableStateOf("") }
+
+    LaunchedEffect(backupStatusMessage) {
+        backupStatusMessage?.let { msg ->
+            Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+            viewModel.clearBackupStatusMessage()
+        }
+    }
 
     val horoscopes = remember { RashifalProvider.getDailyHoroscope() }
     val currentRashi = horoscopes.find { it.rashiId == selectedRashiId } ?: horoscopes.first()
@@ -147,7 +170,7 @@ fun SettingsScreen(
                                     .clip(CircleShape)
                                     .background(
                                         brush = Brush.horizontalGradient(
-                                            listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
+                                            listOf(PremiumGold, GoldSecondary)
                                         )
                                     ),
                                 contentAlignment = Alignment.Center
@@ -155,7 +178,7 @@ fun SettingsScreen(
                                 Icon(
                                     imageVector = Icons.Default.Star,
                                     contentDescription = "PRO",
-                                    tint = MaterialTheme.colorScheme.surface,
+                                    tint = Color(0xFF1C1C1E),
                                     modifier = Modifier.size(22.dp)
                                 )
                             }
@@ -164,7 +187,7 @@ fun SettingsScreen(
                                 Text(
                                     text = "AstroVeda PRO (अपग्रेड करें)",
                                     style = MaterialTheme.typography.titleMedium.copy(
-                                        color = MaterialTheme.colorScheme.primary,
+                                        color = PremiumGold,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 17.sp
                                     )
@@ -181,8 +204,9 @@ fun SettingsScreen(
 
                         GlassBadge(
                             text = "PRO ₹99/माह",
-                            textColor = MaterialTheme.colorScheme.primary,
-                            borderColor = MaterialTheme.colorScheme.primary
+                            backgroundColor = PremiumGold.copy(alpha = 0.15f),
+                            textColor = PremiumGold,
+                            borderColor = PremiumGold
                         )
                     }
 
@@ -203,7 +227,7 @@ fun SettingsScreen(
                             .clip(RoundedCornerShape(12.dp))
                             .background(
                                 brush = Brush.horizontalGradient(
-                                    listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
+                                    listOf(PremiumGold, GoldSecondary)
                                 )
                             )
                             .padding(vertical = 10.dp),
@@ -212,7 +236,7 @@ fun SettingsScreen(
                         Text(
                             text = "अभी PRO अपग्रेड करें • ₹99/माह",
                             style = MaterialTheme.typography.labelMedium.copy(
-                                color = MaterialTheme.colorScheme.surface,
+                                color = Color(0xFF1C1C1E),
                                 fontWeight = FontWeight.ExtraBold,
                                 fontSize = 13.sp
                             )
@@ -818,7 +842,7 @@ fun SettingsScreen(
                                 .clickable {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     webViewTitle = "गोपनीयता नीति (Privacy Policy)"
-                                    webViewUrlToOpen = "https://astroveda.app/privacy"
+                                    webViewUrlToOpen = LOCAL_PRIVACY_POLICY_URL
                                 }
                                 .padding(vertical = 10.dp, horizontal = 8.dp)
                                 .testTag("settings_privacy_policy_button"),
@@ -853,7 +877,7 @@ fun SettingsScreen(
                                 .clickable {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     webViewTitle = "सेवा की शर्तें (Terms of Service)"
-                                    webViewUrlToOpen = "https://astroveda.app/terms"
+                                    webViewUrlToOpen = LOCAL_TERMS_OF_SERVICE_URL
                                 }
                                 .padding(vertical = 10.dp, horizontal = 8.dp)
                                 .testTag("settings_terms_button"),
@@ -876,6 +900,78 @@ fun SettingsScreen(
                                     )
                                 )
                             }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 7. Account & Data Privacy Control (DPDP Act 2023)
+        item {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.DeleteForever,
+                                contentDescription = null,
+                                tint = InauspiciousRed,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "खाता एवं डेटा नियंत्रण (Data Privacy)",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                                Text(
+                                    text = if (currentUser != null) "साइन इन: ${currentUser?.email}" else "स्थानीय डेटा (Local Storage)",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 11.sp
+                                    )
+                                )
+                            }
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(InauspiciousRed.copy(alpha = 0.1f))
+                            .border(1.dp, InauspiciousRed.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                showDeleteAccountDialog = true
+                            }
+                            .padding(vertical = 12.dp, horizontal = 14.dp)
+                            .testTag("settings_delete_account_button"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.DeleteForever,
+                                contentDescription = null,
+                                tint = InauspiciousRed,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (currentUser != null) "खाता एवं सभी डेटा हटाएं (Delete Account & Data)" else "सभी सहेजा गया डेटा हटाएं (Delete Local Data)",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    color = InauspiciousRed,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
+                                )
+                            )
                         }
                     }
                 }
@@ -1137,7 +1233,15 @@ fun SettingsScreen(
                             WebView(ctx).apply {
                                 webViewClient = WebViewClient()
                                 settings.javaScriptEnabled = true
-                                loadUrl(webViewUrlToOpen ?: "https://astroveda.app/privacy")
+                                settings.domStorageEnabled = true
+                                settings.cacheMode = android.webkit.WebSettings.LOAD_DEFAULT
+                                loadUrl(webViewUrlToOpen ?: LOCAL_PRIVACY_POLICY_URL)
+                            }
+                        },
+                        update = { view ->
+                            val url = webViewUrlToOpen ?: LOCAL_PRIVACY_POLICY_URL
+                            if (view.url != url) {
+                                view.loadUrl(url)
                             }
                         },
                         modifier = Modifier.fillMaxSize()
@@ -1147,6 +1251,66 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(onClick = { webViewUrlToOpen = null }) {
                     Text("बंद करें (Close)", color = MaterialTheme.colorScheme.primary)
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    }
+
+    // 7. Delete Account & Data Confirmation Dialog
+    if (showDeleteAccountDialog) {
+        val isGoogleUser = currentUser != null
+        AlertDialog(
+            onDismissRequest = { showDeleteAccountDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = InauspiciousRed,
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = if (isGoogleUser) "खाता एवं डेटा स्थायी रूप से हटाएँ?" else "स्थानीय डेटा स्थायी रूप से हटाएँ?",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = if (isGoogleUser)
+                            "क्या आप अपना AstroVeda खाता एवं सभी डेटा स्थायी रूप से हटाना चाहते हैं?\n\n• क्लाउड में सहेजे गए सभी कुण्डली प्रोफाइल (Firestore)\n• इस डिवाइस पर सहेजे गए सभी प्रोफाइल एवं रिपोर्ट\n• गूगल साइन-इन खाता एवं क्रेडेंशियल्स\n\nयह प्रक्रिया पूरी तरह से स्थायी (Irreversible) है।"
+                        else
+                            "क्या आप इस डिवाइस पर सहेजे गए सभी कुण्डली प्रोफाइल और रिपोर्ट स्थायी रूप से हटाना चाहते हैं?\n\nयह प्रक्रिया पूरी तरह से स्थायी (Irreversible) है।",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 12.sp
+                        )
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteAccountDialog = false
+                        if (isGoogleUser) {
+                            viewModel.deleteAccountAndData()
+                        } else {
+                            viewModel.deleteLocalDataOnly()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = InauspiciousRed)
+                ) {
+                    Text("हां, हटाएँ (Delete)", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteAccountDialog = false }) {
+                    Text("रद्द करें (Cancel)", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
             containerColor = MaterialTheme.colorScheme.surfaceVariant

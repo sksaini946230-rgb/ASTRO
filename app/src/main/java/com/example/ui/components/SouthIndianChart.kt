@@ -25,6 +25,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.KundaliChartData
+import com.example.ui.theme.DateOrange
+import com.example.ui.theme.GlassBorder
+import com.example.ui.theme.GlassWhite
+import com.example.ui.theme.PremiumGold
+import com.example.ui.theme.TextGold
+import com.example.ui.theme.TextPrimaryDark
+import com.example.ui.theme.TextSecondaryDark
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -78,9 +85,9 @@ fun SouthIndianChart(
                 scaleX = scaleAnim.value
                 scaleY = scaleAnim.value
             }
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .border(1.5.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(20.dp))
+            .background(GlassWhite)
+            .border(1.dp, GlassBorder, RoundedCornerShape(20.dp))
             .padding(4.dp)
             .testTag("south_indian_chart"),
         contentAlignment = Alignment.Center
@@ -108,7 +115,7 @@ fun SouthIndianChart(
                                         Text(
                                             text = "दक्षिण भारतीय कुण्डली",
                                             style = MaterialTheme.typography.labelSmall.copy(
-                                                color = MaterialTheme.colorScheme.primary,
+                                                color = PremiumGold,
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 11.sp
                                             )
@@ -116,7 +123,7 @@ fun SouthIndianChart(
                                         Text(
                                             text = "लग्न: ${chartData.ascendantRashiHi}",
                                             style = MaterialTheme.typography.labelSmall.copy(
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                color = TextSecondaryDark,
                                                 fontSize = 10.sp
                                             )
                                         )
@@ -131,7 +138,7 @@ fun SouthIndianChart(
                                 modifier = Modifier
                                     .weight(1f)
                                     .fillMaxHeight()
-                                    .border(0.8.dp, MaterialTheme.colorScheme.outline)
+                                    .border(1.dp, GlassBorder)
                                     .padding(4.dp)
                             ) {
                                 Column {
@@ -139,7 +146,7 @@ fun SouthIndianChart(
                                         Text(
                                             text = "${rashiShortHi.getOrElse(rashiNum) { "" }} ($rashiNum)",
                                             style = MaterialTheme.typography.labelSmall.copy(
-                                                color = MaterialTheme.colorScheme.primary,
+                                                color = TextGold,
                                                 fontSize = 9.sp,
                                                 fontWeight = FontWeight.Bold
                                             )
@@ -148,7 +155,7 @@ fun SouthIndianChart(
                                             Text(
                                                 text = " [ल]",
                                                 style = MaterialTheme.typography.labelSmall.copy(
-                                                    color = MaterialTheme.colorScheme.secondary,
+                                                    color = DateOrange,
                                                     fontWeight = FontWeight.ExtraBold,
                                                     fontSize = 9.sp
                                                 )
@@ -159,7 +166,7 @@ fun SouthIndianChart(
                                     Text(
                                         text = planetsInRashi.joinToString(" "),
                                         style = MaterialTheme.typography.bodySmall.copy(
-                                            color = MaterialTheme.colorScheme.onSurface,
+                                            color = TextPrimaryDark,
                                             fontSize = 9.sp,
                                             fontWeight = FontWeight.SemiBold
                                         )

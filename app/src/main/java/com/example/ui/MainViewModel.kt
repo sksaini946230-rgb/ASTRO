@@ -763,6 +763,42 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun deleteAccountAndData() {
+        val user = _currentUser.value
+        if (user == null) {
+            deleteLocalDataOnly()
+            return
+        }
+        viewModelScope.launch {
+            _backupStatusMessage.value = "खाता और डेटा हटाया जा रहा है... (Deleting account and data...)"
+            val result = authService.deleteUserDataAndAccount()
+            result.onSuccess {
+                try {
+                    repository.deleteAllProfiles()
+                    reportRepository.deleteAllReports()
+                } catch (e: Exception) {
+                    android.util.Log.e("MainViewModel", "Error clearing local DB", e)
+                }
+                _currentUser.value = null
+                _backupStatusMessage.value = "आपका खाता और सभी डेटा सफलतापूर्वक हटा दिया गया है। (Account & data deleted successfully.)"
+            }.onFailure { err ->
+                _backupStatusMessage.value = "हटाने में त्रुटि: ${err.message}"
+            }
+        }
+    }
+
+    fun deleteLocalDataOnly() {
+        viewModelScope.launch {
+            try {
+                repository.deleteAllProfiles()
+                reportRepository.deleteAllReports()
+                _backupStatusMessage.value = "सभी स्थानीय डेटा और सहेजे गए प्रोफाइल हटा दिए गए हैं। (Local data deleted successfully.)"
+            } catch (e: Exception) {
+                _backupStatusMessage.value = "स्थानीय डेटा हटाने में त्रुटि: ${e.message}"
+            }
+        }
+    }
+
     fun clearBackupStatusMessage() {
         _backupStatusMessage.value = null
     }

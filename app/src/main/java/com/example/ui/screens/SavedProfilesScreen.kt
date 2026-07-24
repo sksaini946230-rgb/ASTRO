@@ -26,11 +26,14 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -507,6 +510,7 @@ fun CloudBackupCard(
     val context = androidx.compose.ui.platform.LocalContext.current
     val currentUser by viewModel.currentUser.collectAsState()
     val backupStatusMessage by viewModel.backupStatusMessage.collectAsState()
+    var showDeleteAccountDialog by remember { mutableStateOf(false) }
 
     GlassCard(modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -590,14 +594,30 @@ fun CloudBackupCard(
                     }
                 }
 
-                TextButton(
-                    onClick = { viewModel.signOutFirebase() },
-                    modifier = Modifier.align(Alignment.End).testTag("sign_out_button")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = LanguageManager.getString("साइन आउट (Sign Out)", "Sign Out"),
-                        style = MaterialTheme.typography.labelSmall.copy(color = InauspiciousRed)
-                    )
+                    TextButton(
+                        onClick = { showDeleteAccountDialog = true },
+                        modifier = Modifier.testTag("delete_account_button")
+                    ) {
+                        Text(
+                            text = LanguageManager.getString("खाता एवं डेटा हटाएँ (Delete Account)", "Delete Account & Data"),
+                            style = MaterialTheme.typography.labelSmall.copy(color = InauspiciousRed)
+                        )
+                    }
+
+                    TextButton(
+                        onClick = { viewModel.signOutFirebase() },
+                        modifier = Modifier.testTag("sign_out_button")
+                    ) {
+                        Text(
+                            text = LanguageManager.getString("साइन आउट (Sign Out)", "Sign Out"),
+                            style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        )
+                    }
                 }
             } else {
                 Text(
@@ -649,6 +669,62 @@ fun CloudBackupCard(
                 }
             }
         }
+    }
+
+    if (showDeleteAccountDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteAccountDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = InauspiciousRed,
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = LanguageManager.getString("खाता एवं डेटा स्थायी रूप से हटाएँ?", "Delete Account & All Data?"),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                )
+            },
+            text = {
+                Text(
+                    text = LanguageManager.getString(
+                        "क्या आप अपना AstroVeda खाता एवं सभी डेटा स्थायी रूप से हटाना चाहते हैं?\n\n• क्लाउड में सहेजे गए सभी कुण्डली प्रोफाइल (Firestore)\n• इस डिवाइस पर सहेजे गए सभी प्रोफाइल एवं रिपोर्ट\n• गूगल साइन-इन खाता एवं क्रेडेंशियल्स\n\nयह प्रक्रिया पूरी तरह से स्थायी (Irreversible) है।",
+                        "Are you sure you want to permanently delete your AstroVeda account and all associated data?\n\n• All cloud-backed-up Kundali profiles (Firestore)\n• All local saved profiles and reports on this device\n• Google sign-in account and credentials\n\nThis action cannot be undone."
+                    ),
+                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface)
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteAccountDialog = false
+                        viewModel.deleteAccountAndData()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = InauspiciousRed)
+                ) {
+                    Text(
+                        text = LanguageManager.getString("हां, हटाएँ (Delete)", "Delete Account"),
+                        color = androidx.compose.ui.graphics.Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteAccountDialog = false }) {
+                    Text(
+                        text = LanguageManager.getString("रद्द करें", "Cancel"),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     }
 }
 

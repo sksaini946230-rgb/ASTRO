@@ -1,6 +1,9 @@
 package com.example.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
@@ -24,6 +27,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Place
@@ -42,6 +46,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -67,11 +72,14 @@ import com.example.data.model.PanchangData
 import com.example.ui.MainViewModel
 import com.example.ui.components.GlassBadge
 import com.example.ui.components.GlassCard
+import com.example.ui.components.NorthIndianChart
 import com.example.ui.components.SectionHeader
 import com.example.ui.theme.AuspiciousGreen
+import com.example.ui.theme.GlassBorder
 import com.example.ui.theme.InauspiciousRed
 import com.example.ui.theme.NeutralOrange
 import com.example.ui.theme.MinimalistGold
+import com.example.ui.theme.PremiumGold
 import com.example.util.LanguageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -86,10 +94,15 @@ import com.example.ui.AppTab
 
 import com.example.ui.components.CelestialBackground
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun PanchangScreen(viewModel: MainViewModel) {
+fun PanchangScreen(
+    viewModel: MainViewModel,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null
+) {
     val panchang by viewModel.panchangState.collectAsState()
+    val generatedKundali by viewModel.generatedKundali.collectAsState()
     val selectedCity by viewModel.selectedCity.collectAsState()
     val isChoghadiyaDaytime by viewModel.choghadiyaDaytime.collectAsState()
     val choghadiyaSlots = viewModel.choghadiyaSlots
@@ -151,18 +164,9 @@ fun PanchangScreen(viewModel: MainViewModel) {
         // Hero Header (Clean and Minimal)
         item {
             Spacer(modifier = Modifier.height(8.dp))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
-                    .border(1.2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
-            ) {
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.Center
                 ) {
                     Row(
@@ -213,9 +217,9 @@ fun PanchangScreen(viewModel: MainViewModel) {
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                                    focusedContainerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
-                                    unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
+                                    unfocusedBorderColor = GlassBorder,
+                                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
                                 ),
                                 shape = RoundedCornerShape(20.dp),
                                 modifier = Modifier.menuAnchor().fillMaxWidth()
@@ -224,7 +228,7 @@ fun PanchangScreen(viewModel: MainViewModel) {
                             ExposedDropdownMenu(
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false },
-                                modifier = Modifier.background(MaterialTheme.colorScheme.onPrimary)
+                                modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant)
                             ) {
                                 DropdownMenuItem(
                                     text = { Text("📍 वर्तमान स्थान (Current GPS)") },
@@ -560,13 +564,10 @@ fun PanchangScreen(viewModel: MainViewModel) {
                         else -> InauspiciousRed
                     }
 
-                    Box(
-                        modifier = Modifier
-                            .width(130.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(MaterialTheme.colorScheme.onPrimary)
-                            .border(1.dp, statusColor.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
-                            .padding(12.dp)
+                    GlassCard(
+                        modifier = Modifier.width(130.dp),
+                        borderColor = statusColor.copy(alpha = 0.4f),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
                         Column {
                             Text(
@@ -599,6 +600,76 @@ fun PanchangScreen(viewModel: MainViewModel) {
             }
         }
 
+        // Quick Kundali Chart Preview Card (Shared Element Transition to Kundali Screen)
+        item {
+            SectionHeader(
+                titleHi = "आज का कुण्डली चार्ट (Kundali Chart Preview)",
+                titleEn = "Today's Birth Chart",
+                subtitleHi = "टैप करके पूर्ण इंटरएक्टिव कुण्डली देखें",
+                subtitleEn = "Tap to view full interactive Kundali"
+            )
+        }
+
+        item {
+            GlassCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { viewModel.selectTab(AppTab.KUNDALI) }
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = null,
+                                tint = PremiumGold,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "लग्न: ${generatedKundali.ascendantRashiHi}",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                        }
+                        TextButton(onClick = { viewModel.selectTab(AppTab.KUNDALI) }) {
+                            Text(
+                                text = "पूर्ण कुण्डली देखें →",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    color = PremiumGold,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    val chartModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                        with(sharedTransitionScope) {
+                            Modifier
+                                .fillMaxWidth(0.85f)
+                                .sharedElement(
+                                    state = rememberSharedContentState(key = "kundali_chart_shared_element"),
+                                    animatedVisibilityScope = animatedVisibilityScope
+                                )
+                        }
+                    } else Modifier.fillMaxWidth(0.85f)
+
+                    NorthIndianChart(
+                        chartData = generatedKundali,
+                        modifier = chartModifier,
+                        onHouseClick = { _, _, _ -> viewModel.selectTab(AppTab.KUNDALI) }
+                    )
+                }
+            }
+        }
+
         item {
             PlanetaryPositionsCard(planets = panchang.planets)
         }
@@ -607,6 +678,7 @@ fun PanchangScreen(viewModel: MainViewModel) {
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
 }
 }
 }

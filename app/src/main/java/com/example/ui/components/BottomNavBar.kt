@@ -32,8 +32,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
+import android.view.HapticFeedbackConstants
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -61,7 +61,7 @@ fun BottomNavBar(
         NavItem(AppTab.MORE, "और", "More", Icons.Default.Settings)
     )
 
-    val haptic = LocalHapticFeedback.current
+    val view = LocalView.current
 
     NavigationBar(
         modifier = Modifier
@@ -81,7 +81,7 @@ fun BottomNavBar(
             NavigationBarItem(
                 selected = isSelected,
                 onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                     onTabSelected(item.tab)
                 },
                 icon = {

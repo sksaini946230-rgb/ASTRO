@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,12 +28,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
+import com.example.ui.theme.PremiumGold
 import com.example.util.AppLanguage
 import com.example.util.LanguageManager
 
@@ -47,6 +50,7 @@ fun TopHeaderBar(
     onPremiumClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {}
 ) {
+    val view = LocalView.current
     Surface(
         modifier = Modifier.fillMaxWidth().statusBarsPadding(),
         color = MaterialTheme.colorScheme.surface,
@@ -118,7 +122,10 @@ fun TopHeaderBar(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     // Language Switcher
                     Surface(
-                        onClick = onLanguageToggle,
+                        onClick = {
+                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                            onLanguageToggle()
+                        },
                         shape = RoundedCornerShape(16.dp),
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
@@ -139,9 +146,12 @@ fun TopHeaderBar(
 
                     // Premium PRO Badge
                     Surface(
-                        onClick = onPremiumClick,
+                        onClick = {
+                            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                            onPremiumClick()
+                        },
                         shape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.primary,
+                        color = PremiumGold,
                         modifier = Modifier.testTag("premium_upgrade_button")
                     ) {
                         Row(
@@ -151,7 +161,7 @@ fun TopHeaderBar(
                             Icon(
                                 imageVector = Icons.Default.Star,
                                 contentDescription = "PRO",
-                                tint = MaterialTheme.colorScheme.onPrimary,
+                                tint = Color(0xFF1C1C1E),
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
@@ -159,7 +169,7 @@ fun TopHeaderBar(
                                 text = "PRO",
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    color = Color(0xFF1C1C1E),
                                     fontSize = 11.sp
                                 )
                             )
@@ -175,7 +185,10 @@ fun TopHeaderBar(
                             .clip(CircleShape)
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                             .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), CircleShape)
-                            .clickable { onSettingsClick() }
+                            .clickable {
+                                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                onSettingsClick()
+                            }
                             .testTag("settings_icon_button"),
                         contentAlignment = Alignment.Center
                     ) {

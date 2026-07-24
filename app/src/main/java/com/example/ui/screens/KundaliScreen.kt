@@ -2,7 +2,10 @@ package com.example.ui.screens
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -75,6 +78,7 @@ import com.example.ui.components.M3TimePickerDialog
 
 import com.example.ui.components.CelestialBackground
 import com.example.ui.components.SubTabHeader
+import com.example.ui.theme.GlassBorder
 import com.example.ui.AppTab
 
 @Composable
@@ -168,9 +172,13 @@ fun TransitScreen(viewModel: MainViewModel) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
-fun KundaliScreen(viewModel: MainViewModel) {
+fun KundaliScreen(
+    viewModel: MainViewModel,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null
+) {
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
     val currentSubTab by viewModel.kundaliSubTab.collectAsState()
@@ -318,7 +326,7 @@ fun KundaliScreen(viewModel: MainViewModel) {
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedProfileList) },
                                     colors = OutlinedTextFieldDefaults.colors(
                                         focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                        unfocusedBorderColor = GlassBorder,
                                         focusedTextColor = MaterialTheme.colorScheme.onSurface,
                                         unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                                         focusedLabelColor = MaterialTheme.colorScheme.primary,
@@ -364,7 +372,7 @@ fun KundaliScreen(viewModel: MainViewModel) {
 
                         val tfColors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            unfocusedBorderColor = GlassBorder,
                             focusedTextColor = MaterialTheme.colorScheme.onSurface,
                             unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                             focusedLabelColor = MaterialTheme.colorScheme.primary,
@@ -412,7 +420,10 @@ fun KundaliScreen(viewModel: MainViewModel) {
                                 Box(
                                     modifier = Modifier
                                         .matchParentSize()
-                                        .clickable { showDatePicker = true }
+                                        .clickable {
+                                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            showDatePicker = true
+                                        }
                                 )
                             }
 
@@ -440,7 +451,10 @@ fun KundaliScreen(viewModel: MainViewModel) {
                                 Box(
                                     modifier = Modifier
                                         .matchParentSize()
-                                        .clickable { showTimePicker = true }
+                                        .clickable {
+                                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            showTimePicker = true
+                                        }
                                 )
                             }
                         }
@@ -505,6 +519,7 @@ fun KundaliScreen(viewModel: MainViewModel) {
                         modifier = Modifier
                             .size(24.dp)
                             .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 val shareText = """
                                     ✨ AstroVeda Kundali ✨
                                     Name: ${kundali.personName}
@@ -547,11 +562,14 @@ fun KundaliScreen(viewModel: MainViewModel) {
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
+                                .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .clickable { isNorthStyle = true }
+                                    .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        isNorthStyle = true
+                                    }
                                     .background(if (isNorthStyle) MaterialTheme.colorScheme.primary else Color.Transparent)
                                     .padding(horizontal = 12.dp, vertical = 6.dp)
                             ) {
@@ -565,7 +583,10 @@ fun KundaliScreen(viewModel: MainViewModel) {
                             }
                             Box(
                                 modifier = Modifier
-                                    .clickable { isNorthStyle = false }
+                                    .clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        isNorthStyle = false
+                                    }
                                     .background(if (!isNorthStyle) MaterialTheme.colorScheme.primary else Color.Transparent)
                                     .padding(horizontal = 12.dp, vertical = 6.dp)
                             ) {
@@ -583,7 +604,19 @@ fun KundaliScreen(viewModel: MainViewModel) {
                     Spacer(modifier = Modifier.height(20.dp))
                     
                     if (isNorthStyle) {
-                        NorthIndianChart(kundali)
+                        val chartModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                            with(sharedTransitionScope) {
+                                Modifier.sharedElement(
+                                    state = rememberSharedContentState(key = "kundali_chart_shared_element"),
+                                    animatedVisibilityScope = animatedVisibilityScope
+                                )
+                            }
+                        } else Modifier
+
+                        NorthIndianChart(
+                            chartData = kundali,
+                            modifier = chartModifier
+                        )
                     } else {
                         SouthIndianChart(kundali)
                     }

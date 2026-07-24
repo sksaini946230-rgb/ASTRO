@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,23 +33,27 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.theme.GlassBorder
+import com.example.ui.theme.PremiumGold
 import com.example.util.LanguageManager
 
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
-    borderColor: Color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+    borderColor: Color = GlassBorder,
     borderWidth: Dp = 1.dp,
     shape: RoundedCornerShape = RoundedCornerShape(20.dp),
     onClick: (() -> Unit)? = null,
     testTag: String? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
+    val view = LocalView.current
     val cardModifier = modifier
         .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
         .shadow(
@@ -66,7 +71,12 @@ fun GlassCard(
             )
         )
         .border(width = borderWidth, color = borderColor, shape = shape)
-        .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
+        .then(
+            if (onClick != null) Modifier.clickable {
+                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                onClick()
+            } else Modifier
+        )
         .padding(18.dp)
     
     Box(modifier = cardModifier, content = content)
@@ -80,12 +90,16 @@ fun GoldGlowButton(
     icon: ImageVector? = null,
     testTag: String = "gold_glow_button"
 ) {
+    val view = LocalView.current
     Surface(
-        onClick = onClick,
+        onClick = {
+            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+            onClick()
+        },
         modifier = modifier
             .testTag(testTag),
         shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.primary,
+        color = PremiumGold,
         tonalElevation = 0.dp,
         shadowElevation = 2.dp
     ) {
@@ -99,7 +113,7 @@ fun GoldGlowButton(
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimary,
+                        tint = Color(0xFF1C1C1E),
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -108,7 +122,7 @@ fun GoldGlowButton(
                     text = text,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary,
+                        color = Color(0xFF1C1C1E),
                         fontSize = 14.sp,
                         letterSpacing = 0.2.sp
                     )
@@ -195,9 +209,13 @@ fun SectionHeader(
         }
         
         if (actionButtonText != null && onActionClick != null) {
+            val view = LocalView.current
             GlassBadge(
                 text = actionButtonText,
-                modifier = Modifier.clickable { onActionClick() }
+                modifier = Modifier.clickable {
+                    view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    onActionClick()
+                }
             )
         }
     }
@@ -210,6 +228,7 @@ fun SubTabHeader(
     onTabSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val view = LocalView.current
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = MaterialTheme.colorScheme.surfaceVariant,
@@ -232,7 +251,10 @@ fun SubTabHeader(
                         .background(
                             if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
                         )
-                        .clickable { onTabSelected(index) }
+                        .clickable {
+                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                            onTabSelected(index)
+                        }
                         .padding(vertical = 10.dp),
                     contentAlignment = Alignment.Center
                 ) {

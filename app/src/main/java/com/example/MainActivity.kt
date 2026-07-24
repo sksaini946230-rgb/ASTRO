@@ -6,6 +6,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -152,26 +156,31 @@ class MainActivity : ComponentActivity() {
                             Box(
                                 modifier = Modifier.fillMaxSize()
                             ) {
-                                AnimatedContent(
-                                    targetState = selectedTab,
-                                    label = "TabTransition",
-                                    transitionSpec = {
-                                        if (targetState == AppTab.KUNDALI || initialState == AppTab.KUNDALI) {
-                                            (fadeIn(animationSpec = tween(400, delayMillis = 90)) + 
-                                             scaleIn(initialScale = 0.92f, animationSpec = tween(400)))
-                                                .togetherWith(fadeOut(animationSpec = tween(300)))
-                                        } else {
-                                            fadeIn(animationSpec = tween(300))
+                                @OptIn(ExperimentalSharedTransitionApi::class)
+                                SharedTransitionLayout {
+                                    AnimatedContent(
+                                        targetState = selectedTab,
+                                        label = "TabTransition",
+                                        transitionSpec = {
+                                            fadeIn(animationSpec = tween(400))
                                                 .togetherWith(fadeOut(animationSpec = tween(300)))
                                         }
-                                    }
-                                ) { tab ->
-                                    when (tab) {
-                                        AppTab.PANCHANG -> PanchangScreen(mainViewModel)
-                                        AppTab.RASHIFAL -> RashifalScreen(mainViewModel)
-                                        AppTab.KUNDALI -> KundaliScreen(mainViewModel)
-                                        AppTab.MUHURAT -> MuhuratScreen(mainViewModel)
-                                        AppTab.MORE -> MoreScreen(mainViewModel)
+                                    ) { tab ->
+                                        when (tab) {
+                                            AppTab.PANCHANG -> PanchangScreen(
+                                                viewModel = mainViewModel,
+                                                sharedTransitionScope = this@SharedTransitionLayout,
+                                                animatedVisibilityScope = this@AnimatedContent
+                                            )
+                                            AppTab.RASHIFAL -> RashifalScreen(mainViewModel)
+                                            AppTab.KUNDALI -> KundaliScreen(
+                                                viewModel = mainViewModel,
+                                                sharedTransitionScope = this@SharedTransitionLayout,
+                                                animatedVisibilityScope = this@AnimatedContent
+                                            )
+                                            AppTab.MUHURAT -> MuhuratScreen(mainViewModel)
+                                            AppTab.MORE -> MoreScreen(mainViewModel)
+                                        }
                                     }
                                 }
 

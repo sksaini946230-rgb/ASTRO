@@ -30,4 +30,7 @@ interface KundaliDao {
 
     @Query("DELETE FROM saved_kundali_profiles WHERE id = :id")
     suspend fun deleteProfileById(id: Long)
+
+    @Query("DELETE FROM saved_kundali_profiles")
+    suspend fun deleteAllProfiles()
 }

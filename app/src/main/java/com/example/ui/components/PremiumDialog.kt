@@ -39,8 +39,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.graphics.Color
 import com.example.ui.MainViewModel
 import com.example.ui.theme.AuspiciousGreen
+import com.example.ui.theme.GoldSecondary
+import com.example.ui.theme.PremiumGold
 
 @Composable
 fun PremiumDialog(
@@ -63,7 +66,7 @@ fun PremiumDialog(
             color = MaterialTheme.colorScheme.surface,
             modifier = Modifier
                 .fillMaxWidth()
-                .border(1.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(24.dp))
+                .border(1.5.dp, PremiumGold, RoundedCornerShape(24.dp))
         ) {
             Column(
                 modifier = Modifier
@@ -85,19 +88,19 @@ fun PremiumDialog(
                         .clip(CircleShape)
                         .background(
                             brush = Brush.horizontalGradient(
-                                colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
+                                colors = listOf(PremiumGold, GoldSecondary)
                             )
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(32.dp))
+                    Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = Color(0xFF1C1C1E), modifier = Modifier.size(32.dp))
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "AstroVeda PRO Gold",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = PremiumGold,
                         fontSize = 22.sp
                     )
                 )

@@ -36,6 +36,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.KundaliChartData
 import com.example.ui.theme.GlassBorder
+import com.example.ui.theme.GlassWhite
+import com.example.ui.theme.PremiumGold
+import com.example.ui.theme.DateOrange
+import com.example.ui.theme.TextGold
+import com.example.ui.theme.TextPrimaryDark
+import com.example.ui.theme.TextSecondaryDark
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
@@ -75,29 +81,29 @@ fun NorthIndianChart(
                 scaleX = scaleAnim.value
                 scaleY = scaleAnim.value
             }
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .border(1.5.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(20.dp))
+            .background(GlassWhite)
+            .border(1.dp, GlassBorder, RoundedCornerShape(20.dp))
             .testTag("north_indian_chart_canvas"),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
-            val strokeWidth = 3f
+            val strokeWidth = 2.5f
 
-            val goldColor = Color(0xFFFFD700)
-            val borderColor = Color(0x60FFD700)
+            val chartLineColor = PremiumGold
+            val gridBorderColor = PremiumGold.copy(alpha = 0.35f)
 
             // Outer Square
             drawRect(
-                color = borderColor,
+                color = gridBorderColor,
                 style = Stroke(width = strokeWidth)
             )
 
             // Main Diagonals
-            drawLine(goldColor, Offset(0f, 0f), Offset(w, h), strokeWidth = strokeWidth)
-            drawLine(goldColor, Offset(w, 0f), Offset(0f, h), strokeWidth = strokeWidth)
+            drawLine(chartLineColor, Offset(0f, 0f), Offset(w, h), strokeWidth = strokeWidth)
+            drawLine(chartLineColor, Offset(w, 0f), Offset(0f, h), strokeWidth = strokeWidth)
 
             // Inner Diamond
             val pTop = Offset(w / 2f, 0f)
@@ -112,7 +118,7 @@ fun NorthIndianChart(
                 lineTo(pLeft.x, pLeft.y)
                 close()
             }
-            drawPath(diamondPath, color = goldColor, style = Stroke(width = strokeWidth))
+            drawPath(diamondPath, color = chartLineColor, style = Stroke(width = strokeWidth))
 
             // Approximate center positions for 12 Houses
             val housePositions = mapOf(
@@ -144,20 +150,20 @@ fun NorthIndianChart(
                     text = rashiText,
                     topLeft = Offset(pos.x - 12f, pos.y - 20f),
                     style = TextStyle(
-                        color = Color(0xFFFFE082),
+                        color = TextGold,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
                     )
                 )
 
-                // Draw Planet names in White/Amber
+                // Draw Planet names in DateOrange
                 if (planetsText.isNotEmpty()) {
                     drawText(
                         textMeasurer = textMeasurer,
                         text = planetsText,
                         topLeft = Offset(pos.x - 24f, pos.y + 2f),
                         style = TextStyle(
-                            color = Color(0xFFFF7043),
+                            color = DateOrange,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -174,7 +180,7 @@ fun NorthIndianChart(
             Text(
                 text = "उत्तर भारतीय लग्न कुण्डली",
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color = MaterialTheme.colorScheme.primary,
+                    color = PremiumGold,
                     fontWeight = FontWeight.Bold,
                     fontSize = 10.sp
                 )
@@ -182,7 +188,7 @@ fun NorthIndianChart(
             Text(
                 text = "लग्न: ${chartData.ascendantRashiHi}",
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = TextSecondaryDark,
                     fontSize = 9.sp
                 )
             )

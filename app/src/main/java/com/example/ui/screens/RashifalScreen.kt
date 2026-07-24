@@ -65,6 +65,7 @@ import com.example.ui.components.GlassBadge
 import com.example.ui.components.GlassCard
 import com.example.ui.components.PersonalizedInsightCard
 import com.example.ui.components.SectionHeader
+import com.example.ui.theme.GlassBorder
 import com.example.util.LanguageManager
 
 import com.example.ui.components.OfflineStatusChip
@@ -126,7 +127,7 @@ fun RashifalScreen(viewModel: MainViewModel) {
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
                             .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
-                            .border(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
+                            .border(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else GlassBorder, RoundedCornerShape(16.dp))
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 viewModel.selectRashi(item.rashiId)
@@ -171,7 +172,7 @@ fun RashifalScreen(viewModel: MainViewModel) {
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
                             .background(if (isSelected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surfaceVariant)
-                            .border(1.dp, if (isSelected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outline, RoundedCornerShape(20.dp))
+                            .border(1.dp, if (isSelected) MaterialTheme.colorScheme.secondary else GlassBorder, RoundedCornerShape(20.dp))
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 selectedPeriod = code
