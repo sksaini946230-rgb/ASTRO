@@ -15,52 +15,49 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.example.MainActivity
-import com.example.astro.PanchangCalculator
-import com.example.data.local.DatabaseProvider
-import com.example.data.model.CityLocation
+import com.example.astro.FestivalProvider
+import java.util.Calendar
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
-class AstroNotificationWorker(
+class FestivalNotificationWorker(
     appContext: Context,
     params: WorkerParameters
 ) : CoroutineWorker(appContext, params) {
 
     companion object {
-        const val WORK_NAME = "astro_daily_notification_work"
-        const val CHANNEL_ID = "astro_daily_notifications"
+        const val WORK_NAME = "astro_festival_notification_work"
+        const val CHANNEL_ID = "astro_festival_notifications"
 
-        fun scheduleDailyNotification(context: Context) {
+        fun scheduleFestivalNotification(context: Context) {
             val sharedPrefs = context.getSharedPreferences("astroveda_prefs", Context.MODE_PRIVATE)
-            val isEnabled = sharedPrefs.getBoolean("daily_notification_enabled", true)
+            val isEnabled = sharedPrefs.getBoolean("festival_notification_enabled", true)
             
             if (!isEnabled) {
                 WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
                 return
             }
 
-            val hour = sharedPrefs.getInt("notification_hour", 7)
-            val minute = sharedPrefs.getInt("notification_minute", 0)
-
-            val calendar = java.util.Calendar.getInstance()
-            val now = calendar.timeInMillis
-
-            calendar.set(java.util.Calendar.HOUR_OF_DAY, hour)
-            calendar.set(java.util.Calendar.MINUTE, minute)
-            calendar.set(java.util.Calendar.SECOND, 0)
-            calendar.set(java.util.Calendar.MILLISECOND, 0)
-
-            if (calendar.timeInMillis <= now) {
-                calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
-            }
-
-            val initialDelay = calendar.timeInMillis - now
-
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
                 .build()
 
-            val dailyWorkRequest = PeriodicWorkRequestBuilder<AstroNotificationWorker>(24, TimeUnit.HOURS)
+            // Schedule to run every day at around 10:00 AM
+            val calendar = Calendar.getInstance()
+            val now = calendar.timeInMillis
+
+            calendar.set(Calendar.HOUR_OF_DAY, 10)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+
+            if (calendar.timeInMillis <= now) {
+                calendar.add(Calendar.DAY_OF_YEAR, 1)
+            }
+
+            val initialDelay = calendar.timeInMillis - now
+
+            val dailyWorkRequest = PeriodicWorkRequestBuilder<FestivalNotificationWorker>(24, TimeUnit.HOURS)
                 .setConstraints(constraints)
                 .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
                 .build()
@@ -75,26 +72,24 @@ class AstroNotificationWorker(
 
     override suspend fun doWork(): Result {
         return try {
-            val context = applicationContext
-            val dao = DatabaseProvider.getKundaliDao(context)
-            val profiles = dao.getSavedProfilesList()
-            val primaryProfile = profiles.firstOrNull()
+            val calendar = Calendar.getInstance()
+            calendar.add(Calendar.DAY_OF_YEAR, 1) // Tomorrow
+            
+            val year = calendar.get(Calendar.YEAR)
+            val month = calendar.get(Calendar.MONTH) + 1 // 1-12
+            val day = calendar.get(Calendar.DAY_OF_MONTH)
+            val dateStr = String.format("%04d-%02d-%02d", year, month, day)
 
-            val sharedPrefs = context.getSharedPreferences("astroveda_prefs", Context.MODE_PRIVATE)
-            val lat = sharedPrefs.getFloat("city_lat", 26.9124f).toDouble()
-            val lon = sharedPrefs.getFloat("city_lon", 75.7873f).toDouble()
-            val name = sharedPrefs.getString("city_name", "Jaipur") ?: "Jaipur"
-            val nameHi = sharedPrefs.getString("city_name_hi", "जयपुर") ?: "जयपुर"
-            val state = sharedPrefs.getString("city_state", "Rajasthan") ?: "Rajasthan"
-            val userCity = CityLocation(name, nameHi, state, lat, lon)
+            val festivals = FestivalProvider.getFestivals()
+            val tomorrowFestivals = festivals.filter { it.dateIso == dateStr }
 
-            val panchang = PanchangCalculator.calculatePanchang(Date(), userCity)
+            if (tomorrowFestivals.isNotEmpty()) {
+                val names = tomorrowFestivals.joinToString(", ") { it.nameHi }
+                val title = "कल का त्योहार: $names"
+                val content = "AstroVeda आपको कल के व्रत/त्योहार की याद दिला रहा है।"
+                showNotification(title, content)
+            }
 
-            val profileName = primaryProfile?.name ?: "AstroVeda User"
-            val title = "✨ Today's Panchang & Muhurat for $profileName"
-            val content = "Tithi: ${panchang.tithi} | Abhijit: ${panchang.abhijitMuhurat} | Rahu Kaal: ${panchang.rahuKaal}"
-
-            showNotification(title, content)
             Result.success()
         } catch (e: Exception) {
             Result.retry()
@@ -108,10 +103,10 @@ class AstroNotificationWorker(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Daily Astro & Muhurat Alerts",
+                "Festival Reminders",
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Daily notifications for planetary transits, auspicious Abhijit Muhurat, and Panchang insights."
+                description = "Reminders for upcoming Hindu festivals and Vrats."
             }
             notificationManager.createNotificationChannel(channel)
         }
@@ -137,6 +132,6 @@ class AstroNotificationWorker(
             .setContentIntent(pendingIntent)
             .build()
 
-        notificationManager.notify(1001, notification)
+        notificationManager.notify(1002, notification)
     }
 }

@@ -37,36 +37,37 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.CosmicCardSurface
-import com.example.ui.theme.CosmicDeepNavy
-import com.example.ui.theme.GlassBorder
-import com.example.ui.theme.GlassWhite
-import com.example.ui.theme.GoldGlow
-import com.example.ui.theme.GoldPrimary
-import com.example.ui.theme.GoldSecondary
-import com.example.ui.theme.SacredOrange
-import com.example.ui.theme.TextGold
-import com.example.ui.theme.TextPrimaryDark
-import com.example.ui.theme.TextSecondaryDark
 import com.example.util.LanguageManager
 
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
-    borderColor: Color = MaterialTheme.colorScheme.outline,
+    borderColor: Color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
     borderWidth: Dp = 1.dp,
-    shape: RoundedCornerShape = RoundedCornerShape(16.dp),
+    shape: RoundedCornerShape = RoundedCornerShape(20.dp),
     onClick: (() -> Unit)? = null,
     testTag: String? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
     val cardModifier = modifier
         .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
+        .shadow(
+            elevation = 6.dp,
+            shape = shape,
+            spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+        )
         .clip(shape)
-        .background(MaterialTheme.colorScheme.surface)
+        .background(
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    MaterialTheme.colorScheme.surface,
+                    MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+                )
+            )
+        )
         .border(width = borderWidth, color = borderColor, shape = shape)
         .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
-        .padding(16.dp)
+        .padding(18.dp)
     
     Box(modifier = cardModifier, content = content)
 }
@@ -82,23 +83,14 @@ fun GoldGlowButton(
     Surface(
         onClick = onClick,
         modifier = modifier
-            .testTag(testTag)
-            .shadow(
-                elevation = 6.dp,
-                shape = RoundedCornerShape(24.dp),
-                ambientColor = GoldPrimary,
-                spotColor = GoldGlow
-            ),
-        shape = RoundedCornerShape(24.dp),
-        color = Color.Transparent
+            .testTag(testTag),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.primary,
+        tonalElevation = 0.dp,
+        shadowElevation = 2.dp
     ) {
         Box(
             modifier = Modifier
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(GoldPrimary, GoldSecondary, SacredOrange)
-                    )
-                )
                 .padding(horizontal = 24.dp, vertical = 12.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -107,8 +99,8 @@ fun GoldGlowButton(
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                 }
@@ -116,8 +108,9 @@ fun GoldGlowButton(
                     text = text,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        fontSize = 15.sp
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontSize = 14.sp,
+                        letterSpacing = 0.2.sp
                     )
                 )
             }
@@ -130,7 +123,7 @@ fun GlassBadge(
     text: String,
     modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
-    textColor: Color = TextGold,
+    textColor: Color = MaterialTheme.colorScheme.primary,
     borderColor: Color = MaterialTheme.colorScheme.outline
 ) {
     Box(
@@ -172,7 +165,7 @@ fun SectionHeader(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = GoldPrimary,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -237,7 +230,7 @@ fun SubTabHeader(
                         .weight(1f)
                         .clip(RoundedCornerShape(16.dp))
                         .background(
-                            if (isSelected) GoldPrimary else Color.Transparent
+                            if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
                         )
                         .clickable { onTabSelected(index) }
                         .padding(vertical = 10.dp),
@@ -247,7 +240,7 @@ fun SubTabHeader(
                         text = title,
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 13.sp
                         )
                     )

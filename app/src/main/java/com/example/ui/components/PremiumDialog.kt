@@ -41,12 +41,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.ui.MainViewModel
 import com.example.ui.theme.AuspiciousGreen
-import com.example.ui.theme.CosmicDeepNavy
-import com.example.ui.theme.GoldPrimary
-import com.example.ui.theme.SacredOrange
-import com.example.ui.theme.TextGold
-import com.example.ui.theme.TextPrimaryDark
-import com.example.ui.theme.TextSecondaryDark
 
 @Composable
 fun PremiumDialog(
@@ -66,10 +60,10 @@ fun PremiumDialog(
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(24.dp),
-            color = CosmicDeepNavy,
+            color = MaterialTheme.colorScheme.surface,
             modifier = Modifier
                 .fillMaxWidth()
-                .border(1.5.dp, GoldPrimary, RoundedCornerShape(24.dp))
+                .border(1.5.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(24.dp))
         ) {
             Column(
                 modifier = Modifier
@@ -82,7 +76,7 @@ fun PremiumDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     IconButton(onClick = onDismiss, modifier = Modifier.testTag("close_premium_dialog")) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = TextSecondaryDark)
+                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 Box(
@@ -91,25 +85,25 @@ fun PremiumDialog(
                         .clip(CircleShape)
                         .background(
                             brush = Brush.horizontalGradient(
-                                colors = listOf(GoldPrimary, SacredOrange)
+                                colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
                             )
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = CosmicDeepNavy, modifier = Modifier.size(32.dp))
+                    Icon(imageVector = Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(32.dp))
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "AstroVeda PRO Gold",
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.ExtraBold,
-                        color = TextGold,
+                        color = MaterialTheme.colorScheme.primary,
                         fontSize = 22.sp
                     )
                 )
                 Text(
                     text = "Unlock Complete Vedic Wisdom & AI Features",
-                    style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark, fontSize = 12.sp)
+                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -150,7 +144,7 @@ fun FeatureRow(text: String) {
         Text(
             text = text,
             style = MaterialTheme.typography.bodySmall.copy(
-                color = TextPrimaryDark,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.sp
             )

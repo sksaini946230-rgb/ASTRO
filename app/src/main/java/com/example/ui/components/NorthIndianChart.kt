@@ -35,14 +35,12 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.KundaliChartData
-import com.example.ui.theme.CosmicCardSurface
 import com.example.ui.theme.GlassBorder
-import com.example.ui.theme.GoldPrimary
-import com.example.ui.theme.GoldSecondary
-import com.example.ui.theme.SacredOrange
-import com.example.ui.theme.TextGold
-import com.example.ui.theme.TextPrimaryDark
-import com.example.ui.theme.TextSecondaryDark
+
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.graphicsLayer
 
 @Composable
 fun NorthIndianChart(
@@ -50,6 +48,14 @@ fun NorthIndianChart(
     modifier: Modifier = Modifier,
     onHouseClick: (houseNum: Int, rashiNum: Int, planets: List<String>) -> Unit = { _, _, _ -> }
 ) {
+    val alphaAnim = remember { Animatable(0f) }
+    val scaleAnim = remember { Animatable(0.95f) }
+    
+    LaunchedEffect(chartData) {
+        alphaAnim.animateTo(1f, animationSpec = tween(600))
+        scaleAnim.animateTo(1f, animationSpec = tween(600))
+    }
+
     var selectedHouse by remember { mutableStateOf(1) }
     val textMeasurer = rememberTextMeasurer()
 
@@ -64,9 +70,14 @@ fun NorthIndianChart(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(1f)
+            .graphicsLayer {
+                alpha = alphaAnim.value
+                scaleX = scaleAnim.value
+                scaleY = scaleAnim.value
+            }
             .clip(RoundedCornerShape(16.dp))
-            .background(CosmicCardSurface)
-            .border(1.5.dp, GlassBorder, RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.5.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
             .testTag("north_indian_chart_canvas"),
         contentAlignment = Alignment.Center
     ) {
@@ -163,7 +174,7 @@ fun NorthIndianChart(
             Text(
                 text = "उत्तर भारतीय लग्न कुण्डली",
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color = TextGold,
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 10.sp
                 )
@@ -171,7 +182,7 @@ fun NorthIndianChart(
             Text(
                 text = "लग्न: ${chartData.ascendantRashiHi}",
                 style = MaterialTheme.typography.labelSmall.copy(
-                    color = TextSecondaryDark,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 9.sp
                 )
             )

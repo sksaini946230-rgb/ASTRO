@@ -46,16 +46,8 @@ import com.example.ui.components.GlassBadge
 import com.example.ui.components.GlassCard
 import com.example.ui.components.SectionHeader
 import com.example.ui.theme.AuspiciousGreen
-import com.example.ui.theme.CosmicCardSurface
-import com.example.ui.theme.GlassBorder
-import com.example.ui.theme.GlassWhite
-import com.example.ui.theme.GoldPrimary
 import com.example.ui.theme.InauspiciousRed
 import com.example.ui.theme.NeutralOrange
-import com.example.ui.theme.SacredOrange
-import com.example.ui.theme.TextGold
-import com.example.ui.theme.TextPrimaryDark
-import com.example.ui.theme.TextSecondaryDark
 
 @Composable
 fun MuhuratScreen(viewModel: MainViewModel) {
@@ -94,7 +86,7 @@ fun MuhuratScreen(viewModel: MainViewModel) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(if (isDaytime) GoldPrimary else GlassWhite)
+                        .background(if (isDaytime) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                         .clickable { viewModel.toggleChoghadiyaDayNight(true) }
                         .padding(horizontal = 20.dp, vertical = 8.dp)
                         .testTag("choghadiya_day_button")
@@ -103,7 +95,7 @@ fun MuhuratScreen(viewModel: MainViewModel) {
                         Icon(
                             imageVector = Icons.Default.WbSunny,
                             contentDescription = "Day",
-                            tint = if (isDaytime) CosmicCardSurface else GoldPrimary,
+                            tint = if (isDaytime) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -111,7 +103,7 @@ fun MuhuratScreen(viewModel: MainViewModel) {
                             text = LanguageManager.getString("दिन का चौघड़िया (Day)", "Day Choghadiya"),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = if (isDaytime) CosmicCardSurface else TextGold,
+                                color = if (isDaytime) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
                                 fontSize = 12.sp
                             )
                         )
@@ -123,7 +115,7 @@ fun MuhuratScreen(viewModel: MainViewModel) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(if (!isDaytime) GoldPrimary else GlassWhite)
+                        .background(if (!isDaytime) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                         .clickable { viewModel.toggleChoghadiyaDayNight(false) }
                         .padding(horizontal = 20.dp, vertical = 8.dp)
                         .testTag("choghadiya_night_button")
@@ -132,7 +124,7 @@ fun MuhuratScreen(viewModel: MainViewModel) {
                         Icon(
                             imageVector = Icons.Default.NightsStay,
                             contentDescription = "Night",
-                            tint = if (!isDaytime) CosmicCardSurface else GoldPrimary,
+                            tint = if (!isDaytime) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -140,7 +132,7 @@ fun MuhuratScreen(viewModel: MainViewModel) {
                             text = LanguageManager.getString("रात का चौघड़िया (Night)", "Night Choghadiya"),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = if (!isDaytime) CosmicCardSurface else TextGold,
+                                color = if (!isDaytime) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
                                 fontSize = 12.sp
                             )
                         )
@@ -199,7 +191,7 @@ fun ChoghadiyaRow(slot: ChoghadiyaSlot) {
                         text = slot.type.nameHi,
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
-                            color = TextGold,
+                            color = MaterialTheme.colorScheme.primary,
                             fontSize = 16.sp
                         )
                     )
@@ -217,7 +209,7 @@ fun ChoghadiyaRow(slot: ChoghadiyaSlot) {
                 Text(
                     text = "${LanguageManager.getString("समय", "Time")}: ${slot.timeSlotString}",
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = TextPrimaryDark,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 14.sp
                     )
                 )
@@ -246,7 +238,7 @@ fun EventMuhuratCard(item: MuhuratItem) {
                     text = LanguageManager.getString(item.categoryHi, item.categoryEn),
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = TextGold,
+                        color = MaterialTheme.colorScheme.primary,
                         fontSize = 16.sp
                     )
                 )
@@ -264,7 +256,7 @@ fun EventMuhuratCard(item: MuhuratItem) {
             Text(
                 text = "${item.dateString} (${item.dayOfWeekHi}) | ${item.startTime} - ${item.endTime}",
                 style = MaterialTheme.typography.labelMedium.copy(
-                    color = SacredOrange,
+                    color = MaterialTheme.colorScheme.secondary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )
@@ -273,7 +265,7 @@ fun EventMuhuratCard(item: MuhuratItem) {
             Text(
                 text = "${LanguageManager.getString("तिथि", "Tithi")}: ${item.tithiHi} | ${LanguageManager.getString("नक्षत्र", "Nakshatra")}: ${item.nakshatraHi}",
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color = TextSecondaryDark,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp
                 )
             )
@@ -283,7 +275,7 @@ fun EventMuhuratCard(item: MuhuratItem) {
             Text(
                 text = item.descriptionHi,
                 style = MaterialTheme.typography.bodySmall.copy(
-                    color = TextPrimaryDark,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 14.sp,
                     lineHeight = 19.sp
                 )

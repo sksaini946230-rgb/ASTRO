@@ -2,16 +2,17 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Cosmic Dark & Professional Polish Glassmorphism Palette
-val CosmicDeepNavy = Color(0xFF0A0C10)       // Main background #0A0C10
-val CosmicDarkBlue = Color(0xFF14171F)       // Secondary background
-val CosmicCardSurface = Color(0xFF1A1C1E)    // Surface cards #1A1C1E
-val CosmicGlassSurface = Color(0x0DFFFFFF)   // Glass card overlay
+// Celestial Harmony Theme - Spiritual & Modern
+val CosmicDeepNavy = Color(0xFF0D1117)       // Deep Midnight Background
+val CosmicCardSurface = Color(0xFF161B22)    // Subtle Card Background
+val CelestialCream = Color(0xFFFFFBF0)       // Soft Ivory for Light Mode
 
-val GoldPrimary = Color(0xFFF27D26)          // Saffron Gold Accent #F27D26
-val GoldSecondary = Color(0xFFE06812)        // Secondary Accent
-val GoldGlow = Color(0xFFFFA052)             // Glow accent
-val SacredOrange = Color(0xFFF27D26)         // Accent Orange
+val GoldPrimary = Color(0xFFE67E22)          // Saffron Primary
+val GoldSecondary = Color(0xFFD4AF37)        // Classic Gold Accent
+val GoldGlow = Color(0xFFFFD700)             // Bright Gold Glow
+val SacredSaffron = Color(0xFFF39C12)        // Spiritual Orange-Gold
+
+val MinimalistGold = Color(0xFFD4AF37)        // Preserving for compatibility
 
 val AccentCyan = Color(0xFF38BDF8)
 val AccentPurple = Color(0xFFA855F7)

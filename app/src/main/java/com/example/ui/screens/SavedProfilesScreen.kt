@@ -46,7 +46,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.ui.graphics.Color
 import com.example.ui.theme.AuspiciousGreen
-import com.example.ui.theme.CosmicDarkBlue
+import com.example.ui.theme.CosmicCardSurface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -67,19 +67,11 @@ import com.example.ui.MainViewModel
 import com.example.ui.components.GlassBadge
 import com.example.ui.components.GlassCard
 import com.example.ui.components.GoldGlowButton
+import com.example.ui.components.EmptyStateComponent
 import com.example.ui.components.M3DatePickerDialog
 import com.example.ui.components.M3TimePickerDialog
 import com.example.ui.components.SectionHeader
-import com.example.ui.theme.CosmicCardSurface
-import com.example.ui.theme.CosmicDeepNavy
-import com.example.ui.theme.GlassBorder
-import com.example.ui.theme.GlassWhite
-import com.example.ui.theme.GoldPrimary
 import com.example.ui.theme.InauspiciousRed
-import com.example.ui.theme.SacredOrange
-import com.example.ui.theme.TextGold
-import com.example.ui.theme.TextPrimaryDark
-import com.example.ui.theme.TextSecondaryDark
 import com.example.util.LanguageManager
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -132,25 +124,11 @@ fun SavedProfilesScreen(viewModel: MainViewModel) {
 
         if (profiles.isEmpty()) {
             item {
-                GlassCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(imageVector = Icons.Default.Bookmark, contentDescription = null, tint = GoldPrimary, modifier = Modifier.size(40.dp))
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = LanguageManager.getString("कोई कुण्डली प्रोफाइल सहेजी नहीं गई है।", "No saved birth chart profiles found."),
-                            style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold)
-                        )
-                        Text(
-                            text = LanguageManager.getString("ऊपर दिए गए बटन से नया प्रोफाइल जोड़ें।", "Tap above to add a new birth profile."),
-                            style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark, fontSize = 12.sp)
-                        )
-                    }
-                }
+                EmptyStateComponent(
+                    icon = Icons.Default.Bookmark,
+                    title = LanguageManager.getString("कोई कुण्डली प्रोफाइल सहेजी नहीं गई है।", "No saved birth chart profiles found."),
+                    subtitle = LanguageManager.getString("ऊपर दिए गए बटन से नया प्रोफाइल जोड़ें।", "Tap above to add a new birth profile.")
+                )
             }
         } else {
             items(profiles, key = { it.id }) { profile ->
@@ -225,19 +203,10 @@ fun SavedProfilesScreen(viewModel: MainViewModel) {
 
         if (savedReports.isEmpty()) {
             item {
-                GlassCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = LanguageManager.getString("कोई रिपोर्ट सहेजी नहीं गई है।", "No saved reports available."),
-                            style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold)
-                        )
-                    }
-                }
+                EmptyStateComponent(
+                    icon = Icons.Default.CloudDownload,
+                    title = LanguageManager.getString("कोई रिपोर्ट सहेजी नहीं गई है।", "No saved reports available.")
+                )
             }
         } else {
             items(savedReports) { report ->
@@ -284,21 +253,21 @@ fun AddProfileDialog(
     }
 
     val tfColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = GoldPrimary,
-        unfocusedBorderColor = GlassBorder,
-        focusedLabelColor = GoldPrimary,
-        unfocusedLabelColor = TextSecondaryDark,
-        focusedTextColor = TextPrimaryDark,
-        unfocusedTextColor = TextPrimaryDark
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        focusedLabelColor = MaterialTheme.colorScheme.primary,
+        unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
     )
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = CosmicDeepNavy,
+        containerColor = MaterialTheme.colorScheme.background,
         title = {
             Text(
                 text = LanguageManager.getString("नया प्रोफाइल जोड़ें", "Add Birth Profile"),
-                color = TextGold,
+                color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
         },
@@ -323,7 +292,7 @@ fun AddProfileDialog(
                                 Icon(
                                     imageVector = Icons.Default.CalendarMonth,
                                     contentDescription = "DOB",
-                                    tint = GoldPrimary
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             },
                             colors = tfColors,
@@ -346,7 +315,7 @@ fun AddProfileDialog(
                                 Icon(
                                     imageVector = Icons.Default.Schedule,
                                     contentDescription = "TOB",
-                                    tint = GoldPrimary
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             },
                             colors = tfColors,
@@ -377,12 +346,12 @@ fun AddProfileDialog(
                     }
                 }
             ) {
-                Text(LanguageManager.getString("सहेजें", "Save"), color = GoldPrimary, fontWeight = FontWeight.Bold)
+                Text(LanguageManager.getString("सहेजें", "Save"), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(LanguageManager.getString("रद्द करें", "Cancel"), color = TextSecondaryDark)
+                Text(LanguageManager.getString("रद्द करें", "Cancel"), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     )
@@ -408,11 +377,11 @@ fun SavedProfileCard(
                         modifier = Modifier
                             .size(42.dp)
                             .clip(CircleShape)
-                            .background(GlassWhite)
-                            .border(1.dp, GlassBorder, CircleShape),
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = GoldPrimary, modifier = Modifier.size(24.dp))
+                        Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                     }
 
                     Spacer(modifier = Modifier.width(12.dp))
@@ -420,15 +389,15 @@ fun SavedProfileCard(
                     Column {
                         Text(
                             text = profile.name,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = TextGold, fontSize = 16.sp)
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 16.sp)
                         )
                         Text(
                             text = "${profile.dateOfBirth} | ${profile.timeOfBirth}",
-                            style = MaterialTheme.typography.bodySmall.copy(color = SacredOrange, fontSize = 12.sp)
+                            style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.secondary, fontSize = 12.sp)
                         )
                         Text(
                             text = profile.placeOfBirth,
-                            style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 11.sp)
+                            style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
                         )
                     }
                 }
@@ -446,22 +415,22 @@ fun SavedProfileCard(
             ) {
                 GlassBadge(
                     text = LanguageManager.getString("कुण्डली बनाएं", "Generate Chart"),
-                    textColor = GoldPrimary,
-                    borderColor = GoldPrimary,
+                    textColor = MaterialTheme.colorScheme.primary,
+                    borderColor = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable { onOpenKundali() }
                 )
 
                 GlassBadge(
                     text = LanguageManager.getString("वर (Boy)", "Use Boy"),
-                    textColor = GoldPrimary,
-                    borderColor = GlassBorder,
+                    textColor = MaterialTheme.colorScheme.primary,
+                    borderColor = MaterialTheme.colorScheme.outline,
                     modifier = Modifier.clickable { onUseForMatchingBoy() }
                 )
 
                 GlassBadge(
                     text = LanguageManager.getString("कन्या (Girl)", "Use Girl"),
-                    textColor = SacredOrange,
-                    borderColor = SacredOrange,
+                    textColor = MaterialTheme.colorScheme.secondary,
+                    borderColor = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.clickable { onUseForMatchingGirl() }
                 )
             }
@@ -489,7 +458,7 @@ fun SavedReportCard(
                         text = report.title,
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = TextGold,
+                            color = MaterialTheme.colorScheme.primary,
                             fontSize = 15.sp
                         )
                     )
@@ -499,11 +468,11 @@ fun SavedReportCard(
                     ) {
                         Text(
                             text = report.profileName,
-                            style = MaterialTheme.typography.bodySmall.copy(color = SacredOrange, fontSize = 12.sp)
+                            style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.secondary, fontSize = 12.sp)
                         )
                         Text(
                             text = "• $formattedDate",
-                            style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 11.sp)
+                            style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
                         )
                     }
                 }
@@ -521,7 +490,7 @@ fun SavedReportCard(
                 Text(
                     text = report.summaryText,
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = TextPrimaryDark,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 13.sp,
                         lineHeight = 18.sp
                     )
@@ -558,14 +527,14 @@ fun CloudBackupCard(
                     Icon(
                         imageVector = Icons.Default.CloudUpload,
                         contentDescription = "Cloud Backup",
-                        tint = TextGold,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)
                     )
                     Text(
                         text = LanguageManager.getString("क्लाउड बैकअप (Firebase)", "Firebase Cloud Sync"),
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = TextGold
+                            color = MaterialTheme.colorScheme.primary
                         )
                     )
                 }
@@ -580,7 +549,7 @@ fun CloudBackupCard(
                     GlassBadge(
                         text = "Offline",
                         backgroundColor = Color.Gray.copy(alpha = 0.2f),
-                        textColor = TextSecondaryDark
+                        textColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -591,7 +560,7 @@ fun CloudBackupCard(
                         "साइन इन किया: ${currentUser?.displayName ?: currentUser?.email ?: "उपयोगकर्ता"}",
                         "Signed in as: ${currentUser?.displayName ?: currentUser?.email ?: "User"}"
                     ),
-                    style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryDark)
+                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface)
                 )
 
                 Row(
@@ -610,8 +579,8 @@ fun CloudBackupCard(
                         OutlinedButton(
                             onClick = { viewModel.restoreProfilesFromCloud() },
                             modifier = Modifier.fillMaxWidth().testTag("restore_from_cloud_button"),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = TextGold),
-                            border = BorderStroke(1.dp, TextGold)
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                         ) {
                             Text(
                                 text = LanguageManager.getString("पुनर्प्राप्त (Restore)", "Restore"),
@@ -636,7 +605,7 @@ fun CloudBackupCard(
                         "अपने कुण्डली प्रोफाइल को सुरक्षित रूप से गूगल क्लाउड पर बैकअप करने के लिए गूगल से साइन इन करें।",
                         "Sign in with Google to securely back up and sync your Kundali profiles to Firebase Cloud."
                     ),
-                    style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark)
+                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
                 )
 
                 GoldGlowButton(
@@ -651,8 +620,8 @@ fun CloudBackupCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(CosmicDarkBlue.copy(alpha = 0.6f))
-                        .border(1.dp, TextGold.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                        .background(CosmicCardSurface.copy(alpha = 0.6f))
+                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
                         .padding(10.dp)
                 ) {
                     Row(
@@ -662,7 +631,7 @@ fun CloudBackupCard(
                     ) {
                         Text(
                             text = backupStatusMessage!!,
-                            style = MaterialTheme.typography.bodySmall.copy(color = TextGold),
+                            style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primary),
                             modifier = Modifier.weight(1f)
                         )
                         IconButton(
@@ -672,7 +641,7 @@ fun CloudBackupCard(
                             Icon(
                                 imageVector = Icons.Default.Delete,
                                 contentDescription = "Clear Message",
-                                tint = TextSecondaryDark,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(16.dp)
                             )
                         }

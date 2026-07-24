@@ -104,15 +104,19 @@ class BillingManager(
     fun launchPurchaseFlow(activity: Activity) {
         val client = billingClient
         if (client == null) {
-            _errorMessage.value = "Simulated billing: Purchase success."
-            onPremiumUnlocked(true)
+            _errorMessage.value = "Billing client unavailable. Please try again later."
+            if (com.example.BuildConfig.DEBUG) {
+                onPremiumUnlocked(true)
+            }
             return
         }
 
         val details = _productDetails.value
         if (details == null) {
-            _errorMessage.value = "Product details not loaded. Unlocking premium directly (demo fallback)."
-            onPremiumUnlocked(true)
+            _errorMessage.value = "Subscription is temporarily unavailable, please try again later."
+            if (com.example.BuildConfig.DEBUG) {
+                onPremiumUnlocked(true)
+            }
             return
         }
 
@@ -134,8 +138,7 @@ class BillingManager(
                 _errorMessage.value = "Error starting purchase flow: ${billingResult.debugMessage}"
             }
         } catch (e: Throwable) {
-            _errorMessage.value = "Purchase flow exception, unlocking in demo mode."
-            onPremiumUnlocked(true)
+            _errorMessage.value = "Purchase flow exception: ${e.message}"
         }
     }
 
@@ -167,9 +170,9 @@ class BillingManager(
                         }
                     }
                 } catch (e: Throwable) {
-                    onPremiumUnlocked(true)
+                    _errorMessage.value = "Exception acknowledging purchase."
                 }
-            } else {
+            } else if (purchase.isAcknowledged) {
                 onPremiumUnlocked(true)
             }
         }

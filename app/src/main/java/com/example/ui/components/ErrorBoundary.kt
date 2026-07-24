@@ -29,9 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.GoldPrimary
-import com.example.ui.theme.TextGold
-import com.example.ui.theme.TextSecondaryDark
+import com.example.ui.theme.MinimalistGold
 import java.io.PrintWriter
 import java.io.StringWriter
 
@@ -77,7 +75,9 @@ fun ErrorBoundary(
                 modifier = modifier
             )
         } else {
-            content()
+            Box(modifier = modifier) {
+                content()
+            }
         }
     }
 }
@@ -141,7 +141,7 @@ fun ErrorStateUI(
                 Text(
                     text = "ब्रह्मांडीय संरेखण बाधित",
                     style = MaterialTheme.typography.titleLarge.copy(
-                        color = TextGold,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 22.sp,
                         textAlign = TextAlign.Center
@@ -150,7 +150,7 @@ fun ErrorStateUI(
                 Text(
                     text = "Cosmic Alignment Interrupted",
                     style = MaterialTheme.typography.titleMedium.copy(
-                        color = TextGold.copy(alpha = 0.85f),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Medium,
                         textAlign = TextAlign.Center
@@ -179,7 +179,7 @@ fun ErrorStateUI(
                     Text(
                         text = "An unexpected issue occurred during calculation or network request. Please try again.",
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            color = TextSecondaryDark,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
                             lineHeight = 20.sp
                         )
@@ -191,8 +191,8 @@ fun ErrorStateUI(
             Button(
                 onClick = onRetry,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = GoldPrimary,
-                    contentColor = Color(0xFF15102A)
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
@@ -220,7 +220,7 @@ fun ErrorStateUI(
             ) {
                 TextButton(
                     onClick = { showDetails = !showDetails },
-                    colors = ButtonDefaults.textButtonColors(contentColor = TextGold)
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Icon(
                         imageVector = if (showDetails) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
@@ -285,7 +285,7 @@ fun ErrorStateUI(
                             )
                             Text(
                                 text = stackTrace,
-                                color = TextSecondaryDark,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 10.sp,
                                 lineHeight = 14.sp
                             )

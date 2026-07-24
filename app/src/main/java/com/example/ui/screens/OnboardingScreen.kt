@@ -55,16 +55,6 @@ import com.example.ui.MainViewModel
 import com.example.ui.components.GlassCard
 import com.example.ui.components.GoldGlowButton
 import com.example.ui.theme.AuspiciousGreen
-import com.example.ui.theme.CosmicCardSurface
-import com.example.ui.theme.CosmicDeepNavy
-import com.example.ui.theme.GlassBorder
-import com.example.ui.theme.GlassWhite
-import com.example.ui.theme.GoldGlow
-import com.example.ui.theme.GoldPrimary
-import com.example.ui.theme.SacredOrange
-import com.example.ui.theme.TextGold
-import com.example.ui.theme.TextPrimaryDark
-import com.example.ui.theme.TextSecondaryDark
 
 @Composable
 fun OnboardingScreen(
@@ -81,7 +71,7 @@ fun OnboardingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CosmicDeepNavy)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
         // Skip Button Top Right
@@ -99,7 +89,7 @@ fun OnboardingScreen(
                         modifier = Modifier
                             .size(if (idx == pageIndex) 24.dp else 8.dp, 8.dp)
                             .clip(RoundedCornerShape(4.dp))
-                            .background(if (idx == pageIndex) GoldPrimary else GlassWhite)
+                            .background(if (idx == pageIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                     )
                 }
             }
@@ -107,7 +97,7 @@ fun OnboardingScreen(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(16.dp))
-                    .background(GlassWhite)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
                     .clickable { onComplete() }
                     .padding(horizontal = 14.dp, vertical = 6.dp)
                     .testTag("onboarding_skip_button")
@@ -116,7 +106,7 @@ fun OnboardingScreen(
                     text = "छोड़ें (Skip)",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Bold,
-                        color = TextGold,
+                        color = MaterialTheme.colorScheme.primary,
                         fontSize = 12.sp
                     )
                 )
@@ -179,10 +169,10 @@ fun WelcomeOnboardingPage() {
                 .clip(CircleShape)
                 .background(
                     brush = Brush.radialGradient(
-                        colors = listOf(GoldGlow, CosmicDeepNavy)
+                        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.background)
                     )
                 )
-                .border(2.dp, GoldPrimary, CircleShape),
+                .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Image(
@@ -200,7 +190,7 @@ fun WelcomeOnboardingPage() {
             text = "AstroVeda",
             style = MaterialTheme.typography.displayMedium.copy(
                 fontWeight = FontWeight.ExtraBold,
-                color = TextGold,
+                color = MaterialTheme.colorScheme.primary,
                 letterSpacing = 1.sp
             )
         )
@@ -208,7 +198,7 @@ fun WelcomeOnboardingPage() {
         Text(
             text = "वैदिक पंचांग एवं कुण्डली 2026",
             style = MaterialTheme.typography.titleMedium.copy(
-                color = SacredOrange,
+                color = MaterialTheme.colorScheme.secondary,
                 fontWeight = FontWeight.Bold
             )
         )
@@ -219,7 +209,7 @@ fun WelcomeOnboardingPage() {
             Text(
                 text = "100% सटीक वैदिक पंचांग, दैनिक राशिफल, शुभ मुहूर्त एवं एआई ज्योतिषाचार्य परामर्श। भारत का सबसे भरोसेमंद वैदिक पंचांग ऐप।",
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = TextPrimaryDark,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
                     lineHeight = 22.sp
                 )
@@ -238,7 +228,7 @@ fun RashiSelectOnboardingPage(viewModel: MainViewModel) {
             text = "अपनी राशि चुनें (Select Your Rashi)",
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold,
-                color = TextGold,
+                color = MaterialTheme.colorScheme.primary,
                 fontSize = 20.sp
             )
         )
@@ -246,7 +236,7 @@ fun RashiSelectOnboardingPage(viewModel: MainViewModel) {
         Text(
             text = "दैनिक सटीक राशिफल एवं व्यक्तिगत सूचनाओं हेतु अपनी राशि का चयन करें",
             style = MaterialTheme.typography.bodySmall.copy(
-                color = TextSecondaryDark,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 fontSize = 12.sp
             )
@@ -265,10 +255,10 @@ fun RashiSelectOnboardingPage(viewModel: MainViewModel) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
-                        .background(if (isSelected) GoldPrimary else CosmicCardSurface)
+                        .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                         .border(
                             1.2.dp,
-                            if (isSelected) GoldPrimary else GlassBorder,
+                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
                             RoundedCornerShape(16.dp)
                         )
                         .clickable { viewModel.selectRashi(item.rashiId) }
@@ -280,14 +270,14 @@ fun RashiSelectOnboardingPage(viewModel: MainViewModel) {
                         Text(
                             text = item.symbol,
                             fontSize = 28.sp,
-                            color = if (isSelected) CosmicCardSurface else GoldPrimary
+                            color = if (isSelected) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = item.rashiNameHi.substringBefore(" "),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = if (isSelected) CosmicCardSurface else TextGold,
+                                color = if (isSelected) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primary,
                                 fontSize = 13.sp
                             )
                         )
@@ -310,7 +300,7 @@ fun LocationNotificationOnboardingPage(
         Icon(
             imageVector = Icons.Default.AutoAwesome,
             contentDescription = null,
-            tint = GoldPrimary,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(48.dp)
         )
 
@@ -320,7 +310,7 @@ fun LocationNotificationOnboardingPage(
             text = "अनुमतियां (Setup Permissions)",
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold,
-                color = TextGold,
+                color = MaterialTheme.colorScheme.primary,
                 fontSize = 20.sp
             )
         )
@@ -328,7 +318,7 @@ fun LocationNotificationOnboardingPage(
         Text(
             text = "सटीक सूर्योदय, सूर्यास्त व राहुकाल गणना हेतु स्थान अनुमति आवश्यक है",
             style = MaterialTheme.typography.bodySmall.copy(
-                color = TextSecondaryDark,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 fontSize = 12.sp
             )
@@ -350,18 +340,18 @@ fun LocationNotificationOnboardingPage(
                     Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = null,
-                        tint = GoldPrimary,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(28.dp)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
                             text = "स्थान अनुमति (GPS Location)",
-                            style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold)
+                            style = MaterialTheme.typography.titleSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                         )
                         Text(
                             text = "वर्तमान स्थान: $selectedCityName",
-                            style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark, fontSize = 11.sp)
+                            style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
                         )
                     }
                 }
@@ -369,7 +359,7 @@ fun LocationNotificationOnboardingPage(
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = if (locationGranted) AuspiciousGreen else GlassWhite,
+                    tint = if (locationGranted) AuspiciousGreen else MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -391,18 +381,18 @@ fun LocationNotificationOnboardingPage(
                     Icon(
                         imageVector = Icons.Default.NotificationsActive,
                         contentDescription = null,
-                        tint = SacredOrange,
+                        tint = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.size(28.dp)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
                             text = "दैनिक पंचांग नोटिफिकेशन",
-                            style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold)
+                            style = MaterialTheme.typography.titleSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                         )
                         Text(
                             text = "प्रातः 06:00 बजे शुभ मुहूर्त व चौघड़िया अलर्ट",
-                            style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark, fontSize = 11.sp)
+                            style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
                         )
                     }
                 }
@@ -410,7 +400,7 @@ fun LocationNotificationOnboardingPage(
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = if (notificationGranted) AuspiciousGreen else GlassWhite,
+                    tint = if (notificationGranted) AuspiciousGreen else MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier.size(24.dp)
                 )
             }

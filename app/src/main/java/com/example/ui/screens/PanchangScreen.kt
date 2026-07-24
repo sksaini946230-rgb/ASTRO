@@ -32,7 +32,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -65,18 +69,9 @@ import com.example.ui.components.GlassBadge
 import com.example.ui.components.GlassCard
 import com.example.ui.components.SectionHeader
 import com.example.ui.theme.AuspiciousGreen
-import com.example.ui.theme.CosmicCardSurface
-import com.example.ui.theme.CosmicDeepNavy
-import com.example.ui.theme.GlassBorder
-import com.example.ui.theme.GlassWhite
-import com.example.ui.theme.GoldGlow
-import com.example.ui.theme.GoldPrimary
 import com.example.ui.theme.InauspiciousRed
 import com.example.ui.theme.NeutralOrange
-import com.example.ui.theme.SacredOrange
-import com.example.ui.theme.TextGold
-import com.example.ui.theme.TextPrimaryDark
-import com.example.ui.theme.TextSecondaryDark
+import com.example.ui.theme.MinimalistGold
 import com.example.util.LanguageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -89,6 +84,9 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.ui.components.SubTabHeader
 import com.example.ui.AppTab
 
+import com.example.ui.components.CelestialBackground
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PanchangScreen(viewModel: MainViewModel) {
     val panchang by viewModel.panchangState.collectAsState()
@@ -117,15 +115,16 @@ fun PanchangScreen(viewModel: MainViewModel) {
         }
     }
 
-    Scaffold(
-        containerColor = Color.Transparent,
-        modifier = Modifier.fillMaxSize()
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = paddingValues.calculateTopPadding())
-        ) {
+    CelestialBackground {
+        Scaffold(
+            containerColor = Color.Transparent,
+            modifier = Modifier.fillMaxSize()
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = paddingValues.calculateTopPadding())
+            ) {
             SubTabHeader(
                 selectedTab = currentSubTab,
                 tabs = listOf(
@@ -149,37 +148,22 @@ fun PanchangScreen(viewModel: MainViewModel) {
                     ),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-        // Hero Cosmic Banner Header
+        // Hero Header (Clean and Minimal)
         item {
             Spacer(modifier = Modifier.height(8.dp))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(140.dp)
+                    .height(100.dp)
                     .clip(RoundedCornerShape(20.dp))
-                    .border(1.2.dp, GlassBorder, RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
+                    .border(1.2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), RoundedCornerShape(20.dp))
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.img_cosmic_hero_1784710301045),
-                    contentDescription = "Cosmic Sky",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(Color.Transparent, CosmicDeepNavy.copy(alpha = 0.85f))
-                            )
-                        )
-                )
-
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.dp),
-                    verticalArrangement = Arrangement.Bottom
+                    verticalArrangement = Arrangement.Center
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -190,7 +174,7 @@ fun PanchangScreen(viewModel: MainViewModel) {
                             Text(
                                 text = panchang.dateString,
                                 style = MaterialTheme.typography.titleMedium.copy(
-                                    color = TextGold,
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp
                                 )
@@ -198,47 +182,54 @@ fun PanchangScreen(viewModel: MainViewModel) {
                             Text(
                                 text = "${panchang.dayOfWeekHindi} | ${panchang.pakshaHindi}",
                                 style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = TextPrimaryDark,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     fontWeight = FontWeight.SemiBold
                                 )
                             )
                         }
 
                         // City Location Picker Pill
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(CosmicCardSurface.copy(alpha = 0.9f))
-                                .border(1.dp, GoldPrimary, RoundedCornerShape(20.dp))
-                                .clickable { showCityDropdown = true }
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                                .testTag("city_picker_button")
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Place,
-                                    contentDescription = "Location",
-                                    tint = GoldPrimary,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = panchang.locationName,
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        color = TextGold,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                )
-                            }
+                        var expanded by remember { mutableStateOf(false) }
+                        var searchQuery by remember { mutableStateOf("") }
+                        val cities = PanchangCalculator.popularCities
+                        val filteredCities = if (searchQuery.isBlank()) {
+                            cities
+                        } else {
+                            cities.filter { it.cityNameHindi.contains(searchQuery, ignoreCase = true) || it.cityName.contains(searchQuery, ignoreCase = true) }
+                        }
 
-                            DropdownMenu(
-                                expanded = showCityDropdown,
-                                onDismissRequest = { showCityDropdown = false }
+                        ExposedDropdownMenuBox(
+                            expanded = expanded,
+                            onExpandedChange = { expanded = !expanded },
+                            modifier = Modifier.width(180.dp)
+                        ) {
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = {
+                                    searchQuery = it
+                                    expanded = true
+                                },
+                                label = { Text("Search City", fontSize = 12.sp) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                    focusedContainerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
+                                ),
+                                shape = RoundedCornerShape(20.dp),
+                                modifier = Modifier.menuAnchor().fillMaxWidth()
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
+                                modifier = Modifier.background(MaterialTheme.colorScheme.onPrimary)
                             ) {
                                 DropdownMenuItem(
                                     text = { Text("📍 वर्तमान स्थान (Current GPS)") },
                                     onClick = {
-                                        showCityDropdown = false
+                                        expanded = false
                                         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
                                             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                                             viewModel.detectGPSLocation(context) { success ->
@@ -257,12 +248,13 @@ fun PanchangScreen(viewModel: MainViewModel) {
                                     }
                                 )
 
-                                PanchangCalculator.popularCities.forEach { city ->
+                                filteredCities.forEach { city ->
                                     DropdownMenuItem(
                                         text = { Text("${city.cityNameHindi} (${city.cityName})") },
                                         onClick = {
                                             viewModel.setCity(city)
-                                            showCityDropdown = false
+                                            searchQuery = city.cityNameHindi
+                                            expanded = false
                                         }
                                     )
                                 }
@@ -310,7 +302,7 @@ fun PanchangScreen(viewModel: MainViewModel) {
                         ) {
                             Text(
                                 text = "तिथि (Tithi)",
-                                style = MaterialTheme.typography.labelMedium.copy(color = TextSecondaryDark, fontSize = 13.sp)
+                                style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
                             )
                             GlassBadge(text = panchang.pakshaHindi.substringBefore(" "))
                         }
@@ -319,13 +311,13 @@ fun PanchangScreen(viewModel: MainViewModel) {
                             text = panchang.tithiHindi,
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = TextGold,
+                                color = MaterialTheme.colorScheme.primary,
                                 fontSize = 18.sp
                             )
                         )
                         Text(
                             text = panchang.tithiEndTime,
-                            style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 13.sp)
+                            style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         LinearProgressIndicator(
@@ -334,12 +326,12 @@ fun PanchangScreen(viewModel: MainViewModel) {
                                 .fillMaxWidth()
                                 .height(6.dp)
                                 .clip(RoundedCornerShape(3.dp)),
-                            color = GoldPrimary,
-                            trackColor = GlassWhite
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.surfaceVariant
                         )
                     }
 
-                    androidx.compose.material3.HorizontalDivider(color = GlassWhite.copy(alpha = 0.1f), thickness = 1.dp)
+                    androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f), thickness = 1.dp)
 
                     // Nakshatra Section
                     Column {
@@ -350,7 +342,7 @@ fun PanchangScreen(viewModel: MainViewModel) {
                         ) {
                             Text(
                                 text = "नक्षत्र (Nakshatra)",
-                                style = MaterialTheme.typography.labelMedium.copy(color = TextSecondaryDark, fontSize = 13.sp)
+                                style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
                             )
                             GlassBadge(text = "चंद्र नक्षत्र: ${panchang.moonSign}")
                         }
@@ -359,13 +351,13 @@ fun PanchangScreen(viewModel: MainViewModel) {
                             text = "${panchang.nakshatraHindi} (चरण ${panchang.nakshatraPada})",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = TextGold,
+                                color = MaterialTheme.colorScheme.primary,
                                 fontSize = 18.sp
                             )
                         )
                         Text(
                             text = panchang.nakshatraEndTime,
-                            style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 13.sp)
+                            style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         LinearProgressIndicator(
@@ -374,26 +366,26 @@ fun PanchangScreen(viewModel: MainViewModel) {
                                 .fillMaxWidth()
                                 .height(6.dp)
                                 .clip(RoundedCornerShape(3.dp)),
-                            color = GoldPrimary,
-                            trackColor = GlassWhite
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.surfaceVariant
                         )
                     }
 
-                    androidx.compose.material3.HorizontalDivider(color = GlassWhite.copy(alpha = 0.1f), thickness = 1.dp)
+                    androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f), thickness = 1.dp)
 
                     // Yoga & Karan Section
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "योग (Yoga)",
-                                style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 12.sp)
+                                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = panchang.yogaHindi,
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = TextGold,
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontSize = 16.sp
                                 )
                             )
@@ -401,14 +393,14 @@ fun PanchangScreen(viewModel: MainViewModel) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "करण (Karan)",
-                                style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 12.sp)
+                                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = panchang.karanHindi,
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = TextGold,
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontSize = 16.sp
                                 )
                             )
@@ -432,10 +424,10 @@ fun PanchangScreen(viewModel: MainViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    TimingColumn("सूर्योदय", panchang.sunrise, Icons.Default.WbSunny, GoldPrimary)
-                    TimingColumn("सूर्यास्त", panchang.sunset, Icons.Default.WbSunny, SacredOrange)
-                    TimingColumn("चन्द्रास्त", panchang.moonset, Icons.Default.NightsStay, TextSecondaryDark)
-                    TimingColumn("चन्द्रोदय", panchang.moonrise, Icons.Default.NightsStay, GoldGlow)
+                    TimingColumn("सूर्योदय", panchang.sunrise, Icons.Default.WbSunny, MaterialTheme.colorScheme.primary)
+                    TimingColumn("सूर्यास्त", panchang.sunset, Icons.Default.WbSunny, MaterialTheme.colorScheme.secondary)
+                    TimingColumn("चन्द्रास्त", panchang.moonset, Icons.Default.NightsStay, MaterialTheme.colorScheme.onSurfaceVariant)
+                    TimingColumn("चन्द्रोदय", panchang.moonrise, Icons.Default.NightsStay, MaterialTheme.colorScheme.primary)
                 }
             }
         }
@@ -474,7 +466,7 @@ fun PanchangScreen(viewModel: MainViewModel) {
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = time,
-                                    style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryDark, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                                 )
                             }
 
@@ -487,7 +479,7 @@ fun PanchangScreen(viewModel: MainViewModel) {
                         }
 
                         if (index < timings.lastIndex) {
-                            androidx.compose.material3.HorizontalDivider(color = GlassWhite.copy(alpha = 0.1f), thickness = 1.dp)
+                            androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f), thickness = 1.dp)
                         }
                     }
                 }
@@ -512,14 +504,14 @@ fun PanchangScreen(viewModel: MainViewModel) {
             ) {
                 Text(
                     text = if (isChoghadiyaDaytime) "दिन का चौघड़िया (Day)" else "रात्रि चौघड़िया (Night)",
-                    style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold)
+                    style = MaterialTheme.typography.titleSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 )
 
                 Row {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(if (isChoghadiyaDaytime) GoldPrimary else GlassWhite)
+                            .background(if (isChoghadiyaDaytime) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                             .clickable { viewModel.toggleChoghadiyaDayNight(true) }
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
@@ -527,7 +519,7 @@ fun PanchangScreen(viewModel: MainViewModel) {
                             text = "दिन (Day)",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = if (isChoghadiyaDaytime) CosmicCardSurface else TextGold,
+                                color = if (isChoghadiyaDaytime) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
                                 fontSize = 11.sp
                             )
                         )
@@ -538,7 +530,7 @@ fun PanchangScreen(viewModel: MainViewModel) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(if (!isChoghadiyaDaytime) GoldPrimary else GlassWhite)
+                            .background(if (!isChoghadiyaDaytime) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                             .clickable { viewModel.toggleChoghadiyaDayNight(false) }
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
@@ -546,7 +538,7 @@ fun PanchangScreen(viewModel: MainViewModel) {
                             text = "रात (Night)",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = if (!isChoghadiyaDaytime) CosmicCardSurface else TextGold,
+                                color = if (!isChoghadiyaDaytime) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
                                 fontSize = 11.sp
                             )
                         )
@@ -572,7 +564,7 @@ fun PanchangScreen(viewModel: MainViewModel) {
                         modifier = Modifier
                             .width(130.dp)
                             .clip(RoundedCornerShape(16.dp))
-                            .background(CosmicCardSurface)
+                            .background(MaterialTheme.colorScheme.onPrimary)
                             .border(1.dp, statusColor.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
                             .padding(12.dp)
                     ) {
@@ -581,7 +573,7 @@ fun PanchangScreen(viewModel: MainViewModel) {
                                 text = slot.type.nameHi,
                                 style = MaterialTheme.typography.titleSmall.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = TextGold,
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontSize = 15.sp
                                 )
                             )
@@ -597,7 +589,7 @@ fun PanchangScreen(viewModel: MainViewModel) {
                             Text(
                                 text = slot.timeSlotString,
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    color = TextPrimaryDark,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     fontSize = 11.sp
                                 )
                             )
@@ -616,7 +608,7 @@ fun PanchangScreen(viewModel: MainViewModel) {
         }
     }
 }
-    }
+}
 }
 }
 
@@ -625,11 +617,11 @@ fun InfoPill(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 13.sp)
+            style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
         )
     }
 }
@@ -652,7 +644,7 @@ fun PanchangElementCard(
             ) {
                 Text(
                     text = titleHi,
-                    style = MaterialTheme.typography.labelMedium.copy(color = TextSecondaryDark, fontSize = 13.sp)
+                    style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
                 )
                 GlassBadge(text = badgeText)
             }
@@ -663,14 +655,14 @@ fun PanchangElementCard(
                 text = valueHi,
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.Bold,
-                    color = TextGold,
+                    color = MaterialTheme.colorScheme.primary,
                     fontSize = 18.sp
                 )
             )
 
             Text(
                 text = subValueHi,
-                style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 13.sp)
+                style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -681,8 +673,8 @@ fun PanchangElementCard(
                     .fillMaxWidth()
                     .height(6.dp)
                     .clip(RoundedCornerShape(3.dp)),
-                color = GoldPrimary,
-                trackColor = GlassWhite
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
         }
     }
@@ -694,14 +686,14 @@ fun SmallElementCard(titleHi: String, valueHi: String) {
         Column {
             Text(
                 text = titleHi,
-                style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 12.sp)
+                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = valueHi,
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.Bold,
-                    color = TextGold,
+                    color = MaterialTheme.colorScheme.primary,
                     fontSize = 15.sp
                 )
             )
@@ -714,8 +706,8 @@ fun TimingColumn(title: String, time: String, icon: ImageVector, iconColor: Colo
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Icon(imageVector = icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(24.dp))
         Spacer(modifier = Modifier.height(4.dp))
-        Text(text = title, style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 12.sp))
-        Text(text = time, style = MaterialTheme.typography.labelMedium.copy(color = TextPrimaryDark, fontWeight = FontWeight.Bold, fontSize = 14.sp))
+        Text(text = title, style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp))
+        Text(text = time, style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp))
     }
 }
 
@@ -739,7 +731,7 @@ fun MuhuratTimeRow(titleHi: String, timeStr: String, statusText: String, color: 
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = timeStr,
-                    style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryDark, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
+                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                 )
             }
 
@@ -774,13 +766,13 @@ fun PlanetaryPositionsCard(planets: List<com.example.data.model.PlanetPosition>)
                                 modifier = Modifier
                                     .size(36.dp)
                                     .clip(CircleShape)
-                                    .background(GoldPrimary.copy(alpha = 0.2f)),
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = planet.planetNameHi.substring(0, 1),
                                     style = MaterialTheme.typography.titleMedium.copy(
-                                        color = TextGold,
+                                        color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 16.sp
                                     )
@@ -792,13 +784,13 @@ fun PlanetaryPositionsCard(planets: List<com.example.data.model.PlanetPosition>)
                                     text = "${planet.planetNameHi} (${planet.planetNameEn})",
                                     style = MaterialTheme.typography.titleSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = TextGold,
+                                        color = MaterialTheme.colorScheme.primary,
                                         fontSize = 15.sp
                                     )
                                 )
                                 Text(
                                     text = "नक्षत्र: ${planet.nakshatraHi} | राशि: ${planet.rashiNameHi}",
-                                    style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 13.sp)
+                                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp)
                                 )
                             }
                         }
@@ -807,7 +799,7 @@ fun PlanetaryPositionsCard(planets: List<com.example.data.model.PlanetPosition>)
                             Text(
                                 text = "${planet.degree}°",
                                 style = MaterialTheme.typography.titleSmall.copy(
-                                    color = TextSecondaryDark,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 15.sp
                                 )

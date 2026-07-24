@@ -5,6 +5,7 @@ data class FestivalData(
     val nameEn: String,
     val nameHi: String,
     val dateString: String,
+    val dateIso: String,
     val dayNameHi: String,
     val monthNameHi: String,
     val pakshaHi: String,

@@ -131,20 +131,90 @@ object KundaliMatchingCalculator {
         val score2 = if (r2 in listOf(3, 5, 7)) 0.0 else 1.5
         return score1 + score2
     }
-    private fun calculateYoni(b: Int, g: Int): Double = if (b % 4 == g % 4) 4.0 else 2.0
-    private fun calculateGrahaMaitri(b: Int, g: Int): Double = if (b % 3 == g % 3) 5.0 else 3.0
-    private fun calculateGana(b: Int, g: Int): Double {
-        val bGana = b % 3
-        val gGana = g % 3
-        return if (bGana == gGana) 6.0 else if (bGana == 0 || gGana == 0) 4.0 else 0.0
+    private fun calculateYoni(b: Int, g: Int): Double {
+        val yoniMap = listOf(
+            0, 1, 2, 3, 3, 4, 5, 2, 5, 6, 6, 7, 8, 9, 8, 9, 10, 10, 4, 11, 12, 11, 13, 0, 13, 7, 1
+        ) // 0:Horse, 1:Elephant, 2:Sheep, 3:Serpent, 4:Dog, 5:Cat, 6:Rat, 7:Cow, 8:Buffalo, 9:Tiger, 10:Deer, 11:Monkey, 12:Mongoose, 13:Lion
+        
+        val bYoni = yoniMap[b]
+        val gYoni = yoniMap[g]
+        
+        if (bYoni == gYoni) return 4.0
+        
+        val swornEnemies = setOf(
+            Pair(0, 8), Pair(8, 0), // Horse-Buffalo
+            Pair(1, 13), Pair(13, 1), // Elephant-Lion
+            Pair(2, 11), Pair(11, 2), // Sheep-Monkey
+            Pair(3, 12), Pair(12, 3), // Serpent-Mongoose
+            Pair(4, 10), Pair(10, 4), // Dog-Deer
+            Pair(5, 6), Pair(6, 5), // Cat-Rat
+            Pair(7, 9), Pair(9, 7)  // Cow-Tiger
+        )
+        
+        if (swornEnemies.contains(Pair(bYoni, gYoni))) return 0.0
+        return 2.0 // Simplified: 2.0 for neutral/friendly
     }
+
+    private fun calculateGrahaMaitri(b: Int, g: Int): Double {
+        val lords = listOf(2, 5, 3, 1, 0, 3, 5, 2, 4, 6, 6, 4) // 0:Sun, 1:Moon, 2:Mars, 3:Mercury, 4:Jupiter, 5:Venus, 6:Saturn
+        val bLord = lords[b]
+        val gLord = lords[g]
+        
+        if (bLord == gLord) return 5.0
+        
+        fun getRelation(p1: Int, p2: Int): Int { // 2:Friend, 1:Neutral, 0:Enemy
+            return when (p1) {
+                0 -> if (p2 in listOf(1, 2, 4)) 2 else if (p2 in listOf(5, 6)) 0 else 1
+                1 -> if (p2 in listOf(0, 3)) 2 else 1
+                2 -> if (p2 in listOf(0, 1, 4)) 2 else if (p2 == 3) 0 else 1
+                3 -> if (p2 in listOf(0, 5)) 2 else if (p2 == 1) 0 else 1
+                4 -> if (p2 in listOf(0, 1, 2)) 2 else if (p2 in listOf(3, 5)) 0 else 1
+                5 -> if (p2 in listOf(3, 6)) 2 else if (p2 in listOf(0, 1)) 0 else 1
+                6 -> if (p2 in listOf(3, 5)) 2 else if (p2 in listOf(0, 1, 2)) 0 else 1
+                else -> 1
+            }
+        }
+        
+        val r1 = getRelation(bLord, gLord)
+        val r2 = getRelation(gLord, bLord)
+        val sum = r1 + r2
+        return when (sum) {
+            4 -> 5.0 // Friend-Friend
+            3 -> 4.0 // Friend-Neutral
+            2 -> if (r1 == 1 && r2 == 1) 3.0 else 1.0 // Neutral-Neutral or Friend-Enemy
+            1 -> 0.5 // Neutral-Enemy
+            else -> 0.0 // Enemy-Enemy
+        }
+    }
+
+    private fun calculateGana(b: Int, g: Int): Double {
+        val ganaMap = listOf(
+            0, 1, 2, 1, 0, 1, 0, 0, 2, 2, 1, 1, 0, 2, 0, 2, 0, 2, 2, 1, 1, 0, 2, 2, 1, 1, 0
+        ) // 0:Deva, 1:Manushya, 2:Rakshasa
+        val bGana = ganaMap[b]
+        val gGana = ganaMap[g]
+        
+        if (bGana == gGana) return 6.0
+        if (bGana == 0 && gGana == 1) return 5.0
+        if (bGana == 1 && gGana == 0) return 6.0
+        if (bGana == 2 && gGana == 0) return 1.0
+        if (bGana == 0 && gGana == 2) return 0.0
+        if (bGana == 1 && gGana == 2) return 0.0
+        if (bGana == 2 && gGana == 1) return 0.0
+        return 0.0
+    }
+
     private fun calculateBhakoot(b: Int, g: Int): Double {
         val dist = (g - b + 12) % 12
         return if (dist in listOf(1, 5, 7)) 0.0 else 7.0
     }
+
     private fun calculateNadi(b: Int, g: Int): Double {
-        val bNadi = b % 3
-        val gNadi = g % 3
+        val nadiMap = listOf(
+            0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0, 0, 1, 2
+        ) // 0:Adi, 1:Madhya, 2:Antya
+        val bNadi = nadiMap[b]
+        val gNadi = nadiMap[g]
         return if (bNadi != gNadi) 8.0 else 0.0
     }
 }

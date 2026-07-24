@@ -111,7 +111,7 @@ object GeminiAstroService {
         }
     }
 
-    private fun getOfflineVedicResponse(question: String): String {
+    fun getOfflineVedicResponse(question: String): String {
         val qLower = question.lowercase()
         return when {
             qLower.contains("career") || qLower.contains("नौकरी") || qLower.contains("व्यापार") || qLower.contains("job") ->
@@ -206,7 +206,7 @@ object GeminiAstroService {
         }
     }
 
-    private fun getOfflineAstroNews(): String {
+    fun getOfflineAstroNews(): String {
         return """
             • 🪐 गुरु ग्रह का अतिचारी गोचर (Jupiter Transit):
               देवगुरु बृहस्पति इस माह मिथुन राशि से कर्क राशि में प्रवेश करेंगे। उच्च के गुरु से हंस महापुरुष योग निर्मित होगा, जिससे ज्ञान व शिक्षा क्षेत्र में उन्नति होगी।

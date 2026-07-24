@@ -30,9 +30,16 @@ class FirebaseAuthService {
         return try {
             val credentialManager = CredentialManager.create(context)
 
+            val defaultClientId = com.example.BuildConfig.GOOGLE_WEB_CLIENT_ID
+            val clientId = if (webClientId.isNotEmpty()) webClientId else defaultClientId
+
+            if (clientId.isEmpty()) {
+                return Result.failure(Exception("Google Web Client ID is not configured. Please add GOOGLE_WEB_CLIENT_ID to .env or strings.xml"))
+            }
+
             val googleIdOption = GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
-                .setServerClientId(webClientId.ifEmpty { "10838382023-default-web-client-id" })
+                .setServerClientId(clientId)
                 .setAutoSelectEnabled(false)
                 .build()
 

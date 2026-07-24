@@ -7,6 +7,7 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -17,11 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.ui.theme.CosmicCardSurface
-import com.example.ui.theme.CosmicDeepNavy
-import com.example.ui.theme.GoldPrimary
-import com.example.ui.theme.SacredOrange
-import com.example.ui.theme.TextSecondaryDark
 import com.example.util.LanguageManager
 import java.util.Calendar
 import java.util.Locale
@@ -79,32 +75,32 @@ fun M3DatePickerDialog(
                     onDismiss()
                 }
             ) {
-                Text(LanguageManager.getString("ठीक है", "OK"), color = GoldPrimary)
+                Text(LanguageManager.getString("ठीक है", "OK"), color = MaterialTheme.colorScheme.primary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(LanguageManager.getString("रद्द करें", "Cancel"), color = TextSecondaryDark)
+                Text(LanguageManager.getString("रद्द करें", "Cancel"), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     ) {
         DatePicker(
             state = datePickerState,
             colors = DatePickerDefaults.colors(
-                containerColor = CosmicDeepNavy,
-                titleContentColor = GoldPrimary,
-                headlineContentColor = GoldPrimary,
-                weekdayContentColor = TextSecondaryDark,
-                subheadContentColor = GoldPrimary,
-                yearContentColor = GoldPrimary,
-                currentYearContentColor = SacredOrange,
-                selectedYearContentColor = CosmicDeepNavy,
-                selectedYearContainerColor = GoldPrimary,
-                dayContentColor = GoldPrimary,
-                selectedDayContainerColor = GoldPrimary,
-                selectedDayContentColor = CosmicDeepNavy,
-                todayDateBorderColor = SacredOrange,
-                todayContentColor = SacredOrange
+                containerColor = MaterialTheme.colorScheme.surface,
+                titleContentColor = MaterialTheme.colorScheme.primary,
+                headlineContentColor = MaterialTheme.colorScheme.primary,
+                weekdayContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                subheadContentColor = MaterialTheme.colorScheme.primary,
+                yearContentColor = MaterialTheme.colorScheme.primary,
+                currentYearContentColor = MaterialTheme.colorScheme.secondary,
+                selectedYearContentColor = MaterialTheme.colorScheme.onPrimary,
+                selectedYearContainerColor = MaterialTheme.colorScheme.primary,
+                dayContentColor = MaterialTheme.colorScheme.primary,
+                selectedDayContainerColor = MaterialTheme.colorScheme.primary,
+                selectedDayContentColor = MaterialTheme.colorScheme.onPrimary,
+                todayDateBorderColor = MaterialTheme.colorScheme.secondary,
+                todayContentColor = MaterialTheme.colorScheme.secondary
             )
         )
     }
@@ -152,18 +148,18 @@ fun M3TimePickerDialog(
                     onDismiss()
                 }
             ) {
-                Text(LanguageManager.getString("ठीक है", "OK"), color = GoldPrimary)
+                Text(LanguageManager.getString("ठीक है", "OK"), color = MaterialTheme.colorScheme.primary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(LanguageManager.getString("रद्द करें", "Cancel"), color = TextSecondaryDark)
+                Text(LanguageManager.getString("रद्द करें", "Cancel"), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
         title = {
             Text(
                 text = LanguageManager.getString("जन्म समय चुनें", "Select Birth Time"),
-                color = GoldPrimary
+                color = MaterialTheme.colorScheme.primary
             )
         },
         text = {
@@ -174,23 +170,23 @@ fun M3TimePickerDialog(
                 TimePicker(
                     state = timePickerState,
                     colors = TimePickerDefaults.colors(
-                        clockDialColor = CosmicCardSurface,
-                        clockDialSelectedContentColor = CosmicDeepNavy,
-                        clockDialUnselectedContentColor = GoldPrimary,
-                        selectorColor = GoldPrimary,
-                        periodSelectorSelectedContainerColor = GoldPrimary,
-                        periodSelectorSelectedContentColor = CosmicDeepNavy,
-                        periodSelectorUnselectedContainerColor = CosmicCardSurface,
-                        periodSelectorUnselectedContentColor = GoldPrimary,
-                        timeSelectorSelectedContainerColor = GoldPrimary.copy(alpha = 0.3f),
-                        timeSelectorSelectedContentColor = GoldPrimary,
-                        timeSelectorUnselectedContainerColor = CosmicCardSurface,
-                        timeSelectorUnselectedContentColor = TextSecondaryDark
+                        clockDialColor = MaterialTheme.colorScheme.surfaceVariant,
+                        clockDialSelectedContentColor = MaterialTheme.colorScheme.onPrimary,
+                        clockDialUnselectedContentColor = MaterialTheme.colorScheme.primary,
+                        selectorColor = MaterialTheme.colorScheme.primary,
+                        periodSelectorSelectedContainerColor = MaterialTheme.colorScheme.primary,
+                        periodSelectorSelectedContentColor = MaterialTheme.colorScheme.onPrimary,
+                        periodSelectorUnselectedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        periodSelectorUnselectedContentColor = MaterialTheme.colorScheme.primary,
+                        timeSelectorSelectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                        timeSelectorSelectedContentColor = MaterialTheme.colorScheme.primary,
+                        timeSelectorUnselectedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        timeSelectorUnselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 )
             }
         },
-        containerColor = CosmicDeepNavy,
+        containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 6.dp
     )
 }

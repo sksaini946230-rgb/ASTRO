@@ -5,7 +5,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -51,6 +56,14 @@ class MainActivity : ComponentActivity() {
     private var mInterstitialAd: InterstitialAd? = null
     private var lastInterstitialShowTime = 0L
 
+    private val requestNotificationPermissionLauncher =
+        registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { isGranted ->
+            if (isGranted) {
+                com.example.worker.AstroNotificationWorker.scheduleDailyNotification(this)
+                com.example.worker.FestivalNotificationWorker.scheduleFestivalNotification(this)
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -58,7 +71,21 @@ class MainActivity : ComponentActivity() {
         try {
             MobileAds.initialize(this) {}
             loadInterstitialAd()
-            com.example.worker.AstroNotificationWorker.scheduleDailyNotification(this)
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                if (androidx.core.content.ContextCompat.checkSelfPermission(
+                        this,
+                        android.Manifest.permission.POST_NOTIFICATIONS
+                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                ) {
+                    com.example.worker.AstroNotificationWorker.scheduleDailyNotification(this)
+                    com.example.worker.FestivalNotificationWorker.scheduleFestivalNotification(this)
+                } else {
+                    requestNotificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                }
+            } else {
+                com.example.worker.AstroNotificationWorker.scheduleDailyNotification(this)
+                com.example.worker.FestivalNotificationWorker.scheduleFestivalNotification(this)
+            }
         } catch (e: Throwable) {
             // fail gracefully
         }
@@ -76,6 +103,7 @@ class MainActivity : ComponentActivity() {
                 val selectedTab by mainViewModel.selectedTab.collectAsState()
                 val showPremium by mainViewModel.showPremiumDialog.collectAsState()
                 val isOnboardingCompleted by mainViewModel.isOnboardingCompleted.collectAsState()
+                val isOffline by mainViewModel.isOffline.collectAsState()
 
                 if (!isOnboardingCompleted) {
                     OnboardingScreen(
@@ -87,6 +115,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         topBar = {
                             TopHeaderBar(
+                                isOffline = isOffline,
                                 onLanguageToggle = { mainViewModel.toggleLanguage() },
                                 onPremiumClick = { mainViewModel.showPremiumDialog.value = true },
                                 onSettingsClick = { mainViewModel.navigateToMore(subTab = 1) }
@@ -123,7 +152,20 @@ class MainActivity : ComponentActivity() {
                             Box(
                                 modifier = Modifier.fillMaxSize()
                             ) {
-                                Crossfade(targetState = selectedTab, label = "TabTransition") { tab ->
+                                AnimatedContent(
+                                    targetState = selectedTab,
+                                    label = "TabTransition",
+                                    transitionSpec = {
+                                        if (targetState == AppTab.KUNDALI || initialState == AppTab.KUNDALI) {
+                                            (fadeIn(animationSpec = tween(400, delayMillis = 90)) + 
+                                             scaleIn(initialScale = 0.92f, animationSpec = tween(400)))
+                                                .togetherWith(fadeOut(animationSpec = tween(300)))
+                                        } else {
+                                            fadeIn(animationSpec = tween(300))
+                                                .togetherWith(fadeOut(animationSpec = tween(300)))
+                                        }
+                                    }
+                                ) { tab ->
                                     when (tab) {
                                         AppTab.PANCHANG -> PanchangScreen(mainViewModel)
                                         AppTab.RASHIFAL -> RashifalScreen(mainViewModel)

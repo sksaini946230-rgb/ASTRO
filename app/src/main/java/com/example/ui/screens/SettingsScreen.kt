@@ -72,20 +72,13 @@ import com.example.astro.PanchangCalculator
 import com.example.astro.RashifalProvider
 import com.example.data.model.CityLocation
 import com.example.ui.MainViewModel
+import com.example.ui.components.AstroLoadingIndicator
 import com.example.ui.components.GlassBadge
 import com.example.ui.components.GlassCard
 import com.example.ui.components.SectionHeader
 import com.example.ui.theme.AuspiciousGreen
-import com.example.ui.theme.CosmicCardSurface
-import com.example.ui.theme.CosmicDeepNavy
-import com.example.ui.theme.GlassBorder
-import com.example.ui.theme.GlassWhite
-import com.example.ui.theme.GoldGlow
-import com.example.ui.theme.GoldPrimary
-import com.example.ui.theme.SacredOrange
-import com.example.ui.theme.TextGold
-import com.example.ui.theme.TextPrimaryDark
-import com.example.ui.theme.TextSecondaryDark
+import com.example.ui.theme.InauspiciousRed
+import com.example.ui.theme.NeutralOrange
 import com.example.util.AppLanguage
 import com.example.util.LanguageManager
 
@@ -154,7 +147,7 @@ fun SettingsScreen(
                                     .clip(CircleShape)
                                     .background(
                                         brush = Brush.horizontalGradient(
-                                            listOf(GoldPrimary, SacredOrange)
+                                            listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
                                         )
                                     ),
                                 contentAlignment = Alignment.Center
@@ -162,7 +155,7 @@ fun SettingsScreen(
                                 Icon(
                                     imageVector = Icons.Default.Star,
                                     contentDescription = "PRO",
-                                    tint = CosmicDeepNavy,
+                                    tint = MaterialTheme.colorScheme.surface,
                                     modifier = Modifier.size(22.dp)
                                 )
                             }
@@ -171,7 +164,7 @@ fun SettingsScreen(
                                 Text(
                                     text = "AstroVeda PRO (अपग्रेड करें)",
                                     style = MaterialTheme.typography.titleMedium.copy(
-                                        color = TextGold,
+                                        color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 17.sp
                                     )
@@ -179,7 +172,7 @@ fun SettingsScreen(
                                 Text(
                                     text = "प्रीमियम वैदिक अनुभव अनलॉक करें",
                                     style = MaterialTheme.typography.bodySmall.copy(
-                                        color = TextSecondaryDark,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 12.sp
                                     )
                                 )
@@ -188,8 +181,8 @@ fun SettingsScreen(
 
                         GlassBadge(
                             text = "PRO ₹99/माह",
-                            textColor = GoldPrimary,
-                            borderColor = GoldPrimary
+                            textColor = MaterialTheme.colorScheme.primary,
+                            borderColor = MaterialTheme.colorScheme.primary
                         )
                     }
 
@@ -210,7 +203,7 @@ fun SettingsScreen(
                             .clip(RoundedCornerShape(12.dp))
                             .background(
                                 brush = Brush.horizontalGradient(
-                                    listOf(GoldPrimary, SacredOrange)
+                                    listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
                                 )
                             )
                             .padding(vertical = 10.dp),
@@ -219,7 +212,7 @@ fun SettingsScreen(
                         Text(
                             text = "अभी PRO अपग्रेड करें • ₹99/माह",
                             style = MaterialTheme.typography.labelMedium.copy(
-                                color = CosmicDeepNavy,
+                                color = MaterialTheme.colorScheme.surface,
                                 fontWeight = FontWeight.ExtraBold,
                                 fontSize = 13.sp
                             )
@@ -232,57 +225,60 @@ fun SettingsScreen(
         // 1. Language Toggle (ENG / हिं Switch)
         item {
             GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Language,
-                            contentDescription = null,
-                            tint = GoldPrimary,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = "भाषा (App Language)",
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    color = TextGold,
-                                    fontWeight = FontWeight.Bold
-                                )
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    // Language Toggle
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Language,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
                             )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "भाषा (App Language)",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                )
+                                Text(
+                                    text = if (LanguageManager.currentLanguage == AppLanguage.HINDI) "वर्तमान: हिन्दी (Hindi)" else "Current: English",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 11.sp
+                                    )
+                                )
+                            }
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(20.dp))
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    viewModel.toggleLanguage()
+                                }
+                                .padding(horizontal = 14.dp, vertical = 6.dp)
+                                .testTag("settings_language_toggle")
+                        ) {
                             Text(
-                                text = if (LanguageManager.currentLanguage == AppLanguage.HINDI) "वर्तमान: हिन्दी (Hindi)" else "Current: English",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = TextSecondaryDark,
-                                    fontSize = 11.sp
+                                text = if (LanguageManager.currentLanguage == AppLanguage.HINDI) "English ⇄" else "हिन्दी ⇄",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontSize = 12.sp
                                 )
                             )
                         }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(GlassWhite)
-                            .border(1.dp, GoldPrimary, RoundedCornerShape(20.dp))
-                            .clickable {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                viewModel.toggleLanguage()
-                            }
-                            .padding(horizontal = 14.dp, vertical = 6.dp)
-                            .testTag("settings_language_toggle")
-                    ) {
-                        Text(
-                            text = if (LanguageManager.currentLanguage == AppLanguage.HINDI) "English ⇄" else "हिन्दी ⇄",
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = GoldPrimary,
-                                fontSize = 12.sp
-                            )
-                        )
                     }
                 }
             }
@@ -301,8 +297,8 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(GoldPrimary.copy(alpha = 0.15f))
-                                .border(1.dp, GoldPrimary, CircleShape),
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                                .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(text = currentRashi.symbol, fontSize = 20.sp)
@@ -312,14 +308,14 @@ fun SettingsScreen(
                             Text(
                                 text = "मुख्य राशि (Default Rashi)",
                                 style = MaterialTheme.typography.titleSmall.copy(
-                                    color = TextGold,
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold
                                 )
                             )
                             Text(
                                 text = "${currentRashi.rashiNameHi} • स्वामी: ${currentRashi.rulerHi}",
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    color = TextSecondaryDark,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 11.sp
                                 )
                             )
@@ -329,8 +325,8 @@ fun SettingsScreen(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(GlassWhite)
-                            .border(1.dp, SacredOrange, RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .border(1.dp, MaterialTheme.colorScheme.secondary, RoundedCornerShape(16.dp))
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 showRashiDialog = true
@@ -342,7 +338,7 @@ fun SettingsScreen(
                             text = "बदलें (Change)",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = SacredOrange,
+                                color = MaterialTheme.colorScheme.secondary,
                                 fontSize = 11.sp
                             )
                         )
@@ -364,7 +360,7 @@ fun SettingsScreen(
                             Icon(
                                 imageVector = Icons.Default.LocationOn,
                                 contentDescription = null,
-                                tint = SacredOrange,
+                                tint = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.size(24.dp)
                             )
                             Spacer(modifier = Modifier.width(12.dp))
@@ -372,14 +368,14 @@ fun SettingsScreen(
                                 Text(
                                     text = "स्थान सेटिंग्स (Location)",
                                     style = MaterialTheme.typography.titleSmall.copy(
-                                        color = TextGold,
+                                        color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Bold
                                     )
                                 )
                                 Text(
                                     text = "${selectedCity.cityNameHindi} (${selectedCity.state})",
                                     style = MaterialTheme.typography.bodySmall.copy(
-                                        color = TextSecondaryDark,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 11.sp
                                     )
                                 )
@@ -391,8 +387,8 @@ fun SettingsScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(GlassWhite)
-                                    .border(1.dp, GoldPrimary, RoundedCornerShape(16.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(16.dp))
                                     .clickable {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         isRefreshingLocation = true
@@ -407,16 +403,12 @@ fun SettingsScreen(
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     if (isRefreshingLocation) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(12.dp),
-                                            color = GoldPrimary,
-                                            strokeWidth = 1.5.dp
-                                        )
+                                        AstroLoadingIndicator(size = 12.dp, strokeWidth = 1.5.dp)
                                     } else {
                                         Icon(
                                             imageVector = Icons.Default.Refresh,
                                             contentDescription = null,
-                                            tint = GoldPrimary,
+                                            tint = MaterialTheme.colorScheme.primary,
                                             modifier = Modifier.size(14.dp)
                                         )
                                     }
@@ -425,7 +417,7 @@ fun SettingsScreen(
                                         text = "GPS",
                                         style = MaterialTheme.typography.labelSmall.copy(
                                             fontWeight = FontWeight.Bold,
-                                            color = GoldPrimary,
+                                            color = MaterialTheme.colorScheme.primary,
                                             fontSize = 11.sp
                                         )
                                     )
@@ -436,8 +428,8 @@ fun SettingsScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(GlassWhite)
-                                    .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
                                     .clickable {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         showLocationModal = true
@@ -449,7 +441,7 @@ fun SettingsScreen(
                                     text = "शहर खोजें",
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontWeight = FontWeight.Bold,
-                                        color = TextGold,
+                                        color = MaterialTheme.colorScheme.primary,
                                         fontSize = 11.sp
                                     )
                                 )
@@ -462,20 +454,23 @@ fun SettingsScreen(
 
         // 4. Notifications Toggles (Daily Rahu Kaal Alert & Festival Reminders)
         item {
+            val notificationHour by viewModel.notificationHour.collectAsState()
+            val notificationMinute by viewModel.notificationMinute.collectAsState()
+            
             GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Notifications,
                             contentDescription = null,
-                            tint = GoldPrimary,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(22.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = "अधिसूचनाएं एवं अलर्ट (Notifications)",
                             style = MaterialTheme.typography.titleSmall.copy(
-                                color = TextGold,
+                                color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold
                             )
                         )
@@ -489,20 +484,45 @@ fun SettingsScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "दैनिक राहुकाल अलर्ट (Daily Rahu Kaal Alert)",
+                                text = "दैनिक राहुकाल एवं पंचांग अलर्ट",
                                 style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = TextPrimaryDark,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 13.sp
                                 )
                             )
-                            Text(
-                                text = "राहुकाल प्रारंभ होने से 15 मिनट पूर्व चेतावनी",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = TextSecondaryDark,
-                                    fontSize = 11.sp
+                            val amPm = if (notificationHour >= 12) "PM" else "AM"
+                            val displayHour = if (notificationHour % 12 == 0) 12 else notificationHour % 12
+                            val timeString = String.format("%02d:%02d %s", displayHour, notificationMinute, amPm)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "समय: $timeString",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    modifier = Modifier.clickable {
+                                        android.app.TimePickerDialog(
+                                            context,
+                                            { _, hourOfDay, minute ->
+                                                viewModel.setNotificationTime(hourOfDay, minute)
+                                            },
+                                            notificationHour,
+                                            notificationMinute,
+                                            false
+                                        ).show()
+                                    }.padding(vertical = 4.dp)
                                 )
-                            )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "(बदलें / Change)",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 10.sp
+                                    )
+                                )
+                            }
                         }
                         Switch(
                             checked = dailyRahuKaalAlert,
@@ -511,10 +531,10 @@ fun SettingsScreen(
                                 viewModel.toggleRahuKaalAlert()
                             },
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = CosmicDeepNavy,
-                                checkedTrackColor = GoldPrimary,
-                                uncheckedThumbColor = TextSecondaryDark,
-                                uncheckedTrackColor = GlassWhite
+                                checkedThumbColor = MaterialTheme.colorScheme.surface,
+                                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                                uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
                             ),
                             modifier = Modifier.testTag("settings_toggle_rahu_kaal")
                         )
@@ -530,7 +550,7 @@ fun SettingsScreen(
                             Text(
                                 text = "त्योहार व व्रत रिमाइंडर (Festival Reminders)",
                                 style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = TextPrimaryDark,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 13.sp
                                 )
@@ -538,7 +558,7 @@ fun SettingsScreen(
                             Text(
                                 text = "प्रमुख एकादशी, पूर्णिमा व पर्व की पूर्व सूचना",
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    color = TextSecondaryDark,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 11.sp
                                 )
                             )
@@ -550,10 +570,10 @@ fun SettingsScreen(
                                 viewModel.toggleFestivalAlert()
                             },
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = CosmicDeepNavy,
-                                checkedTrackColor = SacredOrange,
-                                uncheckedThumbColor = TextSecondaryDark,
-                                uncheckedTrackColor = GlassWhite
+                                checkedThumbColor = MaterialTheme.colorScheme.surface,
+                                checkedTrackColor = MaterialTheme.colorScheme.secondary,
+                                uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
                             ),
                             modifier = Modifier.testTag("settings_toggle_festivals")
                         )
@@ -566,6 +586,7 @@ fun SettingsScreen(
         item {
             val astroNews by viewModel.astroNews.collectAsState()
             val isNewsLoading by viewModel.isNewsLoading.collectAsState()
+            val isNewsOffline by viewModel.isNewsOffline.collectAsState()
 
             GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -578,7 +599,7 @@ fun SettingsScreen(
                             Icon(
                                 imageVector = Icons.Default.AutoAwesome,
                                 contentDescription = null,
-                                tint = GoldGlow,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(22.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -586,7 +607,7 @@ fun SettingsScreen(
                                 Text(
                                     text = "ताज़ा खगोलीय व ज्योतिष समाचार",
                                     style = MaterialTheme.typography.titleSmall.copy(
-                                        color = TextGold,
+                                        color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp
                                     )
@@ -594,7 +615,7 @@ fun SettingsScreen(
                                 Text(
                                     text = "Vedic Astro & Celestial News",
                                     style = MaterialTheme.typography.bodySmall.copy(
-                                        color = TextSecondaryDark,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 11.sp
                                     )
                                 )
@@ -612,41 +633,50 @@ fun SettingsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
-                            .background(GlassWhite)
-                            .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
                             .padding(12.dp)
                     ) {
-                        if (isNewsLoading) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 12.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(18.dp),
-                                    color = GoldPrimary,
-                                    strokeWidth = 2.dp
-                                )
-                                Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            if (isNewsOffline) {
                                 Text(
-                                    text = "गूगल सर्च द्वारा ताज़ा खगोलीय घटनाएँ खोजी जा रही हैं...",
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        color = TextSecondaryDark,
-                                        fontSize = 12.sp
+                                    text = "Offline Mode: AI offline, showing cached news",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = MaterialTheme.colorScheme.secondary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp
+                                    ),
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                            }
+                            if (isNewsLoading) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 12.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    AstroLoadingIndicator(size = 18.dp, strokeWidth = 2.dp)
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = "गूगल सर्च द्वारा ताज़ा खगोलीय घटनाएँ खोजी जा रही हैं...",
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            fontSize = 12.sp
+                                        )
+                                    )
+                                }
+                            } else {
+                                Text(
+                                    text = astroNews.ifBlank { "खगोलीय व ज्योतिषीय समाचार उपलब्ध हैं।" },
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontSize = 12.sp,
+                                        lineHeight = 18.sp
                                     )
                                 )
                             }
-                        } else {
-                            Text(
-                                text = astroNews.ifBlank { "खगोलीय व ज्योतिषीय समाचार उपलब्ध हैं।" },
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = TextPrimaryDark,
-                                    fontSize = 12.sp,
-                                    lineHeight = 18.sp
-                                )
-                            )
                         }
                     }
 
@@ -657,8 +687,8 @@ fun SettingsScreen(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(GlassWhite)
-                                .border(1.dp, GoldPrimary, RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
                                 .clickable {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     viewModel.fetchAstroNews()
@@ -671,14 +701,14 @@ fun SettingsScreen(
                                 Icon(
                                     imageVector = Icons.Default.Refresh,
                                     contentDescription = "Refresh News",
-                                    tint = GoldPrimary,
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = "रीफ्रेश समाचार (Live Search)",
                                     style = MaterialTheme.typography.labelSmall.copy(
-                                        color = GoldPrimary,
+                                        color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 11.sp
                                     )
@@ -703,7 +733,7 @@ fun SettingsScreen(
                         Icon(
                             imageVector = Icons.Default.Info,
                             contentDescription = null,
-                            tint = GoldGlow,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(22.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
@@ -711,14 +741,14 @@ fun SettingsScreen(
                             Text(
                                 text = "AstroVeda के बारे में (About App)",
                                 style = MaterialTheme.typography.titleSmall.copy(
-                                    color = TextGold,
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold
                                 )
                             )
                             Text(
                                 text = "संस्करण 2026.1.0 (Build 108) • स्विस् एपिफेमरीस परिशुद्धता",
                                 style = MaterialTheme.typography.bodySmall.copy(
-                                    color = TextSecondaryDark,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 11.sp
                                 )
                             )
@@ -730,8 +760,8 @@ fun SettingsScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
-                            .background(GlassWhite)
-                            .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 showRatingDialog = true
@@ -744,14 +774,14 @@ fun SettingsScreen(
                             Icon(
                                 imageVector = Icons.Default.Star,
                                 contentDescription = null,
-                                tint = GoldPrimary,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "प्ले स्टोर पर 5★ रेटिंग दें (Rate Us on Play Store)",
                                 style = MaterialTheme.typography.labelMedium.copy(
-                                    color = TextGold,
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 12.sp
                                 )
@@ -769,7 +799,7 @@ fun SettingsScreen(
                     Text(
                         text = "कानूनी एवं गोपनीयता (Legal & Terms)",
                         style = MaterialTheme.typography.titleSmall.copy(
-                            color = TextGold,
+                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
                         )
                     )
@@ -783,8 +813,8 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(GlassWhite)
-                                .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
                                 .clickable {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     webViewTitle = "गोपनीयता नीति (Privacy Policy)"
@@ -798,14 +828,14 @@ fun SettingsScreen(
                                 Icon(
                                     imageVector = Icons.Default.PrivacyTip,
                                     contentDescription = null,
-                                    tint = GoldPrimary,
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "गोपनीयता नीति",
                                     style = MaterialTheme.typography.labelMedium.copy(
-                                        color = TextGold,
+                                        color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 12.sp
                                     )
@@ -818,8 +848,8 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(GlassWhite)
-                                .border(1.dp, GlassBorder, RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
                                 .clickable {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     webViewTitle = "सेवा की शर्तें (Terms of Service)"
@@ -833,14 +863,14 @@ fun SettingsScreen(
                                 Icon(
                                     imageVector = Icons.Default.Description,
                                     contentDescription = null,
-                                    tint = SacredOrange,
+                                    tint = MaterialTheme.colorScheme.secondary,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "सेवा शर्तें (Terms)",
                                     style = MaterialTheme.typography.labelMedium.copy(
-                                        color = SacredOrange,
+                                        color = MaterialTheme.colorScheme.secondary,
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 12.sp
                                     )
@@ -864,7 +894,7 @@ fun SettingsScreen(
             title = {
                 Text(
                     text = "अपनी मुख्य राशि चुनें (Select Default Rashi)",
-                    color = TextGold,
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
@@ -881,8 +911,8 @@ fun SettingsScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(if (isSelected) GoldPrimary else GlassWhite)
-                                    .border(1.dp, if (isSelected) GoldPrimary else GlassBorder, RoundedCornerShape(12.dp))
+                                    .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                                    .border(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
                                     .clickable {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         viewModel.selectRashi(rashi.rashiId)
@@ -898,7 +928,7 @@ fun SettingsScreen(
                                         text = rashi.rashiNameHi.substringBefore(" "),
                                         style = MaterialTheme.typography.labelSmall.copy(
                                             fontWeight = FontWeight.Bold,
-                                            color = if (isSelected) CosmicCardSurface else TextGold,
+                                            color = if (isSelected) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primary,
                                             fontSize = 11.sp
                                         )
                                     )
@@ -910,10 +940,10 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showRashiDialog = false }) {
-                    Text("बंद करें (Close)", color = GoldPrimary)
+                    Text("बंद करें (Close)", color = MaterialTheme.colorScheme.primary)
                 }
             },
-            containerColor = CosmicCardSurface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     }
 
@@ -933,7 +963,7 @@ fun SettingsScreen(
             title = {
                 Text(
                     text = "शहर खोजें एवं चुनें (Search City)",
-                    color = TextGold,
+                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
@@ -943,14 +973,14 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = { searchQuery = it },
-                        placeholder = { Text("शहर का नाम लिखें (e.g. Jaipur, Varanasi)", color = TextSecondaryDark, fontSize = 12.sp) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = GoldPrimary) },
+                        placeholder = { Text("शहर का नाम लिखें (e.g. Jaipur, Varanasi)", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = GoldPrimary,
-                            unfocusedBorderColor = GlassBorder,
-                            focusedTextColor = TextGold,
-                            unfocusedTextColor = TextGold
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            focusedTextColor = MaterialTheme.colorScheme.primary,
+                            unfocusedTextColor = MaterialTheme.colorScheme.primary
                         ),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -965,7 +995,7 @@ fun SettingsScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(if (isSelected) GoldPrimary.copy(alpha = 0.2f) else GlassWhite)
+                                    .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant)
                                     .clickable {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         viewModel.setCity(city)
@@ -980,7 +1010,7 @@ fun SettingsScreen(
                                     Text(
                                         text = "${city.cityNameHindi} (${city.cityName})",
                                         style = MaterialTheme.typography.bodyMedium.copy(
-                                            color = TextGold,
+                                            color = MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 13.sp
                                         )
@@ -988,7 +1018,7 @@ fun SettingsScreen(
                                     Text(
                                         text = "${city.state} • Lat: ${city.latitude}, Lon: ${city.longitude}",
                                         style = MaterialTheme.typography.bodySmall.copy(
-                                            color = TextSecondaryDark,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontSize = 10.sp
                                         )
                                     )
@@ -997,7 +1027,7 @@ fun SettingsScreen(
                                     Icon(
                                         imageVector = Icons.Default.CheckCircle,
                                         contentDescription = null,
-                                        tint = GoldPrimary,
+                                        tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
@@ -1008,10 +1038,10 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showLocationModal = false }) {
-                    Text("रद्द करें (Cancel)", color = TextSecondaryDark)
+                    Text("रद्द करें (Cancel)", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = CosmicCardSurface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     }
 
@@ -1020,21 +1050,21 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { showAboutDialog = false },
             title = {
-                Text(text = "AstroVeda 2026", color = TextGold, fontWeight = FontWeight.Bold)
+                Text(text = "AstroVeda 2026", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             },
             text = {
                 Text(
                     text = "AstroVeda (वैदिक पंचांग एवं कुण्डली 2026) भारत का सबसे भरोसेमंद एवं सटीक पंचांग ऐप है। इसमें स्विस् एपिफेमरीस आधारित ग्रहों की उच्च परिशुद्धता गणना, 12 राशियां, चौघड़िया, राहुकाल, व्रत-त्योहार व एआई ज्योतिष परामर्श शामिल हैं।",
-                    color = TextPrimaryDark,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 13.sp
                 )
             },
             confirmButton = {
                 TextButton(onClick = { showAboutDialog = false }) {
-                    Text("ठीक है (OK)", color = GoldPrimary)
+                    Text("ठीक है (OK)", color = MaterialTheme.colorScheme.primary)
                 }
             },
-            containerColor = CosmicCardSurface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     }
 
@@ -1044,15 +1074,15 @@ fun SettingsScreen(
             onDismissRequest = { showRatingDialog = false },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Star, contentDescription = null, tint = GoldPrimary)
+                    Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "AstroVeda रेटिंग दें", color = TextGold, fontWeight = FontWeight.Bold)
+                    Text(text = "AstroVeda रेटिंग दें", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 }
             },
             text = {
                 Text(
                     text = "AstroVeda ऐप को 5-स्टार रेटिंग देकर हमारा समर्थन करें! गूगल प्ले स्टोर लिंक शीघ्र ही सक्रिय हो जाएगा।",
-                    color = TextPrimaryDark,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 13.sp
                 )
             },
@@ -1063,15 +1093,15 @@ fun SettingsScreen(
                         Toast.makeText(context, "धन्यवाद! आपका समर्थन हमारे लिए अनमोल है।", Toast.LENGTH_SHORT).show()
                     }
                 ) {
-                    Text("5★ रेटिंग दें", color = GoldPrimary, fontWeight = FontWeight.Bold)
+                    Text("5★ रेटिंग दें", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showRatingDialog = false }) {
-                    Text("बाद में", color = TextSecondaryDark)
+                    Text("बाद में", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = CosmicCardSurface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     }
 
@@ -1087,10 +1117,10 @@ fun SettingsScreen(
                 ) {
                     Text(
                         text = webViewTitle,
-                        style = MaterialTheme.typography.titleMedium.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     )
                     IconButton(onClick = { webViewUrlToOpen = null }) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = GoldPrimary)
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.primary)
                     }
                 }
             },
@@ -1116,10 +1146,10 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { webViewUrlToOpen = null }) {
-                    Text("बंद करें (Close)", color = GoldPrimary)
+                    Text("बंद करें (Close)", color = MaterialTheme.colorScheme.primary)
                 }
             },
-            containerColor = CosmicCardSurface
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     }
 }
@@ -1130,7 +1160,7 @@ private fun ProBenefitRow(text: String) {
         Text(
             text = text,
             style = MaterialTheme.typography.bodySmall.copy(
-                color = TextPrimaryDark,
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 12.sp
             )
         )

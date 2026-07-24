@@ -30,12 +30,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Casino
-import androidx.compose.material.icons.filled.Diamond
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.MonetizationOn
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Icon
@@ -66,21 +63,11 @@ import com.example.data.model.RashifalData
 import com.example.ui.MainViewModel
 import com.example.ui.components.GlassBadge
 import com.example.ui.components.GlassCard
+import com.example.ui.components.PersonalizedInsightCard
 import com.example.ui.components.SectionHeader
-import com.example.ui.theme.AuspiciousGreen
-import com.example.ui.theme.CosmicCardSurface
-import com.example.ui.theme.GlassBorder
-import com.example.ui.theme.GlassWhite
-import com.example.ui.theme.GoldGlow
-import com.example.ui.theme.GoldPrimary
-import com.example.ui.theme.SacredOrange
-import com.example.ui.theme.TextGold
-import com.example.ui.theme.TextPrimaryDark
-import com.example.ui.theme.TextSecondaryDark
 import com.example.util.LanguageManager
 
-import com.example.ui.components.SubTabHeader
-import com.example.ui.AppTab
+import com.example.ui.components.OfflineStatusChip
 
 @Composable
 fun RashifalScreen(viewModel: MainViewModel) {
@@ -99,7 +86,7 @@ fun RashifalScreen(viewModel: MainViewModel) {
     }
 
     Scaffold(
-        containerColor = Color.Transparent,
+        containerColor = MaterialTheme.colorScheme.background,
         modifier = Modifier.fillMaxSize()
     ) { paddingValues ->
         LazyColumn(
@@ -112,6 +99,11 @@ fun RashifalScreen(viewModel: MainViewModel) {
             ),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+        item {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                OfflineStatusChip("Offline Mode: Showing cached daily horoscope")
+            }
+        }
         item {
             Spacer(modifier = Modifier.height(8.dp))
             SectionHeader(
@@ -133,8 +125,8 @@ fun RashifalScreen(viewModel: MainViewModel) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
-                            .background(if (isSelected) GoldPrimary else GlassWhite)
-                            .border(1.dp, if (isSelected) GoldPrimary else GlassBorder, RoundedCornerShape(16.dp))
+                            .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                            .border(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 viewModel.selectRashi(item.rashiId)
@@ -146,14 +138,14 @@ fun RashifalScreen(viewModel: MainViewModel) {
                             Text(
                                 text = item.symbol,
                                 fontSize = 18.sp,
-                                color = if (isSelected) CosmicCardSurface else GoldPrimary
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = LanguageManager.getString(item.rashiNameHi.substringBefore(" "), item.rashiNameEn),
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) CosmicCardSurface else TextGold,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
                                     fontSize = 13.sp
                                 )
                             )
@@ -178,8 +170,8 @@ fun RashifalScreen(viewModel: MainViewModel) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
-                            .background(if (isSelected) SacredOrange else GlassWhite)
-                            .border(1.dp, if (isSelected) SacredOrange else GlassBorder, RoundedCornerShape(20.dp))
+                            .background(if (isSelected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.surfaceVariant)
+                            .border(1.dp, if (isSelected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outline, RoundedCornerShape(20.dp))
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 selectedPeriod = code
@@ -191,7 +183,7 @@ fun RashifalScreen(viewModel: MainViewModel) {
                             text = label,
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else TextGold,
+                                color = if (isSelected) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.primary,
                                 fontSize = 12.sp
                             )
                         )
@@ -225,8 +217,8 @@ fun RashifalScreen(viewModel: MainViewModel) {
                                         modifier = Modifier
                                             .size(52.dp)
                                             .clip(CircleShape)
-                                            .background(GoldPrimary.copy(alpha = 0.15f))
-                                            .border(1.dp, GoldPrimary, CircleShape),
+                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                                            .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Text(text = horoscope.symbol, fontSize = 28.sp)
@@ -237,14 +229,14 @@ fun RashifalScreen(viewModel: MainViewModel) {
                                             text = LanguageManager.getString(horoscope.rashiNameHi, horoscope.rashiNameEn),
                                             style = MaterialTheme.typography.titleLarge.copy(
                                                 fontWeight = FontWeight.Bold,
-                                                color = TextGold,
+                                                color = MaterialTheme.colorScheme.primary,
                                                 fontSize = 20.sp
                                             )
                                         )
                                         Text(
                                             text = "${LanguageManager.getString("स्वामी", "Lord")}: ${horoscope.rulerHi} | ${LanguageManager.getString("तत्व", "Element")}: ${horoscope.elementHi}",
                                             style = MaterialTheme.typography.bodySmall.copy(
-                                                color = TextSecondaryDark,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 fontSize = 12.sp
                                             )
                                         )
@@ -262,13 +254,13 @@ fun RashifalScreen(viewModel: MainViewModel) {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(GlassWhite)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
                                     .padding(horizontal = 10.dp, vertical = 4.dp)
                             ) {
                                 Text(
                                     text = "📅 $dateRangeText",
                                     style = MaterialTheme.typography.labelMedium.copy(
-                                        color = SacredOrange,
+                                        color = MaterialTheme.colorScheme.secondary,
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 11.sp
                                     )
@@ -284,18 +276,18 @@ fun RashifalScreen(viewModel: MainViewModel) {
                             ) {
                                 GlassBadge(
                                     text = "शुभ अंक: ${horoscope.luckyNumber}",
-                                    textColor = GoldPrimary,
-                                    borderColor = GoldPrimary
+                                    textColor = MaterialTheme.colorScheme.primary,
+                                    borderColor = MaterialTheme.colorScheme.primary
                                 )
                                 GlassBadge(
                                     text = "शुभ रंग: ${horoscope.luckyColorHi}",
-                                    textColor = TextGold,
-                                    borderColor = TextGold
+                                    textColor = MaterialTheme.colorScheme.primary,
+                                    borderColor = MaterialTheme.colorScheme.primary
                                 )
                                 GlassBadge(
                                     text = "शुभ रत्न: ${horoscope.luckyStoneHi}",
-                                    textColor = SacredOrange,
-                                    borderColor = SacredOrange
+                                    textColor = MaterialTheme.colorScheme.secondary,
+                                    borderColor = MaterialTheme.colorScheme.secondary
                                 )
                             }
                         }
@@ -308,14 +300,14 @@ fun RashifalScreen(viewModel: MainViewModel) {
                                 Icon(
                                     imageVector = Icons.Default.AutoAwesome,
                                     contentDescription = null,
-                                    tint = GoldPrimary,
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = LanguageManager.getString("सामान्य भविष्यफल", "General Overview"),
                                     style = MaterialTheme.typography.titleSmall.copy(
-                                        color = TextGold,
+                                        color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Bold
                                     )
                                 )
@@ -327,7 +319,7 @@ fun RashifalScreen(viewModel: MainViewModel) {
                                     horoscope.generalReadingEn
                                 ),
                                 style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = TextPrimaryDark,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     fontSize = 13.sp,
                                     lineHeight = 19.sp
                                 )
@@ -349,28 +341,28 @@ fun RashifalScreen(viewModel: MainViewModel) {
                                     horoscope.careerReadingHi,
                                     horoscope.careerReadingEn,
                                     Icons.Default.Work,
-                                    GoldPrimary
+                                    MaterialTheme.colorScheme.primary
                                 ),
                                 DomainItem(
                                     "स्वास्थ्य एवं ऊर्जा (Health & Fitness)",
                                     horoscope.healthReadingHi,
                                     horoscope.healthReadingEn,
                                     Icons.Default.FitnessCenter,
-                                    AuspiciousGreen
+                                    MaterialTheme.colorScheme.tertiary // Assuming AuspiciousGreen is tertiary
                                 ),
                                 DomainItem(
                                     "प्रेम व संबंध (Love & Marriage)",
                                     horoscope.loveReadingHi,
                                     horoscope.loveReadingEn,
                                     Icons.Default.Favorite,
-                                    SacredOrange
+                                    MaterialTheme.colorScheme.secondary
                                 ),
                                 DomainItem(
                                     "वित्त व धन लाभ (Finance & Money)",
                                     horoscope.financeReadingHi,
                                     horoscope.financeReadingEn,
                                     Icons.Default.MonetizationOn,
-                                    GoldGlow
+                                    MaterialTheme.colorScheme.primary // Assuming GoldGlow is primary
                                 )
                             )
 
@@ -401,7 +393,7 @@ fun RashifalScreen(viewModel: MainViewModel) {
                                         Text(
                                             text = item.title,
                                             style = MaterialTheme.typography.titleSmall.copy(
-                                                color = TextGold,
+                                                color = MaterialTheme.colorScheme.primary,
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 15.sp
                                             )
@@ -410,7 +402,7 @@ fun RashifalScreen(viewModel: MainViewModel) {
                                         Text(
                                             text = LanguageManager.getString(item.readingHi, item.readingEn),
                                             style = MaterialTheme.typography.bodySmall.copy(
-                                                color = TextPrimaryDark,
+                                                color = MaterialTheme.colorScheme.onSurface,
                                                 fontSize = 14.sp,
                                                 lineHeight = 20.sp
                                             )
@@ -419,11 +411,23 @@ fun RashifalScreen(viewModel: MainViewModel) {
                                 }
 
                                 if (index < domains.lastIndex) {
-                                    androidx.compose.material3.HorizontalDivider(color = GlassWhite.copy(alpha = 0.1f), thickness = 1.dp)
+                                    androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f), thickness = 1.dp)
                                 }
                             }
                         }
                     }
+
+                    // New: AI Personalized Insight
+                    val aiInsight by viewModel.aiRashifalInsight.collectAsState()
+                    val isAiLoading by viewModel.isRashifalAiLoading.collectAsState()
+
+                    PersonalizedInsightCard(
+                        insight = aiInsight,
+                        isLoading = isAiLoading,
+                        onFetchInsight = {
+                            viewModel.fetchPersonalizedInsight(currentHoroscope.rashiNameEn)
+                        }
+                    )
                 }
             }
         }
@@ -460,7 +464,7 @@ fun AnimatedStarScoreDisplay(rating: Int) {
             text = "$rating / 5",
             style = MaterialTheme.typography.labelSmall.copy(
                 fontWeight = FontWeight.Bold,
-                color = GoldPrimary,
+                color = MaterialTheme.colorScheme.primary,
                 fontSize = 11.sp
             )
         )
@@ -473,7 +477,7 @@ fun AnimatedStarScoreDisplay(rating: Int) {
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
-                    tint = if (starFill > 0.5f) GoldPrimary else GlassWhite,
+                    tint = if (starFill > 0.5f) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier
                         .size(18.dp)
                         .graphicsLayer(
@@ -525,7 +529,7 @@ fun HoroscopeDomainCard(
                 Text(
                     text = titleHi,
                     style = MaterialTheme.typography.titleSmall.copy(
-                        color = TextGold,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )
@@ -534,7 +538,7 @@ fun HoroscopeDomainCard(
                 Text(
                     text = LanguageManager.getString(readingHi, readingEn),
                     style = MaterialTheme.typography.bodySmall.copy(
-                        color = TextPrimaryDark,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 13.sp,
                         lineHeight = 18.sp
                     )

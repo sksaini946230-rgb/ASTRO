@@ -12,43 +12,43 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val AstroDarkColorScheme = darkColorScheme(
-    primary = GoldPrimary,
-    onPrimary = CosmicDeepNavy,
-    primaryContainer = CosmicCardSurface,
-    onPrimaryContainer = TextGold,
-    secondary = SacredOrange,
-    onSecondary = Color.White,
-    secondaryContainer = CosmicDarkBlue,
-    onSecondaryContainer = TextPrimaryDark,
-    tertiary = AccentCyan,
-    onTertiary = CosmicDeepNavy,
+    primary = SacredSaffron,
+    onPrimary = Color.Black,
+    primaryContainer = Color(0xFF1F2937),
+    onPrimaryContainer = SacredSaffron,
+    secondary = GoldSecondary,
+    onSecondary = Color.Black,
+    secondaryContainer = Color(0xFF161B22),
+    onSecondaryContainer = Color.White,
+    tertiary = GoldGlow,
+    onTertiary = Color.Black,
     background = CosmicDeepNavy,
-    onBackground = TextPrimaryDark,
-    surface = CosmicDarkBlue,
-    onSurface = TextPrimaryDark,
-    surfaceVariant = CosmicCardSurface,
-    onSurfaceVariant = TextSecondaryDark,
-    outline = GlassBorder
+    onBackground = Color(0xFFF0F2F5),
+    surface = CosmicCardSurface,
+    onSurface = Color(0xFFF0F2F5),
+    surfaceVariant = Color(0xFF0D1117),
+    onSurfaceVariant = Color(0xFF8B949E),
+    outline = Color(0xFF30363D)
 )
 
 private val AstroLightColorScheme = lightColorScheme(
     primary = GoldPrimary,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFFFF3E0),
-    onPrimaryContainer = Color(0xFFE65100),
-    secondary = SacredOrange,
+    primaryContainer = Color(0xFFFFF8E1),
+    onPrimaryContainer = Color(0xFF5D4037),
+    secondary = GoldSecondary,
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFFFF8E1),
-    onSecondaryContainer = Color(0xFF1E293B),
-    tertiary = AccentCyan,
+    secondaryContainer = Color(0xFFF5F7FA),
+    onSecondaryContainer = Color(0xFF0D1117),
+    tertiary = SacredSaffron,
     onTertiary = Color.White,
-    background = Color(0xFFFAF7F2),
-    onBackground = Color(0xFF1E293B),
-    surface = Color(0xFFFFFFFF),
-    onSurface = Color(0xFF1E293B),
-    surfaceVariant = Color(0xFFF1EDE6),
-    onSurfaceVariant = Color(0xFF64748B),
-    outline = Color(0xFFE2E8F0)
+    background = CelestialCream,
+    onBackground = Color(0xFF1C1C1E),
+    surface = Color.White,
+    onSurface = Color(0xFF1C1C1E),
+    surfaceVariant = Color(0xFFFBFBFB),
+    onSurfaceVariant = Color(0xFF6B7280),
+    outline = Color(0xFFE5E7EB)
 )
 
 @Composable

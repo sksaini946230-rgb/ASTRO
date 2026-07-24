@@ -18,6 +18,8 @@ import com.example.data.local.AstroCacheRepository
 import com.example.data.local.DatabaseProvider
 import com.example.data.local.KundaliEntity
 import com.example.data.local.KundaliRepository
+import com.example.data.local.RecentSearchEntity
+import com.example.data.local.RecentSearchRepository
 import com.example.data.local.SavedReportEntity
 import com.example.data.local.SavedReportRepository
 import com.example.data.model.ChoghadiyaSlot
@@ -59,9 +61,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: KundaliRepository
     private val reportRepository: SavedReportRepository
+    private val recentSearchRepository: RecentSearchRepository
     private val cacheRepository: AstroCacheRepository
+    private val connectivityManager = application.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
 
-    // SharedPreferences for local billing persistence
+    private val _isOffline = MutableStateFlow(false)
+    val isOffline: StateFlow<Boolean> = _isOffline.asStateFlow()
+
+    private val _isUsingCache = MutableStateFlow(false)
+    val isUsingCache: StateFlow<Boolean> = _isUsingCache.asStateFlow()
+
+    private fun monitorNetwork() {
+        val networkRequest = android.net.NetworkRequest.Builder()
+            .addCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+        
+        connectivityManager.registerNetworkCallback(networkRequest, object : android.net.ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: android.net.Network) {
+                _isOffline.value = false
+            }
+            override fun onLost(network: android.net.Network) {
+                _isOffline.value = true
+            }
+        })
+        
+        // Initial check
+        val activeNetwork = connectivityManager.activeNetwork
+        val caps = connectivityManager.getNetworkCapabilities(activeNetwork)
+        _isOffline.value = caps == null || !caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
     private val sharedPrefs = application.getSharedPreferences("astroveda_prefs", Context.MODE_PRIVATE)
 
     private val _isProUser = MutableStateFlow(sharedPrefs.getBoolean("is_pro", false))
@@ -125,8 +153,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _panchangSubTab = MutableStateFlow(0) // 0: Daily Panchang, 1: Monthly Calendar
     val panchangSubTab: StateFlow<Int> = _panchangSubTab.asStateFlow()
 
-    private val _kundaliSubTab = MutableStateFlow(0) // 0: Kundali Chart, 1: Guna Matching, 2: Astro AI
+    private val _kundaliSubTab = MutableStateFlow(0) // 0: Kundali Chart, 1: Guna Matching, 2: Astro AI, 3: Transits
     val kundaliSubTab: StateFlow<Int> = _kundaliSubTab.asStateFlow()
+
+    private val _transitKundali = MutableStateFlow<KundaliChartData?>(null)
+    val transitKundali: StateFlow<KundaliChartData?> = _transitKundali.asStateFlow()
+
+    fun calculateCurrentTransits() {
+        viewModelScope.launch(Dispatchers.Default) {
+            val now = java.util.Calendar.getInstance()
+            val dob = String.format(java.util.Locale.US, "%d-%02d-%02d", now.get(java.util.Calendar.YEAR), now.get(java.util.Calendar.MONTH) + 1, now.get(java.util.Calendar.DAY_OF_MONTH))
+            val tob = String.format(java.util.Locale.US, "%02d:%02d", now.get(java.util.Calendar.HOUR_OF_DAY), now.get(java.util.Calendar.MINUTE))
+            
+            val transitData = KundaliCalculator.generateKundali(
+                name = "Current Transits",
+                dobString = dob,
+                tobString = tob,
+                placeName = _selectedCity.value.cityName,
+                lat = _selectedCity.value.latitude,
+                lng = _selectedCity.value.longitude
+            )
+            _transitKundali.value = transitData
+        }
+    }
 
     private val _moreSubTab = MutableStateFlow(0) // 0: Saved Profiles, 1: Settings
     val moreSubTab: StateFlow<Int> = _moreSubTab.asStateFlow()
@@ -176,11 +225,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // Selected City Location for Panchang
-    private val _selectedCity = MutableStateFlow(PanchangCalculator.popularCities[0]) // Default Jaipur, Rajasthan
+    private val _selectedCity = MutableStateFlow(loadCityFromPrefs())
     val selectedCity: StateFlow<CityLocation> = _selectedCity.asStateFlow()
+
+    private fun loadCityFromPrefs(): CityLocation {
+        val lat = sharedPrefs.getFloat("city_lat", 26.9124f).toDouble()
+        val lon = sharedPrefs.getFloat("city_lon", 75.7873f).toDouble()
+        val name = sharedPrefs.getString("city_name", "Jaipur") ?: "Jaipur"
+        val nameHi = sharedPrefs.getString("city_name_hi", "जयपुर") ?: "जयपुर"
+        val state = sharedPrefs.getString("city_state", "Rajasthan") ?: "Rajasthan"
+        return CityLocation(name, nameHi, state, lat, lon)
+    }
 
     fun setCity(city: CityLocation) {
         _selectedCity.value = city
+        sharedPrefs.edit()
+            .putFloat("city_lat", city.latitude.toFloat())
+            .putFloat("city_lon", city.longitude.toFloat())
+            .putString("city_name", city.cityName)
+            .putString("city_name_hi", city.cityNameHindi)
+            .putString("city_state", city.state)
+            .apply()
         recalculatePanchang()
     }
 
@@ -205,27 +270,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 CancellationTokenSource().token
             ).addOnSuccessListener { location ->
                 if (location != null) {
-                    val gpsCity = CityLocation(
-                        cityName = "Current Location",
-                        cityNameHindi = "वर्तमान स्थान",
-                        state = "GPS",
-                        latitude = location.latitude,
-                        longitude = location.longitude
-                    )
-                    setCity(gpsCity)
-                    onComplete(true)
+                    handleLocation(context, location.latitude, location.longitude, onComplete)
                 } else {
                     fusedLocationClient.lastLocation.addOnSuccessListener { lastLoc ->
                         if (lastLoc != null) {
-                            val gpsCity = CityLocation(
-                                cityName = "Current Location",
-                                cityNameHindi = "वर्तमान स्थान",
-                                state = "GPS",
-                                latitude = lastLoc.latitude,
-                                longitude = lastLoc.longitude
-                            )
-                            setCity(gpsCity)
-                            onComplete(true)
+                            handleLocation(context, lastLoc.latitude, lastLoc.longitude, onComplete)
                         } else {
                             onComplete(false)
                         }
@@ -243,16 +292,69 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private fun handleLocation(context: Context, lat: Double, lon: Double, onComplete: (Boolean) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            var cityName = "Current Location"
+            var stateName = "GPS"
+            try {
+                val geocoder = android.location.Geocoder(context, java.util.Locale.getDefault())
+                val addresses = geocoder.getFromLocation(lat, lon, 1)
+                if (!addresses.isNullOrEmpty()) {
+                    val address = addresses[0]
+                    cityName = address.locality ?: address.subAdminArea ?: address.adminArea ?: "Current Location"
+                    stateName = address.adminArea ?: "GPS"
+                }
+            } catch (e: Exception) {
+                // Ignore geocoding failure, fallback to default
+            }
+
+            val gpsCity = CityLocation(
+                cityName = cityName,
+                cityNameHindi = cityName, // Assuming Hindi translation isn't available from Geocoder easily, keeping same
+                state = stateName,
+                latitude = lat,
+                longitude = lon
+            )
+            launch(Dispatchers.Main) {
+                setCity(gpsCity)
+                onComplete(true)
+            }
+        }
+    }
+
     // Notification Toggles
-    val dailyRahuKaalAlert = MutableStateFlow(true)
-    val festivalRemindersAlert = MutableStateFlow(true)
+    val dailyRahuKaalAlert = MutableStateFlow(sharedPrefs.getBoolean("daily_notification_enabled", true))
+    val festivalRemindersAlert = MutableStateFlow(sharedPrefs.getBoolean("festival_notification_enabled", true))
+    
+    private val _notificationHour = MutableStateFlow(sharedPrefs.getInt("notification_hour", 7))
+    val notificationHour: StateFlow<Int> = _notificationHour.asStateFlow()
+    
+    private val _notificationMinute = MutableStateFlow(sharedPrefs.getInt("notification_minute", 0))
+    val notificationMinute: StateFlow<Int> = _notificationMinute.asStateFlow()
 
     fun toggleRahuKaalAlert() {
         dailyRahuKaalAlert.value = !dailyRahuKaalAlert.value
+        sharedPrefs.edit().putBoolean("daily_notification_enabled", dailyRahuKaalAlert.value).apply()
+        val context = getApplication<Application>()
+        com.example.worker.AstroNotificationWorker.scheduleDailyNotification(context)
+    }
+
+    fun setNotificationTime(hour: Int, minute: Int) {
+        _notificationHour.value = hour
+        _notificationMinute.value = minute
+        sharedPrefs.edit()
+            .putInt("notification_hour", hour)
+            .putInt("notification_minute", minute)
+            .apply()
+        val context = getApplication<Application>()
+        com.example.worker.AstroNotificationWorker.scheduleDailyNotification(context)
     }
 
     fun toggleFestivalAlert() {
         festivalRemindersAlert.value = !festivalRemindersAlert.value
+        sharedPrefs.edit().putBoolean("festival_notification_enabled", festivalRemindersAlert.value).apply()
+        val context = getApplication<Application>()
+        com.example.worker.FestivalNotificationWorker.scheduleFestivalNotification(context)
     }
 
     // Selected Date
@@ -342,6 +444,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         kundaliTob.value = tob
         kundaliPlace.value = place
         
+        addRecentSearch("KUNDALI", name, dob, tob, place)
+        
         viewModelScope.launch(Dispatchers.Default) {
             _isCalculating.value = true
             try {
@@ -371,6 +475,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val gunaResult: StateFlow<GunaMatchingResult> = _gunaResult.asStateFlow()
 
     fun calculateGunaMatching() {
+        addRecentSearch("MATCHING", matchBoyName.value, matchBoyDob.value, matchGirlName.value, matchGirlDob.value)
         viewModelScope.launch(Dispatchers.Default) {
             _isCalculating.value = true
             try {
@@ -412,14 +517,44 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _isAiLoading = MutableStateFlow(false)
     val isAiLoading: StateFlow<Boolean> = _isAiLoading.asStateFlow()
 
+    private val _isAiOffline = MutableStateFlow(false)
+    val isAiOffline: StateFlow<Boolean> = _isAiOffline.asStateFlow()
+
+    // Personalized Rashifal Insight
+    private val _aiRashifalInsight = MutableStateFlow("")
+    val aiRashifalInsight: StateFlow<String> = _aiRashifalInsight.asStateFlow()
+
+    private val _isRashifalAiLoading = MutableStateFlow(false)
+    val isRashifalAiLoading: StateFlow<Boolean> = _isRashifalAiLoading.asStateFlow()
+
+    fun fetchPersonalizedInsight(rashiName: String) {
+        viewModelScope.launch {
+            _isRashifalAiLoading.value = true
+            try {
+                val question = "Provide a personalized daily horoscope insight for $rashiName."
+                _aiRashifalInsight.value = GeminiAstroService.getAiAstrologyInsight(question, "Rashi: $rashiName")
+            } catch (e: Exception) {
+                _aiRashifalInsight.value = "Unable to fetch personalized insight at the moment."
+            } finally {
+                _isRashifalAiLoading.value = false
+            }
+        }
+    }
+
     fun askAiAstrologer(question: String) {
         viewModelScope.launch {
             _isAiLoading.value = true
+            _isAiOffline.value = false
             try {
                 val kundaliDetails = "${_generatedKundali.value.personName}, DOB: ${_generatedKundali.value.dateOfBirth}, Lagna: ${_generatedKundali.value.ascendantRashiHi}"
                 val res = GeminiAstroService.getAiAstrologyInsight(question, kundaliDetails)
                 _aiResponse.value = res
+                if (res == com.example.data.ai.GeminiAstroService.getOfflineVedicResponse(question)) {
+                    _isAiOffline.value = true
+                }
             } catch (e: Exception) {
+                _isAiOffline.value = true
+                _aiResponse.value = com.example.data.ai.GeminiAstroService.getOfflineVedicResponse(question)
                 reportError(e)
             } finally {
                 _isAiLoading.value = false
@@ -434,13 +569,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _isNewsLoading = MutableStateFlow(false)
     val isNewsLoading: StateFlow<Boolean> = _isNewsLoading.asStateFlow()
 
+    private val _isNewsOffline = MutableStateFlow(false)
+    val isNewsOffline: StateFlow<Boolean> = _isNewsOffline.asStateFlow()
+
     fun fetchAstroNews() {
         viewModelScope.launch {
             _isNewsLoading.value = true
+            _isNewsOffline.value = false
             try {
                 val news = GeminiAstroService.fetchAstroNewsWithSearchGrounding()
                 _astroNews.value = news
+                if (news == com.example.data.ai.GeminiAstroService.getOfflineAstroNews()) {
+                    _isNewsOffline.value = true
+                }
             } catch (e: Exception) {
+                _isNewsOffline.value = true
+                _astroNews.value = com.example.data.ai.GeminiAstroService.getOfflineAstroNews()
                 reportError(e)
             } finally {
                 _isNewsLoading.value = false
@@ -448,9 +592,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    // Room DB Recent Searches
+    private val _recentSearches = MutableStateFlow<List<RecentSearchEntity>>(emptyList())
+    val recentSearches: StateFlow<List<RecentSearchEntity>> = _recentSearches.asStateFlow()
+
     // Room DB Profiles
     private val _savedProfiles = MutableStateFlow<List<KundaliEntity>>(emptyList())
     val savedProfiles: StateFlow<List<KundaliEntity>> = _savedProfiles.asStateFlow()
+
+    private fun loadRecentSearches() {
+        viewModelScope.launch {
+            recentSearchRepository.recentSearches.collect { list ->
+                _recentSearches.value = list
+            }
+        }
+    }
+
+    fun addRecentSearch(type: String, name: String, dob: String, tob: String, place: String) {
+        val data = "$name|$dob|$tob|$place"
+        viewModelScope.launch {
+            recentSearchRepository.insertSearch(RecentSearchEntity(type = type, data = data))
+        }
+    }
 
     private fun loadSavedProfiles() {
         viewModelScope.launch {
@@ -610,8 +773,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     init {
         repository = DatabaseProvider.getKundaliRepository(application)
         reportRepository = DatabaseProvider.getSavedReportRepository(application)
+        recentSearchRepository = DatabaseProvider.getRecentSearchRepository(application)
         cacheRepository = DatabaseProvider.getAstroCacheRepository(application)
+        monitorNetwork()
         loadSavedProfiles()
+        loadRecentSearches()
         loadSavedReports()
         recalculatePanchang()
         loadHoroscopesWithCache()

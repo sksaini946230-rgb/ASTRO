@@ -52,22 +52,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.GunaKootDetail
 import com.example.service.MatchingPdfReportService
+import com.example.data.local.RecentSearchEntity
 import com.example.ui.MainViewModel
 import com.example.ui.components.GlassBadge
 import com.example.ui.components.GlassCard
 import com.example.ui.components.GoldGlowButton
+import com.example.ui.components.EmptyStateComponent
+import com.example.ui.components.RecentSearchesComponent
+import com.example.ui.components.AstroLoadingIndicator
 import com.example.ui.components.SectionHeader
 import com.example.ui.theme.AuspiciousGreen
-import com.example.ui.theme.CosmicCardSurface
-import com.example.ui.theme.GlassBorder
-import com.example.ui.theme.GlassWhite
-import com.example.ui.theme.GoldGlow
-import com.example.ui.theme.GoldPrimary
 import com.example.ui.theme.InauspiciousRed
-import com.example.ui.theme.SacredOrange
-import com.example.ui.theme.TextGold
-import com.example.ui.theme.TextPrimaryDark
-import com.example.ui.theme.TextSecondaryDark
 import com.example.util.LanguageManager
 
 @Composable
@@ -128,6 +123,20 @@ fun MatchingScreen(viewModel: MainViewModel) {
                 titleHi = "गुण मिलान (36 Guna Kundali Matching)",
                 titleEn = "Kundali Matching (Ashtakoot)"
             )
+            val recentSearches by viewModel.recentSearches.collectAsState()
+            RecentSearchesComponent(
+                recentSearches = recentSearches.filter { it.type == "MATCHING" },
+                onSearchSelected = { search ->
+                    val parts = search.data.split("|")
+                    if (parts.size == 4) {
+                        boyName = parts[0]
+                        boyDob = parts[1]
+                        girlName = parts[2]
+                        girlDob = parts[3]
+                        viewModel.calculateGunaMatching()
+                    }
+                }
+            )
         }
 
         // Boy & Girl Details Form Card
@@ -135,19 +144,19 @@ fun MatchingScreen(viewModel: MainViewModel) {
             GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     val tfColors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = GoldPrimary,
-                        unfocusedBorderColor = GlassBorder,
-                        focusedTextColor = TextPrimaryDark,
-                        unfocusedTextColor = TextPrimaryDark,
-                        focusedLabelColor = TextGold,
-                        unfocusedLabelColor = TextSecondaryDark
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     // Boy Details
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Default.Male, contentDescription = "Boy", tint = GoldPrimary)
+                        Icon(imageVector = Icons.Default.Male, contentDescription = "Boy", tint = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = LanguageManager.getString("वर का विवरण (Boy's Details):", "Boy's Details:"), style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold))
+                        Text(text = LanguageManager.getString("वर का विवरण (Boy's Details):", "Boy's Details:"), style = MaterialTheme.typography.titleSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold))
                     }
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -175,7 +184,7 @@ fun MatchingScreen(viewModel: MainViewModel) {
                                     Icon(
                                         imageVector = Icons.Default.CalendarMonth,
                                         contentDescription = "Select Boy DOB",
-                                        tint = GoldPrimary
+                                        tint = MaterialTheme.colorScheme.primary
                                     )
                                 },
                                 colors = tfColors,
@@ -191,9 +200,9 @@ fun MatchingScreen(viewModel: MainViewModel) {
 
                     // Girl Details
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Default.Female, contentDescription = "Girl", tint = SacredOrange)
+                        Icon(imageVector = Icons.Default.Female, contentDescription = "Girl", tint = MaterialTheme.colorScheme.secondary)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = LanguageManager.getString("कन्या का विवरण (Girl's Details):", "Girl's Details:"), style = MaterialTheme.typography.titleSmall.copy(color = TextGold, fontWeight = FontWeight.Bold))
+                        Text(text = LanguageManager.getString("कन्या का विवरण (Girl's Details):", "Girl's Details:"), style = MaterialTheme.typography.titleSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold))
                     }
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -221,7 +230,7 @@ fun MatchingScreen(viewModel: MainViewModel) {
                                     Icon(
                                         imageVector = Icons.Default.CalendarMonth,
                                         contentDescription = "Select Girl DOB",
-                                        tint = SacredOrange
+                                        tint = MaterialTheme.colorScheme.secondary
                                     )
                                 },
                                 colors = tfColors,
@@ -237,13 +246,12 @@ fun MatchingScreen(viewModel: MainViewModel) {
 
                     val isCalculating by viewModel.isCalculating.collectAsState()
                     if (isCalculating) {
-                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            androidx.compose.material3.CircularProgressIndicator(color = GoldPrimary)
-                        }
+                        AstroLoadingIndicator()
                     } else {
                         GoldGlowButton(
                             text = LanguageManager.getString("गुण मिलान करें (Calculate 36 Guna)", "Calculate 36 Guna Score"),
                             onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 viewModel.matchBoyName.value = boyName
                                 viewModel.matchBoyDob.value = boyDob
                                 viewModel.matchGirlName.value = girlName
@@ -265,7 +273,7 @@ fun MatchingScreen(viewModel: MainViewModel) {
                         text = "${gunaResult.boyName} ♥ ${gunaResult.girlName}",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
-                            color = TextGold,
+                            color = MaterialTheme.colorScheme.primary,
                             fontSize = 18.sp
                         )
                     )
@@ -282,7 +290,7 @@ fun MatchingScreen(viewModel: MainViewModel) {
 
                     Text(
                         text = LanguageManager.getString("कुल प्राप्त गुण (Obtained Guna Score)", "Total Guna Match Score"),
-                        style = MaterialTheme.typography.labelSmall.copy(color = TextSecondaryDark, fontSize = 13.sp)
+                        style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -294,7 +302,7 @@ fun MatchingScreen(viewModel: MainViewModel) {
                             .height(8.dp)
                             .clip(RoundedCornerShape(4.dp)),
                         color = if (gunaResult.totalObtainedGuna >= 18) AuspiciousGreen else InauspiciousRed,
-                        trackColor = GlassWhite
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -313,8 +321,8 @@ fun MatchingScreen(viewModel: MainViewModel) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
-                            .background(GlassWhite)
-                            .border(1.dp, GoldPrimary, RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .border(1.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 val pdfFile = MatchingPdfReportService.generatePdfReport(context, gunaResult)
@@ -330,14 +338,14 @@ fun MatchingScreen(viewModel: MainViewModel) {
                             Icon(
                                 imageVector = Icons.Default.PictureAsPdf,
                                 contentDescription = "PDF Report",
-                                tint = GoldPrimary,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(22.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "PDF रिपोर्ट शेयर / प्रिंट करें (Export PDF Report)",
                                 style = MaterialTheme.typography.titleSmall.copy(
-                                    color = GoldPrimary,
+                                    color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 15.sp
                                 )
@@ -356,27 +364,27 @@ fun MatchingScreen(viewModel: MainViewModel) {
                     Column {
                         Text(
                             text = "मंगल दोष विचार (Mangal Dosha Analysis)",
-                            style = MaterialTheme.typography.titleMedium.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = gunaResult.mangalDoshaStatusHi,
-                            style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryDark, fontSize = 14.sp, lineHeight = 20.sp)
+                            style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp, lineHeight = 20.sp)
                         )
                     }
 
-                    androidx.compose.material3.HorizontalDivider(color = GlassWhite.copy(alpha = 0.1f), thickness = 1.dp)
+                    androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f), thickness = 1.dp)
 
                     // Summary Report Section
                     Column {
                         Text(
                             text = "विवाह निष्कर्ष रिपोर्ट (Summary Report):",
-                            style = MaterialTheme.typography.titleMedium.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = gunaResult.summaryReadingHi,
-                            style = MaterialTheme.typography.bodyMedium.copy(color = TextPrimaryDark, fontSize = 14.sp, lineHeight = 20.sp)
+                            style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp, lineHeight = 20.sp)
                         )
                     }
                 }
@@ -401,9 +409,9 @@ fun MatchingScreen(viewModel: MainViewModel) {
                             .padding(bottom = 6.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = "कूट (Koota)", style = MaterialTheme.typography.labelSmall.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 13.sp), modifier = Modifier.weight(1.5f))
-                        Text(text = "अधिकतम", style = MaterialTheme.typography.labelSmall.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 13.sp), modifier = Modifier.weight(1f))
-                        Text(text = "प्राप्त", style = MaterialTheme.typography.labelSmall.copy(color = TextGold, fontWeight = FontWeight.Bold, fontSize = 13.sp), modifier = Modifier.weight(1f))
+                        Text(text = "कूट (Koota)", style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 13.sp), modifier = Modifier.weight(1.5f))
+                        Text(text = "अधिकतम", style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 13.sp), modifier = Modifier.weight(1f))
+                        Text(text = "प्राप्त", style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 13.sp), modifier = Modifier.weight(1f))
                     }
 
                     gunaResult.kootDetails.forEach { koot ->
@@ -412,8 +420,8 @@ fun MatchingScreen(viewModel: MainViewModel) {
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(text = koot.kootNameHi, style = MaterialTheme.typography.bodySmall.copy(color = TextPrimaryDark, fontSize = 14.sp), modifier = Modifier.weight(1.5f))
-                            Text(text = "${koot.maxPoints}", style = MaterialTheme.typography.bodySmall.copy(color = TextSecondaryDark, fontSize = 14.sp), modifier = Modifier.weight(1f))
+                            Text(text = koot.kootNameHi, style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp), modifier = Modifier.weight(1.5f))
+                            Text(text = "${koot.maxPoints}", style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp), modifier = Modifier.weight(1f))
                             Text(text = "${koot.obtainedPoints}", style = MaterialTheme.typography.bodySmall.copy(color = AuspiciousGreen, fontWeight = FontWeight.Bold, fontSize = 14.sp), modifier = Modifier.weight(1f))
                         }
                     }
