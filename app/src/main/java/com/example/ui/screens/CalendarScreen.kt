@@ -48,6 +48,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import android.view.HapticFeedbackConstants
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -81,6 +83,7 @@ fun getLocalizedDay(dayHi: String): String {
 
 @Composable
 fun CalendarScreen(viewModel: MainViewModel) {
+    val view = LocalView.current
     val panchang by viewModel.panchangState.collectAsState()
     var selectedRegion by remember { mutableStateOf("ALL") }
     var selectedFestivalDetail by remember { mutableStateOf<FestivalData?>(null) }
@@ -233,6 +236,7 @@ fun CalendarScreen(viewModel: MainViewModel) {
                                                 RoundedCornerShape(8.dp)
                                             )
                                             .clickable {
+                                                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                                                 festivalForDay?.let { selectedFestivalDetail = it }
                                             }
                                             .testTag("calendar_day_$dayNum"),
@@ -282,7 +286,10 @@ fun CalendarScreen(viewModel: MainViewModel) {
             GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { selectedFestivalDetail = festival }
+                    .clickable {
+                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                        selectedFestivalDetail = festival
+                    }
                     .testTag("upcoming_festival_${index + 1}")
             ) {
                 Row(

@@ -27,6 +27,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Scaffold
 import androidx.compose.foundation.layout.PaddingValues
+import android.view.HapticFeedbackConstants
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -51,6 +53,7 @@ import com.example.ui.theme.NeutralOrange
 
 @Composable
 fun MuhuratScreen(viewModel: MainViewModel) {
+    val view = LocalView.current
     val isDaytime by viewModel.choghadiyaDaytime.collectAsState()
     val slots = viewModel.choghadiyaSlots
     val muhurats = viewModel.upcomingMuhurats
@@ -87,7 +90,10 @@ fun MuhuratScreen(viewModel: MainViewModel) {
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
                         .background(if (isDaytime) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
-                        .clickable { viewModel.toggleChoghadiyaDayNight(true) }
+                        .clickable {
+                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                            viewModel.toggleChoghadiyaDayNight(true)
+                        }
                         .padding(horizontal = 20.dp, vertical = 8.dp)
                         .testTag("choghadiya_day_button")
                 ) {
@@ -116,7 +122,10 @@ fun MuhuratScreen(viewModel: MainViewModel) {
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
                         .background(if (!isDaytime) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
-                        .clickable { viewModel.toggleChoghadiyaDayNight(false) }
+                        .clickable {
+                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                            viewModel.toggleChoghadiyaDayNight(false)
+                        }
                         .padding(horizontal = 20.dp, vertical = 8.dp)
                         .testTag("choghadiya_night_button")
                 ) {

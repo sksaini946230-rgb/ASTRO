@@ -43,6 +43,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import android.view.HapticFeedbackConstants
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -68,6 +70,7 @@ import com.example.util.LanguageManager
 @Composable
 fun MatchingScreen(viewModel: MainViewModel) {
     val haptic = LocalHapticFeedback.current
+    val view = LocalView.current
     val gunaResult by viewModel.gunaResult.collectAsState()
 
     var boyName by remember { mutableStateOf(viewModel.matchBoyName.value) }
@@ -193,7 +196,10 @@ fun MatchingScreen(viewModel: MainViewModel) {
                             Box(
                                 modifier = Modifier
                                     .matchParentSize()
-                                    .clickable { showBoyDatePicker = true }
+                                    .clickable {
+                                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                        showBoyDatePicker = true
+                                    }
                             )
                         }
                     }
@@ -239,7 +245,10 @@ fun MatchingScreen(viewModel: MainViewModel) {
                             Box(
                                 modifier = Modifier
                                     .matchParentSize()
-                                    .clickable { showGirlDatePicker = true }
+                                    .clickable {
+                                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                        showGirlDatePicker = true
+                                    }
                             )
                         }
                     }

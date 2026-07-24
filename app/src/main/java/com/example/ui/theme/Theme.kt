@@ -1,6 +1,7 @@
 package com.example.ui.theme
 
 import android.os.Build
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -8,6 +9,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
@@ -53,11 +55,11 @@ private val AstroLightColorScheme = lightColorScheme(
 
 @Composable
 fun AstroVedaTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true, // Enforce dark-only theme
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
+    val targetColorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -66,8 +68,46 @@ fun AstroVedaTheme(
         else -> AstroLightColorScheme
     }
 
+    val primary by animateColorAsState(targetValue = targetColorScheme.primary, label = "primary")
+    val onPrimary by animateColorAsState(targetValue = targetColorScheme.onPrimary, label = "onPrimary")
+    val primaryContainer by animateColorAsState(targetValue = targetColorScheme.primaryContainer, label = "primaryContainer")
+    val onPrimaryContainer by animateColorAsState(targetValue = targetColorScheme.onPrimaryContainer, label = "onPrimaryContainer")
+    val secondary by animateColorAsState(targetValue = targetColorScheme.secondary, label = "secondary")
+    val onSecondary by animateColorAsState(targetValue = targetColorScheme.onSecondary, label = "onSecondary")
+    val secondaryContainer by animateColorAsState(targetValue = targetColorScheme.secondaryContainer, label = "secondaryContainer")
+    val onSecondaryContainer by animateColorAsState(targetValue = targetColorScheme.onSecondaryContainer, label = "onSecondaryContainer")
+    val tertiary by animateColorAsState(targetValue = targetColorScheme.tertiary, label = "tertiary")
+    val onTertiary by animateColorAsState(targetValue = targetColorScheme.onTertiary, label = "onTertiary")
+    val background by animateColorAsState(targetValue = targetColorScheme.background, label = "background")
+    val onBackground by animateColorAsState(targetValue = targetColorScheme.onBackground, label = "onBackground")
+    val surface by animateColorAsState(targetValue = targetColorScheme.surface, label = "surface")
+    val onSurface by animateColorAsState(targetValue = targetColorScheme.onSurface, label = "onSurface")
+    val surfaceVariant by animateColorAsState(targetValue = targetColorScheme.surfaceVariant, label = "surfaceVariant")
+    val onSurfaceVariant by animateColorAsState(targetValue = targetColorScheme.onSurfaceVariant, label = "onSurfaceVariant")
+    val outline by animateColorAsState(targetValue = targetColorScheme.outline, label = "outline")
+
+    val animatedColorScheme = targetColorScheme.copy(
+        primary = primary,
+        onPrimary = onPrimary,
+        primaryContainer = primaryContainer,
+        onPrimaryContainer = onPrimaryContainer,
+        secondary = secondary,
+        onSecondary = onSecondary,
+        secondaryContainer = secondaryContainer,
+        onSecondaryContainer = onSecondaryContainer,
+        tertiary = tertiary,
+        onTertiary = onTertiary,
+        background = background,
+        onBackground = onBackground,
+        surface = surface,
+        onSurface = onSurface,
+        surfaceVariant = surfaceVariant,
+        onSurfaceVariant = onSurfaceVariant,
+        outline = outline
+    )
+
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = animatedColorScheme,
         typography = Typography,
         content = content
     )

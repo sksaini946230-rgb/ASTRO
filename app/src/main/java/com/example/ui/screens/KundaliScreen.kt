@@ -80,6 +80,8 @@ import com.example.ui.components.CelestialBackground
 import com.example.ui.components.SubTabHeader
 import com.example.ui.theme.GlassBorder
 import com.example.ui.AppTab
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun TransitScreen(viewModel: MainViewModel) {
@@ -181,6 +183,8 @@ fun KundaliScreen(
 ) {
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
+    val coroutineScope = rememberCoroutineScope()
+    var isSharingChart by remember { mutableStateOf(false) }
     val currentSubTab by viewModel.kundaliSubTab.collectAsState()
 
     val kundali by viewModel.generatedKundali.collectAsState()
@@ -519,7 +523,7 @@ fun KundaliScreen(
                         modifier = Modifier
                             .size(24.dp)
                             .clickable {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                                 val shareText = """
                                     ✨ AstroVeda Kundali ✨
                                     Name: ${kundali.personName}
@@ -567,7 +571,7 @@ fun KundaliScreen(
                             Box(
                                 modifier = Modifier
                                     .clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         isNorthStyle = true
                                     }
                                     .background(if (isNorthStyle) MaterialTheme.colorScheme.primary else Color.Transparent)
@@ -584,7 +588,7 @@ fun KundaliScreen(
                             Box(
                                 modifier = Modifier
                                     .clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         isNorthStyle = false
                                     }
                                     .background(if (!isNorthStyle) MaterialTheme.colorScheme.primary else Color.Transparent)
@@ -617,6 +621,67 @@ fun KundaliScreen(
                             chartData = kundali,
                             modifier = chartModifier
                         )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        if (isSharingChart) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                AstroLoadingIndicator(modifier = Modifier.size(20.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = LanguageManager.getString("कुण्डली चित्र तैयार किया जा रहा है...", "Generating high-quality chart image..."),
+                                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primary)
+                                )
+                            }
+                        } else {
+                            Button(
+                                onClick = {
+                                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    isSharingChart = true
+                                    coroutineScope.launch {
+                                        val uri = com.example.util.KundaliImageGenerator.generateAndShareChart(context, kundali)
+                                        isSharingChart = false
+                                        if (uri != null) {
+                                            val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                                type = "image/png"
+                                                putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                                                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                            }
+                                            context.startActivity(android.content.Intent.createChooser(shareIntent, "Share Birth Chart Image"))
+                                        } else {
+                                            android.widget.Toast.makeText(context, "Failed to generate image", android.widget.Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth(0.85f)
+                                    .testTag("share_kundali_image_button"),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Share,
+                                        contentDescription = "Share Chart Image",
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = LanguageManager.getString("कुण्डली चित्र शेयर करें", "Share Chart Image"),
+                                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                }
+                            }
+                        }
                     } else {
                         SouthIndianChart(kundali)
                     }

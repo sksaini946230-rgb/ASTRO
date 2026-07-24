@@ -40,6 +40,32 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Panchang Home Screen Widget -->
+        <receiver
+            android:name="com.example.widget.PanchangWidgetProvider"
+            android:exported="true"
+            android:label="Panchang Daily Widget">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/panchang_widget_info" />
+        </receiver>
+
+        <!-- Premium Tithi & Nakshatra Widget -->
+        <receiver
+            android:name="com.example.widget.TithiNakshatraWidgetProvider"
+            android:exported="true"
+            android:label="AstroVeda Tithi &amp; Nakshatra">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/tithi_nakshatra_widget_info" />
+        </receiver>
     </application>
 
 </manifest>

@@ -46,8 +46,13 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Date
+import com.google.firebase.Firebase
+import com.google.firebase.crashlytics.crashlytics
 
 enum class AppTab {
     PANCHANG,
@@ -70,6 +75,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _isUsingCache = MutableStateFlow(false)
     val isUsingCache: StateFlow<Boolean> = _isUsingCache.asStateFlow()
+
+    private val _isPanchangLoading = MutableStateFlow(false)
+    val isPanchangLoading: StateFlow<Boolean> = _isPanchangLoading.asStateFlow()
+
+    private val _isHoroscopeLoading = MutableStateFlow(false)
+    val isHoroscopeLoading: StateFlow<Boolean> = _isHoroscopeLoading.asStateFlow()
+
+    private val _isNewsLoading = MutableStateFlow(false)
+    val isNewsLoading: StateFlow<Boolean> = _isNewsLoading.asStateFlow()
+
+    val isSyncing: StateFlow<Boolean> = kotlinx.coroutines.flow.combine(
+        _isPanchangLoading,
+        _isHoroscopeLoading,
+        _isNewsLoading
+    ) { panchang, horoscope, news ->
+        panchang || horoscope || news
+    }.stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000), false)
 
     private fun monitorNetwork() {
         val networkRequest = android.net.NetworkRequest.Builder()
@@ -98,6 +120,50 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setProUser(isPro: Boolean) {
         _isProUser.value = isPro
         sharedPrefs.edit().putBoolean("is_pro", isPro).apply()
+    }
+
+    // Rate Us & Feedback States
+    private val _showRateUsDialog = MutableStateFlow(false)
+    val showRateUsDialog: StateFlow<Boolean> = _showRateUsDialog.asStateFlow()
+
+    private val _hasRated = MutableStateFlow(sharedPrefs.getBoolean("has_rated", false))
+    val hasRated: StateFlow<Boolean> = _hasRated.asStateFlow()
+
+    fun showRateUs() {
+        _showRateUsDialog.value = true
+    }
+
+    fun dismissRateUs() {
+        _showRateUsDialog.value = false
+        sharedPrefs.edit().putLong("rate_dialog_dismissed_at", System.currentTimeMillis()).apply()
+    }
+
+    fun markAsRated() {
+        _showRateUsDialog.value = false
+        _hasRated.value = true
+        sharedPrefs.edit().putBoolean("has_rated", true).apply()
+    }
+
+    fun submitFeedback(rating: Int, feedback: String) {
+        // Save to SharedPreferences and mark as rated
+        sharedPrefs.edit()
+            .putInt("user_rating_value", rating)
+            .putString("user_feedback_text", feedback)
+            .apply()
+        markAsRated()
+    }
+
+    fun incrementSessionActionCount() {
+        if (_hasRated.value) return
+
+        val count = sharedPrefs.getInt("session_action_count", 0) + 1
+        sharedPrefs.edit().putInt("session_action_count", count).apply()
+
+        val dismissedAt = sharedPrefs.getLong("rate_dialog_dismissed_at", 0L)
+        val oneDayMs = 24 * 60 * 60 * 1000L
+        if (count >= 5 && (System.currentTimeMillis() - dismissedAt) > oneDayMs) {
+            _showRateUsDialog.value = true
+        }
     }
 
     // Google Play Billing Client Wrapper
@@ -247,6 +313,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             .putString("city_state", city.state)
             .apply()
         recalculatePanchang()
+        com.example.widget.PanchangWidgetProvider.triggerUpdate(getApplication())
+        com.example.widget.TithiNakshatraWidgetProvider.triggerUpdate(getApplication())
     }
 
     fun detectGPSLocation(context: Context, onComplete: (Boolean) -> Unit = {}) {
@@ -370,14 +438,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _panchangState = MutableStateFlow(PanchangCalculator.calculatePanchang(Date(), PanchangCalculator.popularCities[0]))
     val panchangState: StateFlow<PanchangData> = _panchangState.asStateFlow()
 
-    private fun recalculatePanchang() {
+    fun recalculatePanchang(forceRefresh: Boolean = false) {
         viewModelScope.launch {
+            _isPanchangLoading.value = true
             try {
-                _panchangState.value = cacheRepository.getPanchangWith7DayCache(_selectedDate.value, _selectedCity.value)
+                _panchangState.value = cacheRepository.getPanchangWith7DayCache(_selectedDate.value, _selectedCity.value, forceRefresh = forceRefresh)
+                incrementSessionActionCount()
             } catch (e: Exception) {
                 reportError(e)
+            } finally {
+                _isPanchangLoading.value = false
             }
         }
+    }
+
+    private fun recalculatePanchang() {
+        recalculatePanchang(forceRefresh = false)
+    }
+
+    fun refreshPanchang() {
+        recalculatePanchang(forceRefresh = true)
     }
 
     // Festivals
@@ -388,14 +468,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val dailyHoroscopesState: StateFlow<List<RashifalData>> = _dailyHoroscopes.asStateFlow()
     val dailyHoroscopes: List<RashifalData> get() = _dailyHoroscopes.value
 
-    private fun loadHoroscopesWithCache() {
+    fun loadHoroscopesWithCache(forceRefresh: Boolean = false) {
         viewModelScope.launch {
+            _isHoroscopeLoading.value = true
             try {
-                _dailyHoroscopes.value = cacheRepository.getHoroscopesWith7DayCache()
+                _dailyHoroscopes.value = cacheRepository.getHoroscopesWith7DayCache(forceRefresh = forceRefresh)
+                incrementSessionActionCount()
             } catch (e: Exception) {
                 reportError(e)
+            } finally {
+                _isHoroscopeLoading.value = false
             }
         }
+    }
+
+    fun refreshHoroscopes() {
+        loadHoroscopesWithCache(forceRefresh = true)
     }
 
     private val _selectedRashiId = MutableStateFlow(1) // Mesh
@@ -452,6 +540,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val result = KundaliCalculator.generateKundali(name, dob, tob, place)
                 _generatedKundali.value = result
                 triggerInterstitial()
+                incrementSessionActionCount()
             } catch (e: Exception) {
                 reportError(e)
             } finally {
@@ -485,6 +574,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 )
                 _gunaResult.value = result
                 triggerInterstitial()
+                incrementSessionActionCount()
             } catch (e: Exception) {
                 reportError(e)
             } finally {
@@ -505,6 +595,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun calculateNumerology() {
         try {
             _numerologyData.value = NumerologyCalculator.calculateNumerology(numName.value, numDob.value)
+            incrementSessionActionCount()
         } catch (e: Exception) {
             reportError(e)
         }
@@ -566,9 +657,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _astroNews = MutableStateFlow("")
     val astroNews: StateFlow<String> = _astroNews.asStateFlow()
 
-    private val _isNewsLoading = MutableStateFlow(false)
-    val isNewsLoading: StateFlow<Boolean> = _isNewsLoading.asStateFlow()
-
     private val _isNewsOffline = MutableStateFlow(false)
     val isNewsOffline: StateFlow<Boolean> = _isNewsOffline.asStateFlow()
 
@@ -615,10 +703,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private val _isFirestoreSyncing = MutableStateFlow(false)
+    val isFirestoreSyncing: StateFlow<Boolean> = _isFirestoreSyncing.asStateFlow()
+
+    private var backupJob: kotlinx.coroutines.Job? = null
+
+    private fun triggerBackgroundBackup(profiles: List<KundaliEntity>) {
+        backupJob?.cancel()
+        backupJob = viewModelScope.launch {
+            _isFirestoreSyncing.value = true
+            try {
+                authService.backupProfilesToCloud(profiles)
+            } catch (e: Exception) {
+                android.util.Log.e("MainViewModel", "Background backup failed", e)
+                Firebase.crashlytics.recordException(e)
+            } finally {
+                _isFirestoreSyncing.value = false
+            }
+        }
+    }
+
     private fun loadSavedProfiles() {
         viewModelScope.launch {
             repository.allProfiles.collect { list ->
                 _savedProfiles.value = list
+                if (_currentUser.value != null) {
+                    triggerBackgroundBackup(list)
+                }
             }
         }
     }
@@ -713,8 +824,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             result.onSuccess { user ->
                 _currentUser.value = user
                 _backupStatusMessage.value = "Signed in as ${user.displayName ?: user.email}"
+                Firebase.crashlytics.setUserId(user.uid)
+                triggerBackgroundBackup(_savedProfiles.value)
             }.onFailure { err ->
                 _backupStatusMessage.value = "Sign-In failed: ${err.message}"
+                Firebase.crashlytics.recordException(err)
             }
         }
     }
@@ -732,6 +846,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         viewModelScope.launch {
+            _isFirestoreSyncing.value = true
             _backupStatusMessage.value = "Backing up profiles to cloud..."
             val profiles = _savedProfiles.value
             val result = authService.backupProfilesToCloud(profiles)
@@ -739,7 +854,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _backupStatusMessage.value = "Successfully backed up $count profiles to cloud!"
             }.onFailure { err ->
                 _backupStatusMessage.value = "Backup failed: ${err.message}"
+                Firebase.crashlytics.recordException(err)
             }
+            _isFirestoreSyncing.value = false
         }
     }
 
@@ -750,6 +867,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         viewModelScope.launch {
+            _isFirestoreSyncing.value = true
             _backupStatusMessage.value = "Restoring profiles from cloud..."
             val result = authService.restoreProfilesFromCloud()
             result.onSuccess { cloudProfiles ->
@@ -759,7 +877,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _backupStatusMessage.value = "Restored ${cloudProfiles.size} profiles from cloud!"
             }.onFailure { err ->
                 _backupStatusMessage.value = "Restore failed: ${err.message}"
+                Firebase.crashlytics.recordException(err)
             }
+            _isFirestoreSyncing.value = false
         }
     }
 

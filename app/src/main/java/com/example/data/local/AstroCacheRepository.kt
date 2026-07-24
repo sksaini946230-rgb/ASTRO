@@ -22,51 +22,53 @@ class AstroCacheRepository(
         const val SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000L
     }
 
-    suspend fun getPanchangWith7DayCache(date: Date, city: CityLocation): PanchangData = withContext(ioDispatcher) {
+    suspend fun getPanchangWith7DayCache(date: Date, city: CityLocation, forceRefresh: Boolean = false): PanchangData = withContext(ioDispatcher) {
         val dateFormat = SimpleDateFormat("yyyy-MM-DD", Locale.US)
         val dateKey = dateFormat.format(date)
         val cacheKey = "${dateKey}_${city.cityName.replace(" ", "_")}"
         val now = System.currentTimeMillis()
 
-        val cached = panchangCacheDao.getCachedPanchang(cacheKey)
-        if (cached != null && (now - cached.cachedAtTimestamp) < SEVEN_DAYS_MS) {
-            return@withContext PanchangData(
-                dateString = cached.dateString,
-                dayOfWeek = cached.dayOfWeek,
-                dayOfWeekHindi = cached.dayOfWeekHindi,
-                vikramSamvat = cached.vikramSamvat,
-                sakaSamvat = cached.sakaSamvat,
-                masaName = cached.masaName,
-                masaNameHindi = cached.masaNameHindi,
-                paksha = cached.paksha,
-                pakshaHindi = cached.pakshaHindi,
-                tithi = cached.tithi,
-                tithiHindi = cached.tithiHindi,
-                tithiEndTime = cached.tithiEndTime,
-                tithiProgressPercent = cached.tithiProgressPercent,
-                nakshatra = cached.nakshatra,
-                nakshatraHindi = cached.nakshatraHindi,
-                nakshatraEndTime = cached.nakshatraEndTime,
-                nakshatraPada = cached.nakshatraPada,
-                yoga = cached.yoga,
-                yogaHindi = cached.yogaHindi,
-                karan = cached.karan,
-                karanHindi = cached.karanHindi,
-                sunrise = cached.sunrise,
-                sunset = cached.sunset,
-                moonrise = cached.moonrise,
-                moonset = cached.moonset,
-                rahuKaal = cached.rahuKaal,
-                gulikaKaal = cached.gulikaKaal,
-                yamaganda = cached.yamaganda,
-                abhijitMuhurat = cached.abhijitMuhurat,
-                brahmaMuhurat = cached.brahmaMuhurat,
-                sunSign = cached.sunSign,
-                moonSign = cached.moonSign,
-                locationName = cached.locationName,
-                latitude = cached.latitude,
-                longitude = cached.longitude
-            )
+        if (!forceRefresh) {
+            val cached = panchangCacheDao.getCachedPanchang(cacheKey)
+            if (cached != null && (now - cached.cachedAtTimestamp) < SEVEN_DAYS_MS) {
+                return@withContext PanchangData(
+                    dateString = cached.dateString,
+                    dayOfWeek = cached.dayOfWeek,
+                    dayOfWeekHindi = cached.dayOfWeekHindi,
+                    vikramSamvat = cached.vikramSamvat,
+                    sakaSamvat = cached.sakaSamvat,
+                    masaName = cached.masaName,
+                    masaNameHindi = cached.masaNameHindi,
+                    paksha = cached.paksha,
+                    pakshaHindi = cached.pakshaHindi,
+                    tithi = cached.tithi,
+                    tithiHindi = cached.tithiHindi,
+                    tithiEndTime = cached.tithiEndTime,
+                    tithiProgressPercent = cached.tithiProgressPercent,
+                    nakshatra = cached.nakshatra,
+                    nakshatraHindi = cached.nakshatraHindi,
+                    nakshatraEndTime = cached.nakshatraEndTime,
+                    nakshatraPada = cached.nakshatraPada,
+                    yoga = cached.yoga,
+                    yogaHindi = cached.yogaHindi,
+                    karan = cached.karan,
+                    karanHindi = cached.karanHindi,
+                    sunrise = cached.sunrise,
+                    sunset = cached.sunset,
+                    moonrise = cached.moonrise,
+                    moonset = cached.moonset,
+                    rahuKaal = cached.rahuKaal,
+                    gulikaKaal = cached.gulikaKaal,
+                    yamaganda = cached.yamaganda,
+                    abhijitMuhurat = cached.abhijitMuhurat,
+                    brahmaMuhurat = cached.brahmaMuhurat,
+                    sunSign = cached.sunSign,
+                    moonSign = cached.moonSign,
+                    locationName = cached.locationName,
+                    latitude = cached.latitude,
+                    longitude = cached.longitude
+                )
+            }
         }
 
         // Calculate fresh
@@ -117,36 +119,38 @@ class AstroCacheRepository(
         return@withContext freshPanchang
     }
 
-    suspend fun getHoroscopesWith7DayCache(): List<RashifalData> = withContext(ioDispatcher) {
+    suspend fun getHoroscopesWith7DayCache(forceRefresh: Boolean = false): List<RashifalData> = withContext(ioDispatcher) {
         val now = System.currentTimeMillis()
         val validAfter = now - SEVEN_DAYS_MS
 
-        val cachedEntities = horoscopeCacheDao.getAllValidHoroscopes(validAfter)
-        if (cachedEntities.size >= 12) {
-            return@withContext cachedEntities.map { entity ->
-                RashifalData(
-                    rashiId = entity.rashiId,
-                    rashiNameEn = entity.rashiNameEn,
-                    rashiNameHi = entity.rashiNameHi,
-                    symbol = entity.symbol,
-                    elementHi = entity.elementHi,
-                    rulerHi = entity.rulerHi,
-                    ratingStars = entity.ratingStars,
-                    luckyNumber = entity.luckyNumber,
-                    luckyColorEn = entity.luckyColorEn,
-                    luckyColorHi = entity.luckyColorHi,
-                    luckyStoneHi = entity.luckyStoneHi,
-                    generalReadingHi = entity.generalReadingHi,
-                    generalReadingEn = entity.generalReadingEn,
-                    careerReadingHi = entity.careerReadingHi,
-                    careerReadingEn = entity.careerReadingEn,
-                    healthReadingHi = entity.healthReadingHi,
-                    healthReadingEn = entity.healthReadingEn,
-                    loveReadingHi = entity.loveReadingHi,
-                    loveReadingEn = entity.loveReadingEn,
-                    financeReadingHi = entity.financeReadingHi,
-                    financeReadingEn = entity.financeReadingEn
-                )
+        if (!forceRefresh) {
+            val cachedEntities = horoscopeCacheDao.getAllValidHoroscopes(validAfter)
+            if (cachedEntities.size >= 12) {
+                return@withContext cachedEntities.map { entity ->
+                    RashifalData(
+                        rashiId = entity.rashiId,
+                        rashiNameEn = entity.rashiNameEn,
+                        rashiNameHi = entity.rashiNameHi,
+                        symbol = entity.symbol,
+                        elementHi = entity.elementHi,
+                        rulerHi = entity.rulerHi,
+                        ratingStars = entity.ratingStars,
+                        luckyNumber = entity.luckyNumber,
+                        luckyColorEn = entity.luckyColorEn,
+                        luckyColorHi = entity.luckyColorHi,
+                        luckyStoneHi = entity.luckyStoneHi,
+                        generalReadingHi = entity.generalReadingHi,
+                        generalReadingEn = entity.generalReadingEn,
+                        careerReadingHi = entity.careerReadingHi,
+                        careerReadingEn = entity.careerReadingEn,
+                        healthReadingHi = entity.healthReadingHi,
+                        healthReadingEn = entity.healthReadingEn,
+                        loveReadingHi = entity.loveReadingHi,
+                        loveReadingEn = entity.loveReadingEn,
+                        financeReadingHi = entity.financeReadingHi,
+                        financeReadingEn = entity.financeReadingEn
+                    )
+                }
             }
         }
 

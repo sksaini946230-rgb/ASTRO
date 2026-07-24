@@ -89,9 +89,6 @@ import com.example.ui.theme.PremiumGold
 import com.example.util.AppLanguage
 import com.example.util.LanguageManager
 
-// External URL constants for hosted versions (can be updated when hosted on web)
-const val EXTERNAL_PRIVACY_POLICY_URL = "https://astroveda.app/privacy"
-const val EXTERNAL_TERMS_OF_SERVICE_URL = "https://astroveda.app/terms"
 const val LOCAL_PRIVACY_POLICY_URL = "file:///android_asset/privacy_policy.html"
 const val LOCAL_TERMS_OF_SERVICE_URL = "file:///android_asset/terms_of_service.html"
 
@@ -115,7 +112,6 @@ fun SettingsScreen(
     var isRefreshingLocation by remember { mutableStateOf(false) }
 
     var showAboutDialog by remember { mutableStateOf(false) }
-    var showRatingDialog by remember { mutableStateOf(false) }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
     var webViewUrlToOpen by remember { mutableStateOf<String?>(null) }
     var webViewTitle by remember { mutableStateOf("") }
@@ -788,7 +784,7 @@ fun SettingsScreen(
                             .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                showRatingDialog = true
+                                viewModel.showRateUs()
                             }
                             .padding(vertical = 10.dp, horizontal = 12.dp)
                             .testTag("settings_rate_us_button"),
@@ -1158,43 +1154,6 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(onClick = { showAboutDialog = false }) {
                     Text("ठीक है (OK)", color = MaterialTheme.colorScheme.primary)
-                }
-            },
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    }
-
-    // Rating Dialog
-    if (showRatingDialog) {
-        AlertDialog(
-            onDismissRequest = { showRatingDialog = false },
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "AstroVeda रेटिंग दें", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                }
-            },
-            text = {
-                Text(
-                    text = "AstroVeda ऐप को 5-स्टार रेटिंग देकर हमारा समर्थन करें! गूगल प्ले स्टोर लिंक शीघ्र ही सक्रिय हो जाएगा।",
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 13.sp
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showRatingDialog = false
-                        Toast.makeText(context, "धन्यवाद! आपका समर्थन हमारे लिए अनमोल है।", Toast.LENGTH_SHORT).show()
-                    }
-                ) {
-                    Text("5★ रेटिंग दें", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showRatingDialog = false }) {
-                    Text("बाद में", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
             containerColor = MaterialTheme.colorScheme.surfaceVariant

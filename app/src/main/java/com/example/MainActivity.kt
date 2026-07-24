@@ -20,6 +20,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -29,6 +35,7 @@ import com.example.ui.MainViewModel
 import com.example.ui.components.AdBanner
 import com.example.ui.components.BottomNavBar
 import com.example.ui.components.PremiumDialog
+import com.example.ui.components.RateUsDialog
 import com.example.ui.components.TopHeaderBar
 import com.example.ui.screens.CalendarScreen
 import com.example.ui.screens.KundaliScreen
@@ -106,8 +113,13 @@ class MainActivity : ComponentActivity() {
             AstroVedaTheme {
                 val selectedTab by mainViewModel.selectedTab.collectAsState()
                 val showPremium by mainViewModel.showPremiumDialog.collectAsState()
+                val showRateUsDialog by mainViewModel.showRateUsDialog.collectAsState()
                 val isOnboardingCompleted by mainViewModel.isOnboardingCompleted.collectAsState()
                 val isOffline by mainViewModel.isOffline.collectAsState()
+                val isSyncing by mainViewModel.isSyncing.collectAsState()
+                val isFirestoreSyncing by mainViewModel.isFirestoreSyncing.collectAsState()
+                val currentUser by mainViewModel.currentUser.collectAsState()
+                val isCloudBackupEnabled = currentUser != null
 
                 if (!isOnboardingCompleted) {
                     OnboardingScreen(
@@ -118,12 +130,27 @@ class MainActivity : ComponentActivity() {
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
                         topBar = {
-                            TopHeaderBar(
-                                isOffline = isOffline,
-                                onLanguageToggle = { mainViewModel.toggleLanguage() },
-                                onPremiumClick = { mainViewModel.showPremiumDialog.value = true },
-                                onSettingsClick = { mainViewModel.navigateToMore(subTab = 1) }
-                            )
+                            Column {
+                                TopHeaderBar(
+                                    isOffline = isOffline,
+                                    isSyncing = isSyncing,
+                                    isFirestoreSyncing = isFirestoreSyncing,
+                                    isCloudBackupEnabled = isCloudBackupEnabled,
+                                    onLanguageToggle = { mainViewModel.toggleLanguage() },
+                                    onPremiumClick = { mainViewModel.showPremiumDialog.value = true },
+                                    onSettingsClick = { mainViewModel.navigateToMore(subTab = 1) }
+                                )
+                                if (isCloudBackupEnabled && isFirestoreSyncing) {
+                                    LinearProgressIndicator(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(2.dp)
+                                            .testTag("firestore_sync_progress_bar"),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                    )
+                                }
+                            }
                         },
                         bottomBar = {
                             Column {
@@ -188,6 +215,13 @@ class MainActivity : ComponentActivity() {
                                     PremiumDialog(
                                         viewModel = mainViewModel,
                                         onDismiss = { mainViewModel.showPremiumDialog.value = false }
+                                    )
+                                }
+
+                                if (showRateUsDialog) {
+                                    RateUsDialog(
+                                        viewModel = mainViewModel,
+                                        onDismiss = { mainViewModel.dismissRateUs() }
                                     )
                                 }
                             }

@@ -7,6 +7,7 @@ plugins {
   alias(libs.plugins.roborazzi)
   alias(libs.plugins.secrets)
   alias(libs.plugins.google.services)
+  alias(libs.plugins.google.firebase.crashlytics)
 }
 
 android {
@@ -82,6 +83,7 @@ dependencies {
   implementation(platform(libs.androidx.compose.bom))
   implementation(platform(libs.firebase.bom))
   // implementation(libs.accompanist.permissions)
+  implementation("androidx.fragment:fragment-ktx:1.8.6")
   implementation(libs.androidx.activity.compose)
   // implementation(libs.androidx.camera.camera2)
   // implementation(libs.androidx.camera.core)
@@ -105,6 +107,8 @@ dependencies {
   implementation(libs.coil.compose)
   implementation(libs.converter.moshi)
   implementation(libs.firebase.ai)
+  implementation(libs.firebase.crashlytics)
+  implementation(libs.firebase.analytics)
   implementation(libs.firebase.firestore)
 
   implementation(libs.firebase.auth)
@@ -119,6 +123,7 @@ dependencies {
   implementation(libs.okhttp)
   implementation(libs.play.services.location)
   implementation(libs.play.services.ads)
+  implementation(libs.play.review.ktx)
   implementation(libs.billing.ktx)
   implementation(libs.androidx.work.runtime.ktx)
   implementation(libs.retrofit)

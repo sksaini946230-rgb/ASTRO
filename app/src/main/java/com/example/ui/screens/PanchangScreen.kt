@@ -85,10 +85,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.Manifest
 import android.content.pm.PackageManager
+import android.view.HapticFeedbackConstants
 import androidx.core.content.ContextCompat
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import com.example.ui.components.SubTabHeader
 import com.example.ui.AppTab
 
@@ -111,6 +115,7 @@ fun PanchangScreen(
 
     var showCityDropdown by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val view = LocalView.current
 
     val locationPermissionsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -151,16 +156,22 @@ fun PanchangScreen(
             if (currentSubTab == 1) {
                 CalendarScreen(viewModel)
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        start = 16.dp,
-                        top = 8.dp,
-                        end = 16.dp,
-                        bottom = paddingValues.calculateBottomPadding() + 16.dp
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                val isPanchangLoading by viewModel.isPanchangLoading.collectAsState()
+                PullToRefreshBox(
+                    isRefreshing = isPanchangLoading,
+                    onRefresh = { viewModel.refreshPanchang() },
+                    modifier = Modifier.fillMaxSize().testTag("panchang_swipe_refresh")
                 ) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            start = 16.dp,
+                            top = 8.dp,
+                            end = 16.dp,
+                            bottom = paddingValues.calculateBottomPadding() + 16.dp
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
         // Hero Header (Clean and Minimal)
         item {
             Spacer(modifier = Modifier.height(8.dp))
@@ -516,7 +527,10 @@ fun PanchangScreen(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
                             .background(if (isChoghadiyaDaytime) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
-                            .clickable { viewModel.toggleChoghadiyaDayNight(true) }
+                            .clickable {
+                                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                viewModel.toggleChoghadiyaDayNight(true)
+                            }
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
@@ -535,7 +549,10 @@ fun PanchangScreen(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
                             .background(if (!isChoghadiyaDaytime) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
-                            .clickable { viewModel.toggleChoghadiyaDayNight(false) }
+                            .clickable {
+                                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                viewModel.toggleChoghadiyaDayNight(false)
+                            }
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
@@ -614,7 +631,10 @@ fun PanchangScreen(
             GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { viewModel.selectTab(AppTab.KUNDALI) }
+                    .clickable {
+                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                        viewModel.selectTab(AppTab.KUNDALI)
+                    }
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Row(
@@ -638,7 +658,10 @@ fun PanchangScreen(
                                 )
                             )
                         }
-                        TextButton(onClick = { viewModel.selectTab(AppTab.KUNDALI) }) {
+                        TextButton(onClick = {
+                            view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                            viewModel.selectTab(AppTab.KUNDALI)
+                        }) {
                             Text(
                                 text = "पूर्ण कुण्डली देखें →",
                                 style = MaterialTheme.typography.labelMedium.copy(
@@ -678,6 +701,7 @@ fun PanchangScreen(
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
 }
 }
 }

@@ -39,6 +39,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -70,13 +72,36 @@ import com.example.util.LanguageManager
 
 import com.example.ui.components.OfflineStatusChip
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RashifalScreen(viewModel: MainViewModel) {
     val haptic = LocalHapticFeedback.current
-    val horoscopes = viewModel.dailyHoroscopes
+    val horoscopes by viewModel.dailyHoroscopesState.collectAsState()
     val selectedRashiId by viewModel.selectedRashiId.collectAsState()
 
-    val currentHoroscope = horoscopes.find { it.rashiId == selectedRashiId } ?: horoscopes.first()
+    val currentHoroscope = horoscopes.find { it.rashiId == selectedRashiId } ?: horoscopes.firstOrNull() ?: com.example.data.model.RashifalData(
+        rashiId = 1,
+        rashiNameEn = "Aries",
+        rashiNameHi = "मेष",
+        symbol = "♈",
+        elementHi = "अग्नि",
+        rulerHi = "मंगल",
+        ratingStars = 4,
+        luckyNumber = 9,
+        luckyColorEn = "Red",
+        luckyColorHi = "लाल",
+        luckyStoneHi = "मूंगा",
+        generalReadingHi = "आज का दिन अच्छा रहेगा।",
+        generalReadingEn = "Today will be a good day.",
+        careerReadingHi = "",
+        careerReadingEn = "",
+        healthReadingHi = "",
+        healthReadingEn = "",
+        loveReadingHi = "",
+        loveReadingEn = "",
+        financeReadingHi = "",
+        financeReadingEn = ""
+    )
 
     var selectedPeriod by remember { mutableStateOf("TODAY") } // "TODAY", "WEEK", "MONTH"
 
@@ -90,16 +115,22 @@ fun RashifalScreen(viewModel: MainViewModel) {
         containerColor = MaterialTheme.colorScheme.background,
         modifier = Modifier.fillMaxSize()
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                top = paddingValues.calculateTopPadding() + 8.dp,
-                end = 16.dp,
-                bottom = paddingValues.calculateBottomPadding() + 16.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        val isHoroscopeLoading by viewModel.isHoroscopeLoading.collectAsState()
+        PullToRefreshBox(
+            isRefreshing = isHoroscopeLoading,
+            onRefresh = { viewModel.refreshHoroscopes() },
+            modifier = Modifier.fillMaxSize().testTag("rashifal_swipe_refresh")
         ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    top = paddingValues.calculateTopPadding() + 8.dp,
+                    end = 16.dp,
+                    bottom = paddingValues.calculateBottomPadding() + 16.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
         item {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 OfflineStatusChip("Offline Mode: Showing cached daily horoscope")
@@ -437,6 +468,7 @@ fun RashifalScreen(viewModel: MainViewModel) {
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
 }
 }
 

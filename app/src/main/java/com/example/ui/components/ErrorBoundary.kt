@@ -30,6 +30,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.MinimalistGold
+import com.google.firebase.Firebase
+import com.google.firebase.crashlytics.crashlytics
 import java.io.PrintWriter
 import java.io.StringWriter
 
@@ -60,6 +62,11 @@ fun ErrorBoundary(
     val errorHandler: (Throwable) -> Unit = remember {
         { throwable ->
             internalError = throwable
+            try {
+                Firebase.crashlytics.recordException(throwable)
+            } catch (e: Exception) {
+                // Ignore if not initialized
+            }
         }
     }
 
