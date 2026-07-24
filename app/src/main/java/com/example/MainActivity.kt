@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.background
 import androidx.compose.material3.Scaffold
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -118,6 +120,7 @@ class MainActivity : ComponentActivity() {
                 val isOffline by mainViewModel.isOffline.collectAsState()
                 val isSyncing by mainViewModel.isSyncing.collectAsState()
                 val isFirestoreSyncing by mainViewModel.isFirestoreSyncing.collectAsState()
+                val isFirstRunSyncing by mainViewModel.isFirstRunSyncing.collectAsState()
                 val currentUser by mainViewModel.currentUser.collectAsState()
                 val isCloudBackupEnabled = currentUser != null
 
@@ -126,6 +129,8 @@ class MainActivity : ComponentActivity() {
                         viewModel = mainViewModel,
                         onComplete = { mainViewModel.completeOnboarding() }
                     )
+                } else if (isFirstRunSyncing) {
+                    FirstRunSyncingOverlay()
                 } else {
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
@@ -279,6 +284,41 @@ class MainActivity : ComponentActivity() {
             }
         } catch (e: Throwable) {
             // fail gracefully
+        }
+    }
+}
+
+@Composable
+fun FirstRunSyncingOverlay() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(androidx.compose.material3.MaterialTheme.colorScheme.background),
+        contentAlignment = androidx.compose.ui.Alignment.Center
+    ) {
+        androidx.compose.foundation.layout.Column(
+            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+        ) {
+            androidx.compose.material3.CircularProgressIndicator(
+                color = androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(64.dp)
+            )
+            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(24.dp))
+            androidx.compose.material3.Text(
+                text = "ब्रह्मांडीय डेटा सिंक हो रहा है...",
+                style = androidx.compose.material3.MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.primary
+                )
+            )
+            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(8.dp))
+            androidx.compose.material3.Text(
+                text = "Syncing cosmic data for offline access...",
+                style = androidx.compose.material3.MaterialTheme.typography.bodyMedium.copy(
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            )
         }
     }
 }

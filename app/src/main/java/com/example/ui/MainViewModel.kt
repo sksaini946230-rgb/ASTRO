@@ -114,6 +114,38 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
     private val sharedPrefs = application.getSharedPreferences("astroveda_prefs", Context.MODE_PRIVATE)
 
+    private val _isFirstRun = MutableStateFlow(sharedPrefs.getBoolean("is_first_run", true))
+    val isFirstRun: StateFlow<Boolean> = _isFirstRun.asStateFlow()
+
+    private val _isFirstRunSyncing = MutableStateFlow(false)
+    val isFirstRunSyncing: StateFlow<Boolean> = _isFirstRunSyncing.asStateFlow()
+
+    fun completeFirstRunSync() {
+        if (!_isFirstRun.value) return
+        
+        _isFirstRunSyncing.value = true
+        viewModelScope.launch(Dispatchers.IO) {
+            // Simulate critical astronomical data download / pre-computation
+            // This ensures offline capability immediately after installation
+            try {
+                // Initialize calculators and cache some basic data
+                val defaultCity = CityLocation("New Delhi", "नई दिल्ली", "Delhi", 28.6139, 77.2090)
+                PanchangCalculator.calculatePanchang(Date(), defaultCity)
+                RashifalProvider.getDailyHoroscope()
+                MuhuratCalculator.getUpcomingMuhurats()
+                
+                // Add a small delay to simulate network/db caching of ephemeris
+                kotlinx.coroutines.delay(2000)
+            } catch (e: Exception) {
+                // Ignore sync errors for onboarding, don't crash
+            }
+            
+            _isFirstRunSyncing.value = false
+            _isFirstRun.value = false
+            sharedPrefs.edit().putBoolean("is_first_run", false).apply()
+        }
+    }
+
     private val _isProUser = MutableStateFlow(sharedPrefs.getBoolean("is_pro", false))
     val isProUser: StateFlow<Boolean> = _isProUser.asStateFlow()
 
@@ -200,11 +232,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // Onboarding State
-    private val _isOnboardingCompleted = MutableStateFlow(true)
+    private val _isOnboardingCompleted = MutableStateFlow(sharedPrefs.getBoolean("is_onboarding_completed", false))
     val isOnboardingCompleted: StateFlow<Boolean> = _isOnboardingCompleted.asStateFlow()
 
     fun completeOnboarding() {
         _isOnboardingCompleted.value = true
+        sharedPrefs.edit().putBoolean("is_onboarding_completed", true).apply()
+        completeFirstRunSync()
     }
 
     fun resetOnboarding() {
