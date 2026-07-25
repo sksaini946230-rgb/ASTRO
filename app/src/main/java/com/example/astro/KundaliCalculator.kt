@@ -131,11 +131,15 @@ object KundaliCalculator {
         val moonRashi = moonPlanet.rashiNameHi
         val moonNakshatra = moonPlanet.nakshatraHi
 
-        // Vimshottari Dasha calculation (20-year span timeline)
+        // Vimshottari Dasha calculation via dedicated VimshottariDashaCalculator engine
         val absoluteMoonDegree = (moonPlanet.rashiNumber - 1) * 30.0 + moonPlanet.degree
-        val dashaTimeline = calculateVimshottariDasha(year, absoluteMoonDegree)
+        val dashaResult = VimshottariDashaCalculator.calculateVimshottariDasha(
+            moonLongitude = absoluteMoonDegree,
+            birthDateStr = dobString
+        )
 
-        val currentDasha = dashaTimeline.find { it.isCurrent } ?: dashaTimeline.firstOrNull()
+        val currentDasha = dashaResult.currentMahadasha
+        val currentAntardasha = dashaResult.currentAntardasha
 
         return KundaliChartData(
             personName = name,
@@ -148,59 +152,9 @@ object KundaliCalculator {
             moonNakshatraHi = moonNakshatra,
             planets = planetPositions,
             housePlanetsMap = housePlanetsMap.mapValues { it.value.toList() },
-            currentMahadashaHi = currentDasha?.planetHi ?: "केतु (Ketu)",
-            currentAntardashaHi = "गुरु (Jupiter)",
-            dashaTimeline = dashaTimeline
+            currentMahadashaHi = if (currentDasha != null) "${currentDasha.planetHi} (${currentDasha.planetEn})" else "केतु (Ketu)",
+            currentAntardashaHi = if (currentAntardasha != null) "${currentAntardasha.planetHi} (${currentAntardasha.planetEn})" else "गुरु (Jupiter)",
+            dashaTimeline = dashaResult.mahadashas
         )
-    }
-    private fun calculateVimshottariDasha(birthYear: Int, moonDegree: Double): List<DashaPeriod> {
-        val dashaPlanets = listOf(
-            Pair("केतु", "Ketu") to 7,
-            Pair("शुक्र", "Venus") to 20,
-            Pair("सूर्य", "Sun") to 6,
-            Pair("चन्द्र", "Moon") to 10,
-            Pair("मंगल", "Mars") to 7,
-            Pair("राहु", "Rahu") to 18,
-            Pair("गुरु", "Jupiter") to 16,
-            Pair("शनि", "Saturn") to 19,
-            Pair("बुध", "Mercury") to 17
-        )
-
-        val nakshatraLength = 360.0 / 27.0 // 13.333333 deg
-        val elapsedInNakshatra = moonDegree % nakshatraLength
-        val remainingFraction = 1.0 - (elapsedInNakshatra / nakshatraLength)
-        
-        val nakshatraIdx = (moonDegree / nakshatraLength).toInt().coerceIn(0, 26)
-        val startDashaIdx = nakshatraIdx % 9
-
-        val currentYear = 2026
-        val timeline = mutableListOf<DashaPeriod>()
-        
-        // Reorder the dasha planets starting from the calculated index
-        val orderedDashas = mutableListOf<Pair<Pair<String, String>, Int>>()
-        for (i in 0 until 9) {
-            orderedDashas.add(dashaPlanets[(startDashaIdx + i) % 9])
-        }
-
-        var currentStartYear = birthYear
-        orderedDashas.forEachIndexed { i, (planet, duration) ->
-            val actualDuration = if (i == 0) (duration * remainingFraction).toInt().coerceAtLeast(1) else duration
-            val endYr = currentStartYear + actualDuration
-            val isCurrent = currentYear in currentStartYear..endYr
-            
-            timeline.add(
-                DashaPeriod(
-                    planetHi = planet.first,
-                    planetEn = planet.second,
-                    startDate = "$currentStartYear",
-                    endDate = "$endYr",
-                    durationYears = actualDuration,
-                    isCurrent = isCurrent
-                )
-            )
-            currentStartYear = endYr
-        }
-
-        return timeline
     }
 }

@@ -47,7 +47,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_marginBottom="10dp">
+        android:layout_marginBottom="8dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -66,8 +66,18 @@
             android:maxLines="1"
             android:text="Pratipada (प्रतिपदा)"
             android:textColor="#F5EDD6"
-            android:textSize="15sp"
+            android:textSize="14sp"
             android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_tithi_details"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="समाप्ति: 04:15 PM"
+            android:textColor="#C0F5EDD6"
+            android:textSize="11sp" />
     </LinearLayout>
 
     <!-- Nakshatra Row -->
@@ -75,7 +85,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_marginBottom="10dp">
+        android:layout_marginBottom="8dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -94,8 +104,37 @@
             android:maxLines="1"
             android:text="Ashwini (अश्विनी)"
             android:textColor="#F5EDD6"
-            android:textSize="15sp"
+            android:textSize="14sp"
             android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_nakshatra_details"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="चरण 2 • समाप्ति: 08:30 PM"
+            android:textColor="#C0F5EDD6"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <!-- Quick Astrological Insight Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginBottom="6dp">
+
+        <TextView
+            android:id="@+id/widget_insight"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:text="✨ अभिजीत मुहूर्त: 12:05 - 12:50 PM"
+            android:textColor="#E5C158"
+            android:textSize="11sp"
+            android:textStyle="italic" />
     </LinearLayout>
 
     <!-- Footer Row (Location / Status) -->

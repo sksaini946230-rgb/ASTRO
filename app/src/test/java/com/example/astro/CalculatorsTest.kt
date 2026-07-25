@@ -167,4 +167,45 @@ class CalculatorsTest {
         assertEquals(isBoyManglikExpected, matchingResult.isManglikBoy)
         assertEquals(isGirlManglikExpected, matchingResult.isManglikGirl)
     }
+
+    @Test
+    fun testVimshottariDashaCalculator() {
+        // 1. Verify Vimshottari total cycle duration constant is exactly 120 years
+        val totalYears = VimshottariDashaCalculator.VIMSHOTTARI_PLANETS.sumOf { it.durationYears }
+        assertEquals(120.0, totalYears, 0.001)
+
+        // 2. Test Nakshatra and Dasha lord mapping
+        // Longitude 0.0° -> Ashwini (Index 0) -> Ketu (7 yrs)
+        val nakshatraAshwini = VimshottariDashaCalculator.getNakshatraInfo(0.0)
+        assertEquals(0, nakshatraAshwini.index)
+        assertEquals("अश्विनी", nakshatraAshwini.nameHi)
+        assertEquals("Ketu", nakshatraAshwini.lordNameEn)
+
+        // Longitude 20.0° -> Bharani (Index 1) -> Venus (20 yrs)
+        val nakshatraBharani = VimshottariDashaCalculator.getNakshatraInfo(20.0)
+        assertEquals(1, nakshatraBharani.index)
+        assertEquals("भरणी", nakshatraBharani.nameHi)
+        assertEquals("Venus", nakshatraBharani.lordNameEn)
+
+        // 3. Test full timeline calculation for DOB 1995-05-20 and Moon at 0.0° (Ashwini start)
+        val dashaResult = VimshottariDashaCalculator.calculateVimshottariDasha(
+            moonLongitude = 0.0,
+            birthDateStr = "1995-05-20"
+        )
+
+        assertNotNull(dashaResult)
+        assertEquals(9, dashaResult.mahadashas.size)
+
+        // At 0.0°, full 7 years of Ketu Mahadasha remain at birth
+        assertEquals("Ketu", dashaResult.mahadashas[0].planetEn)
+        assertEquals(7.0, dashaResult.mahadashas[0].durationYears, 0.1)
+
+        // Each Mahadasha must contain 9 Antardashas
+        for (mahadasha in dashaResult.mahadashas) {
+            assertEquals(9, mahadasha.antardashas.size)
+        }
+
+        // Check active Mahadasha for current time
+        assertNotNull(dashaResult.currentMahadasha)
+    }
 }

@@ -27,11 +27,21 @@ data class KundaliChartData(
     val dashaTimeline: List<DashaPeriod>
 )
 
+data class AntardashaPeriod(
+    val planetHi: String,
+    val planetEn: String,
+    val startDate: String,
+    val endDate: String,
+    val durationMonths: Double,
+    val isCurrent: Boolean = false
+)
+
 data class DashaPeriod(
     val planetHi: String,
     val planetEn: String,
     val startDate: String,
     val endDate: String,
-    val durationYears: Int,
-    val isCurrent: Boolean = false
+    val durationYears: Double,
+    val isCurrent: Boolean = false,
+    val antardashas: List<AntardashaPeriod> = emptyList()
 )

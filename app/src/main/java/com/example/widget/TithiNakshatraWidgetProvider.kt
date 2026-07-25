@@ -54,7 +54,19 @@ class TithiNakshatraWidgetProvider : AppWidgetProvider() {
             val views = RemoteViews(context.packageName, R.layout.tithi_nakshatra_widget).apply {
                 setTextViewText(R.id.widget_date, dateStr)
                 setTextViewText(R.id.widget_tithi, panchang.tithiHindi)
+                setTextViewText(
+                    R.id.widget_tithi_details,
+                    "${panchang.pakshaHindi} • समाप्ति: ${panchang.tithiEndTime}"
+                )
                 setTextViewText(R.id.widget_nakshatra, panchang.nakshatraHindi)
+                setTextViewText(
+                    R.id.widget_nakshatra_details,
+                    "चरण ${panchang.nakshatraPada} • समाप्ति: ${panchang.nakshatraEndTime}"
+                )
+                setTextViewText(
+                    R.id.widget_insight,
+                    "✨ शुभ: ${panchang.abhijitMuhurat} | राहूकाल: ${panchang.rahuKaal}"
+                )
                 setTextViewText(R.id.widget_location, "📍 ${panchang.locationName}")
 
                 val mainIntent = Intent(context, MainActivity::class.java).apply {

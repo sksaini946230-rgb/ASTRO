@@ -1,7 +1,11 @@
 package com.example.ui.components
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,12 +18,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -33,12 +47,6 @@ import com.example.ui.theme.TextGold
 import com.example.ui.theme.TextPrimaryDark
 import com.example.ui.theme.TextSecondaryDark
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.graphicsLayer
-
 @Composable
 fun SouthIndianChart(
     chartData: KundaliChartData,
@@ -51,6 +59,9 @@ fun SouthIndianChart(
         alphaAnim.animateTo(1f, animationSpec = tween(600))
         scaleAnim.animateTo(1f, animationSpec = tween(600))
     }
+
+    var userScale by remember { mutableFloatStateOf(1f) }
+    var userOffset by remember { mutableStateOf(Offset.Zero) }
 
     // Fixed South Indian Rashi Grid (12 boxes around a 4x4 perimeter)
     // Row 1: 12 (Pisces), 1 (Aries), 2 (Taurus), 3 (Gemini)
@@ -80,14 +91,44 @@ fun SouthIndianChart(
         modifier = modifier
             .fillMaxWidth()
             .aspectRatio(1f)
-            .graphicsLayer {
-                alpha = alphaAnim.value
-                scaleX = scaleAnim.value
-                scaleY = scaleAnim.value
-            }
             .clip(RoundedCornerShape(20.dp))
             .background(GlassWhite)
             .border(1.dp, GlassBorder, RoundedCornerShape(20.dp))
+            .pointerInput(Unit) {
+                detectTransformGestures { _, pan, zoom, _ ->
+                    val newScale = (userScale * zoom).coerceIn(1f, 3.5f)
+                    val maxOffsetX = (size.width * (newScale - 1f)) / 2f
+                    val maxOffsetY = (size.height * (newScale - 1f)) / 2f
+                    userScale = newScale
+                    userOffset = if (newScale > 1f) {
+                        Offset(
+                            x = (userOffset.x + pan.x).coerceIn(-maxOffsetX, maxOffsetX),
+                            y = (userOffset.y + pan.y).coerceIn(-maxOffsetY, maxOffsetY)
+                        )
+                    } else {
+                        Offset.Zero
+                    }
+                }
+            }
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onDoubleTap = {
+                        if (userScale > 1.1f) {
+                            userScale = 1f
+                            userOffset = Offset.Zero
+                        } else {
+                            userScale = 2f
+                        }
+                    }
+                )
+            }
+            .graphicsLayer {
+                alpha = alphaAnim.value
+                scaleX = scaleAnim.value * userScale
+                scaleY = scaleAnim.value * userScale
+                translationX = userOffset.x
+                translationY = userOffset.y
+            }
             .padding(4.dp)
             .testTag("south_indian_chart"),
         contentAlignment = Alignment.Center
@@ -178,5 +219,36 @@ fun SouthIndianChart(
                 }
             }
         }
+
+        // Reset zoom overlay
+        if (userScale > 1.05f) {
+            Surface(
+                onClick = {
+                    userScale = 1f
+                    userOffset = Offset.Zero
+                },
+                shape = RoundedCornerShape(12.dp),
+                color = GlassWhite,
+                border = androidx.compose.foundation.BorderStroke(1.dp, GlassBorder),
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "${String.format(java.util.Locale.US, "%.1f", userScale)}x  रिसेट ↺",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = TextGold,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
+            }
+        }
     }
 }
+

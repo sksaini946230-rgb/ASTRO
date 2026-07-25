@@ -62,6 +62,7 @@ import com.example.data.model.PlanetPosition
 import com.example.ui.MainViewModel
 import com.example.data.local.RecentSearchEntity
 import com.example.ui.components.AstroLoadingIndicator
+import com.example.ui.components.DashaHorizontalTimeline
 import com.example.ui.components.GlassBadge
 import com.example.ui.components.GlassCard
 import com.example.ui.components.GoldGlowButton
@@ -718,38 +719,9 @@ fun KundaliScreen(
             }
         }
 
-        // Dasha Table
+        // Horizontal Vimshottari Dasha Timeline
         item {
-            SectionHeader(
-                titleHi = "विंशोत्तरी दशा (Vimshottari Dasha)",
-                titleEn = "Vimshottari Dasha"
-            )
-            GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
-                        text = "वर्तमान महादशा: ${kundali.currentMahadashaHi} | अंतर्दशा: ${kundali.currentAntardashaHi}",
-                        style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    
-                    kundali.dashaTimeline.forEach { dasha ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "${dasha.planetHi} (${dasha.planetEn})",
-                                style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
-                            )
-                            Text(
-                                text = "${dasha.startDate} - ${dasha.endDate} (${dasha.durationYears} वर्ष)",
-                                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
-                            )
-                        }
-                    }
-                }
-            }
+            DashaHorizontalTimeline(dashaTimeline = kundali.dashaTimeline)
         }
 
         item {
