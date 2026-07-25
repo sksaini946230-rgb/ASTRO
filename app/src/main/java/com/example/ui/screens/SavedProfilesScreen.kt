@@ -86,6 +86,7 @@ fun SavedProfilesScreen(viewModel: MainViewModel) {
     val profiles by viewModel.savedProfiles.collectAsState()
     val savedReports by viewModel.savedReports.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+    var profileToDelete by remember { mutableStateOf<KundaliEntity?>(null) }
 
     if (showAddDialog) {
         AddProfileDialog(
@@ -94,6 +95,62 @@ fun SavedProfilesScreen(viewModel: MainViewModel) {
                 showAddDialog = false
             },
             onDismiss = { showAddDialog = false }
+        )
+    }
+
+    if (profileToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { profileToDelete = null },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = InauspiciousRed,
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = {
+                Text(
+                    text = LanguageManager.getString("कुण्डली हटाएं?", "Delete Birth Profile?"),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                )
+            },
+            text = {
+                Text(
+                    text = LanguageManager.getString(
+                        "क्या आप सचमुच ${profileToDelete?.name} का प्रोफाइल स्थायी रूप से हटाना चाहते हैं?\nयह प्रक्रिया पूरी तरह से स्थायी है।",
+                        "Are you sure you want to permanently delete the profile of ${profileToDelete?.name}?\nThis action cannot be undone."
+                    ),
+                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface)
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        profileToDelete?.let { viewModel.deleteProfile(it) }
+                        profileToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = InauspiciousRed)
+                ) {
+                    Text(
+                        text = LanguageManager.getString("हां, हटाएँ (Delete)", "Delete"),
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { profileToDelete = null }) {
+                    Text(
+                        text = LanguageManager.getString("रद्द करें", "Cancel"),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
     }
 
@@ -187,7 +244,7 @@ fun SavedProfilesScreen(viewModel: MainViewModel) {
                             viewModel.matchGirlDob.value = profile.dateOfBirth
                             viewModel.navigateToKundali(1)
                         },
-                        onDelete = { viewModel.deleteProfile(profile) }
+                        onDelete = { profileToDelete = profile }
                     )
                 }
             }
