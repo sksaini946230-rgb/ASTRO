@@ -16,7 +16,6 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.example.MainActivity
 import com.example.astro.PanchangCalculator
-import com.example.data.local.DatabaseProvider
 import com.example.data.model.CityLocation
 import java.util.Date
 import java.util.concurrent.TimeUnit
@@ -28,7 +27,7 @@ class AstroNotificationWorker(
 
     companion object {
         const val WORK_NAME = "astro_daily_notification_work"
-        const val CHANNEL_ID = "astro_daily_notifications"
+        const val CHANNEL_ID = "astro_premium_panchang"
 
         fun scheduleDailyNotification(context: Context) {
             val sharedPrefs = context.getSharedPreferences("astroveda_prefs", Context.MODE_PRIVATE)
@@ -39,8 +38,8 @@ class AstroNotificationWorker(
                 return
             }
 
-            val hour = sharedPrefs.getInt("notification_hour", 7)
-            val minute = sharedPrefs.getInt("notification_minute", 0)
+            val hour = sharedPrefs.getInt("notification_hour", 6) // Default to 6 AM for Panchang
+            val minute = sharedPrefs.getInt("notification_minute", 30)
 
             val calendar = java.util.Calendar.getInstance()
             val now = calendar.timeInMillis
@@ -63,6 +62,7 @@ class AstroNotificationWorker(
             val dailyWorkRequest = PeriodicWorkRequestBuilder<AstroNotificationWorker>(24, TimeUnit.HOURS)
                 .setConstraints(constraints)
                 .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
+                .addTag("DAILY_PANCHANG")
                 .build()
 
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
@@ -76,10 +76,8 @@ class AstroNotificationWorker(
     override suspend fun doWork(): Result {
         return try {
             val context = applicationContext
-            val dao = DatabaseProvider.getKundaliDao(context)
-            val profiles = dao.getSavedProfilesList()
-            val primaryProfile = profiles.firstOrNull()
-
+            
+            // Get location from preferences
             val sharedPrefs = context.getSharedPreferences("astroveda_prefs", Context.MODE_PRIVATE)
             val lat = sharedPrefs.getFloat("city_lat", 26.9124f).toDouble()
             val lon = sharedPrefs.getFloat("city_lon", 75.7873f).toDouble()
@@ -90,28 +88,38 @@ class AstroNotificationWorker(
 
             val panchang = PanchangCalculator.calculatePanchang(Date(), userCity)
 
-            val profileName = primaryProfile?.name ?: "AstroVeda User"
-            val title = "✨ Today's Panchang & Muhurat for $profileName"
-            val content = "Tithi: ${panchang.tithi} | Abhijit: ${panchang.abhijitMuhurat} | Rahu Kaal: ${panchang.rahuKaal}"
+            val title = context.getString(com.example.R.string.notif_daily_panchang_title)
+            val content = "Tithi: ${panchang.tithi}\nNakshatra: ${panchang.nakshatra}"
+            val bigText = "🕉️ Today's Panchang\n\n" +
+                    "Tithi: ${panchang.tithi}\n" +
+                    "Nakshatra: ${panchang.nakshatra}\n" +
+                    "Yoga: ${panchang.yoga}\n" +
+                    "Sunrise: ${panchang.sunrise} | Sunset: ${panchang.sunset}"
 
-            showNotification(title, content)
+            showNotification(title, content, bigText)
             Result.success()
         } catch (e: Exception) {
             Result.retry()
         }
     }
 
-    private fun showNotification(title: String, content: String) {
+    private fun showNotification(title: String, content: String, bigText: String) {
         val context = applicationContext
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channelName = context.getString(com.example.R.string.notif_channel_panchang_name)
+            val channelDesc = context.getString(com.example.R.string.notif_channel_panchang_desc)
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Daily Astro & Muhurat Alerts",
-                NotificationManager.IMPORTANCE_DEFAULT
+                channelName,
+                NotificationManager.IMPORTANCE_HIGH // High importance for "premium" feel
             ).apply {
-                description = "Daily notifications for planetary transits, auspicious Abhijit Muhurat, and Panchang insights."
+                description = channelDesc
+                enableLights(true)
+                lightColor = android.graphics.Color.parseColor("#D4A84B") // Premium Gold
+                enableVibration(true)
+                setShowBadge(true)
             }
             notificationManager.createNotificationChannel(channel)
         }
@@ -122,19 +130,22 @@ class AstroNotificationWorker(
 
         val pendingIntent = PendingIntent.getActivity(
             context,
-            0,
+            1001,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(com.example.R.mipmap.ic_launcher)
             .setContentTitle(title)
             .setContentText(content)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(content))
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(bigText))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setColor(android.graphics.Color.parseColor("#D4A84B")) // Premium Gold
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .build()
 
         notificationManager.notify(1001, notification)

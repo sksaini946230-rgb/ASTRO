@@ -224,7 +224,9 @@ fun KundaliScreen(
         )
     }
 
-    CelestialBackground {
+    val isStartupComplete by viewModel.isStartupComplete.collectAsState()
+
+    CelestialBackground(deferred = !isStartupComplete) {
         Scaffold(
             containerColor = Color.Transparent,
             modifier = Modifier.fillMaxSize()

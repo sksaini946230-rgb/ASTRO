@@ -39,6 +39,12 @@ import com.example.ui.components.BottomNavBar
 import com.example.ui.components.PremiumDialog
 import com.example.ui.components.RateUsDialog
 import com.example.ui.components.TopHeaderBar
+import com.example.ui.components.FeatureDiscoveryOverlay
+import com.example.ui.components.DiscoveryStep
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.WbSunny
 import com.example.ui.screens.CalendarScreen
 import com.example.ui.screens.KundaliScreen
 import com.example.ui.screens.MatchingScreen
@@ -121,6 +127,8 @@ class MainActivity : ComponentActivity() {
                 val isSyncing by mainViewModel.isSyncing.collectAsState()
                 val isFirestoreSyncing by mainViewModel.isFirestoreSyncing.collectAsState()
                 val isFirstRunSyncing by mainViewModel.isFirstRunSyncing.collectAsState()
+                val isStartupComplete by mainViewModel.isStartupComplete.collectAsState()
+                val isDiscoveryCompleted by mainViewModel.isDiscoveryCompleted.collectAsState()
                 val currentUser by mainViewModel.currentUser.collectAsState()
                 val isCloudBackupEnabled = currentUser != null
 
@@ -161,9 +169,14 @@ class MainActivity : ComponentActivity() {
                             Column {
                                 val isPro by mainViewModel.isProUser.collectAsState()
                                 if (!isPro && selectedTab == AppTab.PANCHANG) {
-                                    AdBanner(
-                                        onRemoveAdsClick = { mainViewModel.showPremiumDialog.value = true }
-                                    )
+                                    androidx.compose.animation.AnimatedVisibility(
+                                        visible = isStartupComplete,
+                                        enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.expandVertically()
+                                    ) {
+                                        AdBanner(
+                                            onRemoveAdsClick = { mainViewModel.showPremiumDialog.value = true }
+                                        )
+                                    }
                                 }
                                 BottomNavBar(
                                     selectedTab = selectedTab,
@@ -227,6 +240,35 @@ class MainActivity : ComponentActivity() {
                                     RateUsDialog(
                                         viewModel = mainViewModel,
                                         onDismiss = { mainViewModel.dismissRateUs() }
+                                    )
+                                }
+
+                                if (!isDiscoveryCompleted && isOnboardingCompleted && !isFirstRunSyncing) {
+                                    FeatureDiscoveryOverlay(
+                                        steps = listOf(
+                                            DiscoveryStep(
+                                                titleHi = "दैनिक पंचांग",
+                                                titleEn = "Daily Panchang",
+                                                descriptionHi = "तिथि, नक्षत्र और सूर्योदय के समय के साथ अपने दिन की शुरुआत दिव्य रूप से करें।",
+                                                descriptionEn = "Start your day divinely with precise Tithi, Nakshatra, and Sunrise timings.",
+                                                icon = Icons.Default.WbSunny
+                                            ),
+                                            DiscoveryStep(
+                                                titleHi = "विस्तृत कुंडली",
+                                                titleEn = "Detailed Kundali",
+                                                descriptionHi = "अपने जन्म विवरण के साथ अपनी विस्तृत जन्म कुंडली और ग्रह स्थितियों का विश्लेषण करें।",
+                                                descriptionEn = "Generate and analyze your detailed birth chart and planetary positions with ease.",
+                                                icon = Icons.Default.AutoAwesome
+                                            ),
+                                            DiscoveryStep(
+                                                titleHi = "शुभ मुहूर्त",
+                                                titleEn = "Auspicious Muhurat",
+                                                descriptionHi = "अपनी महत्वपूर्ण गतिविधियों के लिए सबसे शुभ समय खोजें और सफलता सुनिश्चित करें।",
+                                                descriptionEn = "Find the most auspicious timings for your important activities and ensure success.",
+                                                icon = Icons.Default.Schedule
+                                            )
+                                        ),
+                                        onComplete = { mainViewModel.completeDiscovery() }
                                     )
                                 }
                             }

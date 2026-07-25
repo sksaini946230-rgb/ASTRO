@@ -185,6 +185,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         markAsRated()
     }
 
+    fun incrementLookupCount() {
+        if (_hasRated.value) return
+
+        val count = sharedPrefs.getInt("successful_lookup_count", 0) + 1
+        sharedPrefs.edit().putInt("successful_lookup_count", count).apply()
+
+        val dismissedAt = sharedPrefs.getLong("rate_dialog_dismissed_at", 0L)
+        val oneDayMs = 24 * 60 * 60 * 1000L
+        
+        // Trigger Rate Us dialog after 3 successful lookups (Kundali/Panchang)
+        if (count >= 3 && (System.currentTimeMillis() - dismissedAt) > oneDayMs) {
+            _showRateUsDialog.value = true
+        }
+    }
+
     fun incrementSessionActionCount() {
         if (_hasRated.value) return
 
@@ -193,7 +208,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         val dismissedAt = sharedPrefs.getLong("rate_dialog_dismissed_at", 0L)
         val oneDayMs = 24 * 60 * 60 * 1000L
-        if (count >= 5 && (System.currentTimeMillis() - dismissedAt) > oneDayMs) {
+        if (count >= 10 && (System.currentTimeMillis() - dismissedAt) > oneDayMs) {
             _showRateUsDialog.value = true
         }
     }
@@ -229,6 +244,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearGlobalError() {
         _globalError.value = null
+    }
+
+    // Feature Discovery State
+    private val _isDiscoveryCompleted = MutableStateFlow(sharedPrefs.getBoolean("is_discovery_completed", false))
+    val isDiscoveryCompleted: StateFlow<Boolean> = _isDiscoveryCompleted.asStateFlow()
+
+    fun completeDiscovery() {
+        _isDiscoveryCompleted.value = true
+        sharedPrefs.edit().putBoolean("is_discovery_completed", true).apply()
+    }
+
+    fun resetDiscovery() {
+        _isDiscoveryCompleted.value = false
+        sharedPrefs.edit().putBoolean("is_discovery_completed", false).apply()
     }
 
     // Onboarding State
@@ -477,7 +506,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _isPanchangLoading.value = true
             try {
                 _panchangState.value = cacheRepository.getPanchangWith7DayCache(_selectedDate.value, _selectedCity.value, forceRefresh = forceRefresh)
-                incrementSessionActionCount()
+                incrementLookupCount()
             } catch (e: Exception) {
                 reportError(e)
             } finally {
@@ -574,7 +603,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val result = KundaliCalculator.generateKundali(name, dob, tob, place)
                 _generatedKundali.value = result
                 triggerInterstitial()
-                incrementSessionActionCount()
+                incrementLookupCount()
             } catch (e: Exception) {
                 reportError(e)
             } finally {
@@ -960,17 +989,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // Premium Dialog state
     var showPremiumDialog = MutableStateFlow(false)
 
+    // Startup Performance
+    private val _isStartupComplete = MutableStateFlow(false)
+    val isStartupComplete: StateFlow<Boolean> = _isStartupComplete.asStateFlow()
+
     init {
         repository = DatabaseProvider.getKundaliRepository(application)
         reportRepository = DatabaseProvider.getSavedReportRepository(application)
         recentSearchRepository = DatabaseProvider.getRecentSearchRepository(application)
         cacheRepository = DatabaseProvider.getAstroCacheRepository(application)
-        monitorNetwork()
-        loadSavedProfiles()
-        loadRecentSearches()
-        loadSavedReports()
-        recalculatePanchang()
-        loadHoroscopesWithCache()
-        fetchAstroNews()
+        
+        viewModelScope.launch {
+            // 1. Critical Initialization (Immediate)
+            monitorNetwork()
+            loadSavedProfiles()
+            recalculatePanchang() // Critical for home screen
+            
+            // Allow critical UI to render first
+            kotlinx.coroutines.delay(800)
+            _isStartupComplete.value = true
+
+            // 2. Deferred Background Tasks (Non-critical)
+            launch {
+                loadRecentSearches()
+                loadSavedReports()
+                loadHoroscopesWithCache()
+                fetchAstroNews()
+                
+                if (sharedPrefs.getBoolean("is_onboarding_completed", false)) {
+                    com.example.worker.AstroNotificationWorker.scheduleDailyNotification(application)
+                }
+            }
+        }
     }
 }
