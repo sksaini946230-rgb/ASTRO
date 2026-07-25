@@ -149,36 +149,58 @@ fun RashifalScreen(viewModel: MainViewModel) {
         // 1: Horizontal scrollable selector for all 12 rashis with zodiac icons
         item {
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxWidth()
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(vertical = 4.dp)
             ) {
                 items(horoscopes) { item ->
                     val isSelected = (item.rashiId == selectedRashiId)
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
-                            .border(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else GlassBorder, RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(
+                                if (isSelected) {
+                                    androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.primary,
+                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                                        )
+                                    )
+                                } else {
+                                    androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                                        )
+                                    )
+                                }
+                            )
+                            .border(
+                                width = if (isSelected) 1.5.dp else 0.75.dp,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                shape = RoundedCornerShape(20.dp)
+                            )
                             .clickable {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 viewModel.selectRashi(item.rashiId)
                             }
-                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                            .padding(horizontal = 16.dp, vertical = 11.dp)
                             .testTag("rashi_selector_${item.rashiId}")
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = item.symbol,
-                                fontSize = 18.sp,
+                                fontSize = 20.sp,
                                 color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = LanguageManager.getString(item.rashiNameHi.substringBefore(" "), item.rashiNameEn),
                                 style = MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = FontWeight.Bold,
+                                    fontWeight = FontWeight.ExtraBold,
                                     color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
-                                    fontSize = 13.sp
+                                    fontSize = 13.sp,
+                                    letterSpacing = 0.3.sp
                                 )
                             )
                         }

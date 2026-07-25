@@ -82,32 +82,63 @@ fun OnboardingScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Page Indicators (Dots)
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            // Page Indicators (Highly Polished Pill Shapes)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 repeat(3) { idx ->
+                    val isSelected = idx == pageIndex
                     Box(
                         modifier = Modifier
-                            .size(if (idx == pageIndex) 24.dp else 8.dp, 8.dp)
+                            .size(if (isSelected) 28.dp else 8.dp, 8.dp)
                             .clip(RoundedCornerShape(4.dp))
-                            .background(if (idx == pageIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                            .background(
+                                if (isSelected) {
+                                    Brush.horizontalGradient(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.primary,
+                                            MaterialTheme.colorScheme.secondary
+                                        )
+                                    )
+                                } else {
+                                    Brush.linearGradient(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.surfaceVariant,
+                                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                        )
+                                    )
+                                }
+                            )
+                            .border(
+                                width = 0.5.dp,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else Color.Transparent,
+                                shape = RoundedCornerShape(4.dp)
+                            )
                     )
                 }
             }
 
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                    .border(
+                        width = 0.75.dp,
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f),
+                        shape = RoundedCornerShape(20.dp)
+                    )
                     .clickable { onComplete() }
-                    .padding(horizontal = 14.dp, vertical = 6.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
                     .testTag("onboarding_skip_button")
             ) {
                 Text(
                     text = "छोड़ें (Skip)",
                     style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.primary,
-                        fontSize = 12.sp
+                        fontSize = 12.sp,
+                        letterSpacing = 0.5.sp
                     )
                 )
             }
@@ -246,39 +277,56 @@ fun RashiSelectOnboardingPage(viewModel: MainViewModel) {
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             items(horoscopes) { item ->
                 val isSelected = (item.rashiId == selectedRashiId)
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(
+                            if (isSelected) {
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                                    )
+                                )
+                            } else {
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                                    )
+                                )
+                            }
+                        )
                         .border(
-                            1.2.dp,
-                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                            RoundedCornerShape(16.dp)
+                            width = if (isSelected) 1.5.dp else 0.75.dp,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
+                            shape = RoundedCornerShape(20.dp)
                         )
                         .clickable { viewModel.selectRashi(item.rashiId) }
-                        .padding(12.dp)
+                        .padding(14.dp)
                         .testTag("onboarding_rashi_${item.rashiId}"),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = item.symbol,
-                            fontSize = 28.sp,
-                            color = if (isSelected) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primary
+                            fontSize = 32.sp,
+                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = item.rashiNameHi.substringBefore(" "),
                             style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = if (isSelected) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primary,
-                                fontSize = 13.sp
+                                fontWeight = FontWeight.ExtraBold,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
+                                fontSize = 13.sp,
+                                letterSpacing = 0.3.sp
                             )
                         )
                     }

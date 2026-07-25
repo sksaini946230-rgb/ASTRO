@@ -284,14 +284,20 @@ fun PanchangScreen(
 
         // Vikram Samvat & Masa Info Bar
         item {
-            GlassCard(modifier = Modifier.fillMaxWidth()) {
+            GlassCard(
+                modifier = Modifier.fillMaxWidth(),
+                borderColor = PremiumGold.copy(alpha = 0.25f),
+                shape = RoundedCornerShape(28.dp)
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     InfoPill("विक्रम संवत", "${panchang.vikramSamvat}")
+                    Box(modifier = Modifier.width(1.dp).height(24.dp).background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)))
                     InfoPill("शक संवत", "${panchang.sakaSamvat}")
+                    Box(modifier = Modifier.width(1.dp).height(24.dp).background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)))
                     InfoPill("मास (Month)", panchang.masaNameHindi.substringBefore(" "))
                 }
             }
@@ -436,14 +442,21 @@ fun PanchangScreen(
         }
 
         item {
-            GlassCard(modifier = Modifier.fillMaxWidth()) {
+            GlassCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp)
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     TimingColumn("सूर्योदय", panchang.sunrise, Icons.Default.WbSunny, MaterialTheme.colorScheme.primary)
+                    Box(modifier = Modifier.width(1.dp).height(32.dp).background(MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)))
                     TimingColumn("सूर्यास्त", panchang.sunset, Icons.Default.WbSunny, MaterialTheme.colorScheme.secondary)
+                    Box(modifier = Modifier.width(1.dp).height(32.dp).background(MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)))
                     TimingColumn("चन्द्रास्त", panchang.moonset, Icons.Default.NightsStay, MaterialTheme.colorScheme.onSurfaceVariant)
+                    Box(modifier = Modifier.width(1.dp).height(32.dp).background(MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)))
                     TimingColumn("चन्द्रोदय", panchang.moonrise, Icons.Default.NightsStay, MaterialTheme.colorScheme.primary)
                 }
             }
@@ -712,14 +725,28 @@ fun PanchangScreen(
 
 @Composable
 fun InfoPill(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                letterSpacing = 0.5.sp
+            )
         )
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            style = MaterialTheme.typography.titleMedium.copy(
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 15.sp,
+                letterSpacing = 0.2.sp
+            )
         )
     }
 }
@@ -801,11 +828,42 @@ fun SmallElementCard(titleHi: String, valueHi: String) {
 
 @Composable
 fun TimingColumn(title: String, time: String, icon: ImageVector, iconColor: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(imageVector = icon, contentDescription = null, tint = iconColor, modifier = Modifier.size(24.dp))
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(text = title, style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp))
-        Text(text = time, style = MaterialTheme.typography.labelMedium.copy(color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 14.sp))
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(iconColor.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconColor,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelSmall.copy(
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium
+            )
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = time,
+            style = MaterialTheme.typography.labelMedium.copy(
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp
+            )
+        )
     }
 }
 

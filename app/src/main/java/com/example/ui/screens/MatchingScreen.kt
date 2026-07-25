@@ -155,101 +155,145 @@ fun MatchingScreen(viewModel: MainViewModel) {
                         unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
-                    // Boy Details
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Default.Male, contentDescription = "Boy", tint = MaterialTheme.colorScheme.primary)
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = LanguageManager.getString("वर का विवरण (Boy's Details):", "Boy's Details:"), style = MaterialTheme.typography.titleSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold))
-                    }
+                    // Boy Details (Modern Elegant Cards)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f))
+                            .border(width = 0.5.dp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f), shape = RoundedCornerShape(16.dp))
+                            .padding(12.dp)
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Male,
+                                    contentDescription = "Boy",
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = LanguageManager.getString("वर का विवरण (Boy's Details):", "Boy's Details:"),
+                                    style = MaterialTheme.typography.titleSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
+                                )
+                            }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
-                            value = boyName,
-                            onValueChange = {
-                                boyName = it
-                                viewModel.matchBoyName.value = it
-                            },
-                            label = { Text(LanguageManager.getString("वर का नाम (Boy Name)", "Boy Name")) },
-                            colors = tfColors,
-                            modifier = Modifier.weight(1.2f).testTag("input_boy_name")
-                        )
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                OutlinedTextField(
+                                    value = boyName,
+                                    onValueChange = {
+                                        boyName = it
+                                        viewModel.matchBoyName.value = it
+                                    },
+                                    label = { Text(LanguageManager.getString("वर का नाम (Boy Name)", "Boy Name"), fontSize = 12.sp) },
+                                    colors = tfColors,
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.weight(1.2f).testTag("input_boy_name")
+                                )
 
-                        Box(modifier = Modifier.weight(1f)) {
-                            OutlinedTextField(
-                                value = boyDob,
-                                onValueChange = {
-                                    boyDob = it
-                                    viewModel.matchBoyDob.value = it
-                                },
-                                readOnly = true,
-                                label = { Text(LanguageManager.getString("जन्म तिथि", "DOB")) },
-                                trailingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.CalendarMonth,
-                                        contentDescription = "Select Boy DOB",
-                                        tint = MaterialTheme.colorScheme.primary
+                                Box(modifier = Modifier.weight(1f)) {
+                                    OutlinedTextField(
+                                        value = boyDob,
+                                        onValueChange = {
+                                            boyDob = it
+                                            viewModel.matchBoyDob.value = it
+                                        },
+                                        readOnly = true,
+                                        label = { Text(LanguageManager.getString("जन्म तिथि", "DOB"), fontSize = 12.sp) },
+                                        trailingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.CalendarMonth,
+                                                contentDescription = "Select Boy DOB",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        },
+                                        colors = tfColors,
+                                        shape = RoundedCornerShape(12.dp),
+                                        modifier = Modifier.fillMaxWidth().testTag("input_boy_dob")
                                     )
-                                },
-                                colors = tfColors,
-                                modifier = Modifier.fillMaxWidth().testTag("input_boy_dob")
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .matchParentSize()
-                                    .clickable {
-                                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                                        showBoyDatePicker = true
-                                    }
-                            )
+                                    Box(
+                                        modifier = Modifier
+                                            .matchParentSize()
+                                            .clickable {
+                                                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                                showBoyDatePicker = true
+                                            }
+                                    )
+                                }
+                            }
                         }
                     }
 
-                    // Girl Details
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Default.Female, contentDescription = "Girl", tint = MaterialTheme.colorScheme.secondary)
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = LanguageManager.getString("कन्या का विवरण (Girl's Details):", "Girl's Details:"), style = MaterialTheme.typography.titleSmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold))
-                    }
+                    // Girl Details (Modern Elegant Cards)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f))
+                            .border(width = 0.5.dp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f), shape = RoundedCornerShape(16.dp))
+                            .padding(12.dp)
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Female,
+                                    contentDescription = "Girl",
+                                    tint = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = LanguageManager.getString("कन्या का विवरण (Girl's Details):", "Girl's Details:"),
+                                    style = MaterialTheme.typography.titleSmall.copy(color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.ExtraBold, fontSize = 14.sp)
+                                )
+                            }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
-                            value = girlName,
-                            onValueChange = {
-                                girlName = it
-                                viewModel.matchGirlName.value = it
-                            },
-                            label = { Text(LanguageManager.getString("कन्या का नाम (Girl Name)", "Girl Name")) },
-                            colors = tfColors,
-                            modifier = Modifier.weight(1.2f).testTag("input_girl_name")
-                        )
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                OutlinedTextField(
+                                    value = girlName,
+                                    onValueChange = {
+                                        girlName = it
+                                        viewModel.matchGirlName.value = it
+                                    },
+                                    label = { Text(LanguageManager.getString("कन्या का नाम (Girl Name)", "Girl Name"), fontSize = 12.sp) },
+                                    colors = tfColors,
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.weight(1.2f).testTag("input_girl_name")
+                                )
 
-                        Box(modifier = Modifier.weight(1f)) {
-                            OutlinedTextField(
-                                value = girlDob,
-                                onValueChange = {
-                                    girlDob = it
-                                    viewModel.matchGirlDob.value = it
-                                },
-                                readOnly = true,
-                                label = { Text(LanguageManager.getString("जन्म तिथि", "DOB")) },
-                                trailingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.CalendarMonth,
-                                        contentDescription = "Select Girl DOB",
-                                        tint = MaterialTheme.colorScheme.secondary
+                                Box(modifier = Modifier.weight(1f)) {
+                                    OutlinedTextField(
+                                        value = girlDob,
+                                        onValueChange = {
+                                            girlDob = it
+                                            viewModel.matchGirlDob.value = it
+                                        },
+                                        readOnly = true,
+                                        label = { Text(LanguageManager.getString("जन्म तिथि", "DOB"), fontSize = 12.sp) },
+                                        trailingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.CalendarMonth,
+                                                contentDescription = "Select Girl DOB",
+                                                tint = MaterialTheme.colorScheme.secondary,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        },
+                                        colors = tfColors,
+                                        shape = RoundedCornerShape(12.dp),
+                                        modifier = Modifier.fillMaxWidth().testTag("input_girl_dob")
                                     )
-                                },
-                                colors = tfColors,
-                                modifier = Modifier.fillMaxWidth().testTag("input_girl_dob")
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .matchParentSize()
-                                    .clickable {
-                                        view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                                        showGirlDatePicker = true
-                                    }
-                            )
+                                    Box(
+                                        modifier = Modifier
+                                            .matchParentSize()
+                                            .clickable {
+                                                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                                                showGirlDatePicker = true
+                                            }
+                                    )
+                                }
+                            }
                         }
                     }
 
