@@ -47,8 +47,8 @@ import com.example.util.LanguageManager
 fun GlassCard(
     modifier: Modifier = Modifier,
     borderColor: Color = GlassBorder,
-    borderWidth: Dp = 1.dp,
-    shape: RoundedCornerShape = RoundedCornerShape(20.dp),
+    borderWidth: Dp = 0.75.dp,
+    shape: RoundedCornerShape = RoundedCornerShape(24.dp),
     onClick: (() -> Unit)? = null,
     testTag: String? = null,
     content: @Composable BoxScope.() -> Unit
@@ -57,27 +57,28 @@ fun GlassCard(
     val cardModifier = modifier
         .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
         .shadow(
-            elevation = 6.dp,
+            elevation = 8.dp,
             shape = shape,
-            spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+            spotColor = PremiumGold.copy(alpha = 0.08f),
+            ambientColor = Color.Black.copy(alpha = 0.4f)
         )
         .clip(shape)
         .background(
             brush = Brush.verticalGradient(
                 colors = listOf(
-                    MaterialTheme.colorScheme.surface,
-                    MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+                    MaterialTheme.colorScheme.surface.copy(alpha = 0.75f),
+                    MaterialTheme.colorScheme.surface.copy(alpha = 0.45f)
                 )
             )
         )
-        .border(width = borderWidth, color = borderColor, shape = shape)
+        .border(width = borderWidth, color = borderColor.copy(alpha = 0.35f), shape = shape)
         .then(
             if (onClick != null) Modifier.clickable {
                 view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
                 onClick()
             } else Modifier
         )
-        .padding(18.dp)
+        .padding(20.dp)
     
     Box(modifier = cardModifier, content = content)
 }
@@ -91,43 +92,51 @@ fun GoldGlowButton(
     testTag: String = "gold_glow_button"
 ) {
     val view = LocalView.current
-    Surface(
-        onClick = {
-            view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-            onClick()
-        },
+    Box(
         modifier = modifier
-            .testTag(testTag),
-        shape = RoundedCornerShape(12.dp),
-        color = PremiumGold,
-        tonalElevation = 0.dp,
-        shadowElevation = 2.dp
-    ) {
-        Box(
-            modifier = Modifier
-                .padding(horizontal = 24.dp, vertical = 12.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (icon != null) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = Color(0xFF1C1C1E),
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                }
-                Text(
-                    text = text,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1C1C1E),
-                        fontSize = 14.sp,
-                        letterSpacing = 0.2.sp
+            .testTag(testTag)
+            .shadow(
+                elevation = 8.dp,
+                shape = RoundedCornerShape(16.dp),
+                spotColor = PremiumGold.copy(alpha = 0.35f),
+                ambientColor = Color.Black.copy(alpha = 0.25f)
+            )
+            .clip(RoundedCornerShape(16.dp))
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        Color(0xFFE5C158), // Premium Champagne Gold
+                        Color(0xFFD4A84B), // Minimalist Gold
+                        Color(0xFFB8860B)  // Rich Deep Saffron Gold
                     )
                 )
+            )
+            .clickable {
+                view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                onClick()
             }
+            .padding(horizontal = 24.dp, vertical = 14.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color(0xFF0D1117), // Deep cosmic navy background color
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Text(
+                text = text,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color(0xFF0D1117),
+                    fontSize = 15.sp,
+                    letterSpacing = 0.5.sp
+                )
+            )
         }
     }
 }
@@ -136,24 +145,25 @@ fun GoldGlowButton(
 fun GlassBadge(
     text: String,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
     textColor: Color = MaterialTheme.colorScheme.primary,
-    borderColor: Color = MaterialTheme.colorScheme.outline
+    borderColor: Color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
 ) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .background(backgroundColor)
-            .border(width = 0.8.dp, color = borderColor, shape = RoundedCornerShape(12.dp))
-            .padding(horizontal = 10.dp, vertical = 4.dp),
+            .border(width = 0.75.dp, color = borderColor, shape = RoundedCornerShape(12.dp))
+            .padding(horizontal = 12.dp, vertical = 5.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Bold,
                 color = textColor,
-                fontSize = 12.sp
+                fontSize = 11.sp,
+                letterSpacing = 0.3.sp
             )
         )
     }

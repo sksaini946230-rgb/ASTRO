@@ -34,6 +34,7 @@ class MainScreensScreenshotTest {
         viewModel = MainViewModel(RuntimeEnvironment.getApplication())
     }
 
+    @OptIn(androidx.compose.animation.ExperimentalSharedTransitionApi::class)
     @Test
     fun panchang_screen_dark_mode() {
         composeTestRule.setContent {
@@ -58,6 +59,7 @@ class MainScreensScreenshotTest {
         composeTestRule.onRoot().captureRoboImage(filePath = "src/test/screenshots/rashifal_dark.png")
     }
 
+    @OptIn(androidx.compose.animation.ExperimentalSharedTransitionApi::class)
     @Test
     fun kundali_screen_dark_mode() {
         composeTestRule.setContent {
